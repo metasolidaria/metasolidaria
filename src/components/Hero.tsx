@@ -36,18 +36,19 @@ export const Hero = () => {
           >
             <Heart className="w-4 h-4 text-secondary" fill="currentColor" />
             <span className="text-primary-foreground text-sm font-medium">
-              Transforme sua saúde em solidariedade
+              Transforme suas metas em solidariedade
             </span>
           </motion.div>
 
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold text-primary-foreground mb-6 leading-tight">
-            Cada kg perdido,{" "}
-            <span className="text-secondary">1kg doado</span>
+            Cada meta alcançada,{" "}
+            <span className="text-secondary">uma doação</span>
           </h1>
 
-          <p className="text-lg md:text-xl text-primary-foreground/80 mb-10 max-w-2xl mx-auto leading-relaxed">
-            Junte-se a grupos comprometidos em transformar metas de saúde em
-            ações que alimentam famílias. Em 2026, sua jornada pode mudar vidas.
+          <p className="text-lg md:text-xl text-primary-foreground/80 mb-10 max-w-3xl mx-auto leading-relaxed">
+            Junte-se a grupos comprometidos em transformar metas pessoais em
+            ações solidárias. Doe alimentos, livros, roupas, cobertores e muito mais. 
+            Em 2026, sua jornada pode mudar vidas.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
@@ -69,8 +70,8 @@ export const Hero = () => {
           >
             {[
               { icon: Users, label: "Grupos", value: "24" },
-              { icon: Scale, label: "kg Perdidos", value: "1.2K" },
-              { icon: Heart, label: "kg Doados", value: "1.2K" },
+              { icon: Scale, label: "Metas", value: "1.2K" },
+              { icon: Heart, label: "Doações", value: "1.2K" },
             ].map((stat, index) => (
               <div
                 key={stat.label}

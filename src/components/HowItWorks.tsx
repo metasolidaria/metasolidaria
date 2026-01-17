@@ -6,25 +6,25 @@ const steps = [
     icon: Users,
     title: "Crie ou Entre em um Grupo",
     description:
-      "Forme uma equipe com amigos, família ou colegas de trabalho comprometidos com a mudança.",
+      "Forme uma equipe com amigos, família ou colegas de trabalho. O líder cadastra nome e WhatsApp.",
   },
   {
     icon: Scale,
-    title: "Defina sua Meta",
+    title: "Escolha o Tipo de Doação",
     description:
-      "Cada participante estabelece sua meta de peso para 2026 e se compromete com a doação.",
+      "Alimentos, livros, roupas, cobertores, sopas... Escolha a causa que mais faz sentido para seu grupo.",
   },
   {
     icon: Apple,
     title: "Registre seu Progresso",
     description:
-      "A cada kg perdido, registre no app. O sistema calcula automaticamente sua contribuição.",
+      "A cada meta alcançada, registre no app. O sistema calcula automaticamente sua contribuição.",
   },
   {
     icon: Heart,
     title: "Faça a Diferença",
     description:
-      "Sua meta de saúde se transforma em alimentos para quem precisa. Todos ganham!",
+      "Suas metas pessoais se transformam em doações para quem precisa. Todos ganham!",
   },
 ];
 
