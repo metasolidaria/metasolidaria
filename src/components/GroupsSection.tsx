@@ -1,62 +1,78 @@
 import { motion } from "framer-motion";
 import { useState } from "react";
-import { Users, Scale, MapPin, Plus, Heart } from "lucide-react";
+import { Users, Target, MapPin, Plus, Heart } from "lucide-react";
 import { Button } from "./ui/button";
 import { CreateGroupModal } from "./CreateGroupModal";
+
+const donationTypeLabels: Record<string, { label: string; icon: string }> = {
+  alimentos: { label: "Alimentos", icon: "🍎" },
+  livros: { label: "Livros", icon: "📚" },
+  roupas: { label: "Roupas", icon: "👕" },
+  cobertores: { label: "Cobertores", icon: "🛏️" },
+  sopas: { label: "Sopas", icon: "🍲" },
+  brinquedos: { label: "Brinquedos", icon: "🧸" },
+  higiene: { label: "Kits de Higiene", icon: "🧴" },
+};
 
 const mockGroups = [
   {
     id: 1,
     name: "Equipe Saúde Total",
     members: 12,
-    totalLost: 45,
+    goalsReached: 45,
     totalDonated: 45,
     city: "São Paulo, SP",
+    donationType: "alimentos",
     image: "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=400",
   },
   {
     id: 2,
-    name: "Vida Leve 2026",
+    name: "Leitura Solidária",
     members: 8,
-    totalLost: 32,
+    goalsReached: 32,
     totalDonated: 32,
     city: "Rio de Janeiro, RJ",
+    donationType: "livros",
     image: "https://images.unsplash.com/photo-1511632765486-a01980e01a18?w=400",
   },
   {
     id: 3,
     name: "Unidos pela Mudança",
     members: 15,
-    totalLost: 67,
+    goalsReached: 67,
     totalDonated: 67,
     city: "Curitiba, PR",
+    donationType: "roupas",
     image: "https://images.unsplash.com/photo-1582213782179-e0d53f98f2ca?w=400",
   },
   {
     id: 4,
-    name: "Corpo e Alma",
+    name: "Aquece Coração",
     members: 6,
-    totalLost: 23,
+    goalsReached: 23,
     totalDonated: 23,
     city: "Belo Horizonte, MG",
+    donationType: "cobertores",
     image: "https://images.unsplash.com/photo-1517486808906-6ca8b3f04846?w=400",
   },
   {
     id: 5,
-    name: "Novos Horizontes",
+    name: "Sopa do Bem",
     members: 10,
-    totalLost: 41,
+    goalsReached: 41,
     totalDonated: 41,
     city: "Brasília, DF",
+    donationType: "sopas",
     image: "https://images.unsplash.com/photo-1491438590914-bc09fcaaf77a?w=400",
   },
   {
     id: 6,
-    name: "Família Saudável",
+    name: "Família Solidária",
     members: 5,
-    totalLost: 18,
+    goalsReached: 18,
     totalDonated: 18,
     city: "Salvador, BA",
+    donationType: "brinquedos",
     image: "https://images.unsplash.com/photo-1523464862212-d6631d073194?w=400",
   },
 ];
@@ -109,6 +125,12 @@ export const GroupsSection = () => {
                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-foreground/60 to-transparent" />
+                <div className="absolute top-3 right-3">
+                  <span className="bg-primary-foreground/20 backdrop-blur-sm px-2 py-1 rounded-full text-xs text-primary-foreground flex items-center gap-1">
+                    <span>{donationTypeLabels[group.donationType]?.icon}</span>
+                    {donationTypeLabels[group.donationType]?.label}
+                  </span>
+                </div>
                 <div className="absolute bottom-4 left-4 right-4">
                   <h3 className="text-xl font-bold text-primary-foreground">
                     {group.name}
@@ -133,21 +155,21 @@ export const GroupsSection = () => {
                   </div>
                   <div className="text-center">
                     <div className="flex items-center justify-center gap-1 text-muted-foreground mb-1">
-                      <Scale className="w-4 h-4" />
+                      <Target className="w-4 h-4" />
                     </div>
                     <div className="text-lg font-bold text-primary">
-                      {group.totalLost}kg
+                      {group.goalsReached}
                     </div>
-                    <div className="text-xs text-muted-foreground">Perdidos</div>
+                    <div className="text-xs text-muted-foreground">Metas</div>
                   </div>
                   <div className="text-center">
                     <div className="flex items-center justify-center gap-1 text-muted-foreground mb-1">
                       <Heart className="w-4 h-4" />
                     </div>
                     <div className="text-lg font-bold text-secondary">
-                      {group.totalDonated}kg
+                      {group.totalDonated}
                     </div>
-                    <div className="text-xs text-muted-foreground">Doados</div>
+                    <div className="text-xs text-muted-foreground">Doações</div>
                   </div>
                 </div>
 

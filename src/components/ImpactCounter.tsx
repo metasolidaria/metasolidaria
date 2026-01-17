@@ -13,15 +13,15 @@ const stats = [
   {
     icon: Scale,
     value: 1234,
-    suffix: "kg",
-    label: "Peso Perdido",
+    suffix: "",
+    label: "Metas Alcançadas",
     color: "text-secondary",
   },
   {
     icon: Heart,
-    value: 1234,
-    suffix: "kg",
-    label: "Alimentos Doados",
+    value: 1580,
+    suffix: "",
+    label: "Doações Realizadas",
     color: "text-primary",
   },
   {

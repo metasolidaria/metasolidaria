@@ -3,6 +3,7 @@ import { Hero } from "@/components/Hero";
 import { HowItWorks } from "@/components/HowItWorks";
 import { ImpactCounter } from "@/components/ImpactCounter";
 import { GroupsSection } from "@/components/GroupsSection";
+import { PartnersSection } from "@/components/PartnersSection";
 import { Footer } from "@/components/Footer";
 
 const Index = () => {
@@ -18,6 +19,7 @@ const Index = () => {
           <ImpactCounter />
         </div>
         <GroupsSection />
+        <PartnersSection />
       </main>
       <Footer />
     </div>

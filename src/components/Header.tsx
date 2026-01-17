@@ -48,7 +48,7 @@ export const Header = () => {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-8">
-            {["Como Funciona", "Grupos", "Impacto"].map((item) => (
+            {["Como Funciona", "Grupos", "Parceiros", "Impacto"].map((item) => (
               <button
                 key={item}
                 onClick={() =>
@@ -103,7 +103,7 @@ export const Header = () => {
             className="md:hidden bg-card rounded-xl shadow-soft p-4 mb-4"
           >
             <nav className="flex flex-col gap-2">
-              {["Como Funciona", "Grupos", "Impacto"].map((item) => (
+              {["Como Funciona", "Grupos", "Parceiros", "Impacto"].map((item) => (
                 <button
                   key={item}
                   onClick={() =>
