@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Users, MapPin, Target, Gift } from "lucide-react";
+import { X, Users, MapPin, Target, Gift, Lock, Globe } from "lucide-react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
+import { Switch } from "./ui/switch";
 import { useAuth } from "@/hooks/useAuth";
 import { useGroups } from "@/hooks/useGroups";
 
@@ -32,6 +33,7 @@ export const CreateGroupModal = ({ open, onOpenChange, onRequireAuth }: CreateGr
     city: "",
     goal: "",
     donationType: "",
+    isPrivate: false,
   });
 
   useEffect(() => {
@@ -55,6 +57,7 @@ export const CreateGroupModal = ({ open, onOpenChange, onRequireAuth }: CreateGr
       donation_type: formData.donationType,
       goal_2026: parseInt(formData.goal),
       leader_id: user.id,
+      is_private: formData.isPrivate,
     });
 
     setFormData({ 
@@ -62,6 +65,7 @@ export const CreateGroupModal = ({ open, onOpenChange, onRequireAuth }: CreateGr
       city: "", 
       goal: "", 
       donationType: "",
+      isPrivate: false,
     });
     onOpenChange(false);
   };
@@ -195,6 +199,32 @@ export const CreateGroupModal = ({ open, onOpenChange, onRequireAuth }: CreateGr
                       <Gift className="w-3 h-3" />
                       Cada meta alcançada = 1 doação realizada
                     </p>
+                  </div>
+
+                  <div className="flex items-center justify-between p-4 rounded-xl border border-border bg-muted/30">
+                    <div className="flex items-center gap-3">
+                      {formData.isPrivate ? (
+                        <Lock className="w-5 h-5 text-secondary" />
+                      ) : (
+                        <Globe className="w-5 h-5 text-primary" />
+                      )}
+                      <div>
+                        <Label className="text-foreground font-medium">
+                          {formData.isPrivate ? "Grupo Privado" : "Grupo Público"}
+                        </Label>
+                        <p className="text-xs text-muted-foreground">
+                          {formData.isPrivate 
+                            ? "Apenas convidados podem participar" 
+                            : "Qualquer pessoa pode participar"}
+                        </p>
+                      </div>
+                    </div>
+                    <Switch
+                      checked={formData.isPrivate}
+                      onCheckedChange={(checked) =>
+                        setFormData({ ...formData, isPrivate: checked })
+                      }
+                    />
                   </div>
                 </div>
 

@@ -1,8 +1,9 @@
 import { motion } from "framer-motion";
 import { useState } from "react";
-import { Users, Target, MapPin, Plus, Heart, Loader2 } from "lucide-react";
+import { Users, Target, MapPin, Plus, Heart, Loader2, Lock, Globe, Mail } from "lucide-react";
 import { Button } from "./ui/button";
 import { CreateGroupModal } from "./CreateGroupModal";
+import { InviteMemberModal } from "./InviteMemberModal";
 import { useGroups } from "@/hooks/useGroups";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -33,13 +34,24 @@ interface GroupsSectionProps {
 
 export const GroupsSection = ({ onRequireAuth }: GroupsSectionProps) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [inviteModalOpen, setInviteModalOpen] = useState(false);
+  const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
   const { groups, isLoading, joinGroup } = useGroups();
   const { user } = useAuth();
   const { toast } = useToast();
 
-  const handleJoinGroup = (groupId: string) => {
+  const handleJoinGroup = (groupId: string, isPrivate: boolean) => {
     if (!user) {
       onRequireAuth();
+      return;
+    }
+
+    if (isPrivate) {
+      toast({
+        title: "Grupo Privado 🔒",
+        description: "Este grupo requer um convite. Peça ao líder para enviar um convite.",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -50,6 +62,15 @@ export const GroupsSection = ({ onRequireAuth }: GroupsSectionProps) => {
     });
   };
 
+  const handleInviteMembers = (groupId: string) => {
+    if (!user) {
+      onRequireAuth();
+      return;
+    }
+    setSelectedGroupId(groupId);
+    setInviteModalOpen(true);
+  };
+
   const handleCreateGroup = () => {
     if (!user) {
       onRequireAuth();
@@ -57,6 +78,8 @@ export const GroupsSection = ({ onRequireAuth }: GroupsSectionProps) => {
     }
     setIsModalOpen(true);
   };
+
+  const isGroupLeader = (leaderId: string) => user?.id === leaderId;
 
   return (
     <section id="grupos" className="py-24 bg-background">
@@ -108,6 +131,19 @@ export const GroupsSection = ({ onRequireAuth }: GroupsSectionProps) => {
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-foreground/60 to-transparent" />
+                  <div className="absolute top-3 left-3 flex gap-2">
+                    {group.is_private ? (
+                      <span className="bg-secondary/80 backdrop-blur-sm px-2 py-1 rounded-full text-xs text-secondary-foreground flex items-center gap-1">
+                        <Lock className="w-3 h-3" />
+                        Privado
+                      </span>
+                    ) : (
+                      <span className="bg-primary/80 backdrop-blur-sm px-2 py-1 rounded-full text-xs text-primary-foreground flex items-center gap-1">
+                        <Globe className="w-3 h-3" />
+                        Público
+                      </span>
+                    )}
+                  </div>
                   <div className="absolute top-3 right-3">
                     <span className="bg-primary-foreground/20 backdrop-blur-sm px-2 py-1 rounded-full text-xs text-primary-foreground flex items-center gap-1">
                       <span>{donationTypeLabels[group.donation_type]?.icon || "📦"}</span>
@@ -156,14 +192,34 @@ export const GroupsSection = ({ onRequireAuth }: GroupsSectionProps) => {
                     </div>
                   </div>
 
-                  <Button 
-                    className="w-full" 
-                    variant="outline"
-                    onClick={() => handleJoinGroup(group.id)}
-                    disabled={joinGroup.isPending}
-                  >
-                    {joinGroup.isPending ? "Entrando..." : "Participar do Grupo"}
-                  </Button>
+                  <div className="flex gap-2">
+                    {isGroupLeader(group.leader_id) && group.is_private && (
+                      <Button 
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleInviteMembers(group.id)}
+                        className="flex-1"
+                      >
+                        <Mail className="w-4 h-4 mr-1" />
+                        Convidar
+                      </Button>
+                    )}
+                    <Button 
+                      className={isGroupLeader(group.leader_id) && group.is_private ? "flex-1" : "w-full"}
+                      variant="outline"
+                      onClick={() => handleJoinGroup(group.id, group.is_private)}
+                      disabled={joinGroup.isPending || group.is_private}
+                    >
+                      {group.is_private ? (
+                        <>
+                          <Lock className="w-4 h-4 mr-1" />
+                          Apenas Convite
+                        </>
+                      ) : (
+                        joinGroup.isPending ? "Entrando..." : "Participar do Grupo"
+                      )}
+                    </Button>
+                  </div>
                 </div>
               </motion.div>
             ))}
@@ -189,6 +245,12 @@ export const GroupsSection = ({ onRequireAuth }: GroupsSectionProps) => {
         open={isModalOpen} 
         onOpenChange={setIsModalOpen}
         onRequireAuth={onRequireAuth}
+      />
+
+      <InviteMemberModal
+        open={inviteModalOpen}
+        onOpenChange={setInviteModalOpen}
+        groupId={selectedGroupId}
       />
     </section>
   );
