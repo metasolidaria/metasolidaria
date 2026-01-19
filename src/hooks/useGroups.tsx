@@ -97,10 +97,17 @@ export const useGroups = () => {
   });
 
   const joinGroup = useMutation({
-    mutationFn: async ({ groupId, userId, name }: { groupId: string; userId: string; name: string }) => {
+    mutationFn: async ({ groupId, name }: { groupId: string; name: string }) => {
+      // Get the authenticated user's ID from supabase auth
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        throw new Error("Você precisa estar logado para entrar em um grupo");
+      }
+
       const { data, error } = await supabase
         .from("group_members")
-        .insert([{ group_id: groupId, user_id: userId, name }])
+        .insert([{ group_id: groupId, user_id: user.id, name }])
         .select()
         .single();
 

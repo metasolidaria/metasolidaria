@@ -46,7 +46,6 @@ export const GroupsSection = ({ onRequireAuth }: GroupsSectionProps) => {
     const profile = user.user_metadata;
     joinGroup.mutate({
       groupId,
-      userId: user.id,
       name: profile?.full_name || user.email || "Membro",
     });
   };
