@@ -14,6 +14,47 @@ export type Database = {
   }
   public: {
     Tables: {
+      group_invitations: {
+        Row: {
+          created_at: string
+          email: string
+          expires_at: string
+          group_id: string
+          id: string
+          invite_code: string
+          invited_by: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          expires_at?: string
+          group_id: string
+          id?: string
+          invite_code?: string
+          invited_by: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          expires_at?: string
+          group_id?: string
+          id?: string
+          invite_code?: string
+          invited_by?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_invitations_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       group_members: {
         Row: {
           created_at: string
@@ -59,6 +100,7 @@ export type Database = {
           donation_type: string
           goal_2026: number
           id: string
+          is_private: boolean
           leader_id: string
           name: string
           updated_at: string
@@ -69,6 +111,7 @@ export type Database = {
           donation_type: string
           goal_2026?: number
           id?: string
+          is_private?: boolean
           leader_id: string
           name: string
           updated_at?: string
@@ -79,6 +122,7 @@ export type Database = {
           donation_type?: string
           goal_2026?: number
           id?: string
+          is_private?: boolean
           leader_id?: string
           name?: string
           updated_at?: string

@@ -10,9 +10,21 @@ export interface Group {
   goal_2026: number;
   leader_id: string;
   created_at: string;
+  is_private: boolean;
   member_count?: number;
   goals_reached?: number;
   leader_name?: string;
+}
+
+export interface GroupInvitation {
+  id: string;
+  group_id: string;
+  email: string;
+  invite_code: string;
+  invited_by: string;
+  status: string;
+  created_at: string;
+  expires_at: string;
 }
 
 export const useGroups = () => {
@@ -70,6 +82,7 @@ export const useGroups = () => {
       donation_type: string;
       goal_2026: number;
       leader_id: string;
+      is_private?: boolean;
     }) => {
       const { data, error } = await supabase
         .from("groups")
@@ -130,10 +143,105 @@ export const useGroups = () => {
     },
   });
 
+  const inviteToGroup = useMutation({
+    mutationFn: async ({ groupId, email }: { groupId: string; email: string }) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        throw new Error("Você precisa estar logado para convidar membros");
+      }
+
+      const { data, error } = await supabase
+        .from("group_invitations")
+        .insert([{ 
+          group_id: groupId, 
+          email, 
+          invited_by: user.id 
+        }])
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["groups"] });
+      toast({
+        title: "Convite enviado! 📧",
+        description: "O convite foi registrado. Compartilhe o link com a pessoa.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Erro ao enviar convite",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const acceptInvitation = useMutation({
+    mutationFn: async (inviteCode: string) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        throw new Error("Você precisa estar logado para aceitar o convite");
+      }
+
+      // First get the invitation
+      const { data: invitation, error: inviteError } = await supabase
+        .from("group_invitations")
+        .select("*")
+        .eq("invite_code", inviteCode)
+        .eq("status", "pending")
+        .single();
+
+      if (inviteError || !invitation) {
+        throw new Error("Convite inválido ou expirado");
+      }
+
+      // Update invitation status
+      await supabase
+        .from("group_invitations")
+        .update({ status: "accepted" })
+        .eq("id", invitation.id);
+
+      // Add user to group
+      const { data, error } = await supabase
+        .from("group_members")
+        .insert([{ 
+          group_id: invitation.group_id, 
+          user_id: user.id,
+          name: user.user_metadata?.full_name || user.email || "Membro"
+        }])
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["groups"] });
+      toast({
+        title: "Você entrou no grupo! 🎉",
+        description: "Bem-vindo ao grupo privado!",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Erro ao aceitar convite",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   return {
     groups,
     isLoading,
     createGroup,
     joinGroup,
+    inviteToGroup,
+    acceptInvitation,
   };
 };
