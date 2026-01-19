@@ -1,14 +1,16 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Users, MapPin, Target, User, Phone, Gift } from "lucide-react";
+import { X, Users, MapPin, Target, Gift } from "lucide-react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
-import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
+import { useGroups } from "@/hooks/useGroups";
 
 interface CreateGroupModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onRequireAuth: () => void;
 }
 
 const donationTypes = [
@@ -22,25 +24,37 @@ const donationTypes = [
   { id: "outro", label: "Outro", icon: "📦" },
 ];
 
-export const CreateGroupModal = ({ open, onOpenChange }: CreateGroupModalProps) => {
-  const { toast } = useToast();
+export const CreateGroupModal = ({ open, onOpenChange, onRequireAuth }: CreateGroupModalProps) => {
+  const { user } = useAuth();
+  const { createGroup } = useGroups();
   const [formData, setFormData] = useState({
     groupName: "",
     city: "",
     goal: "",
     donationType: "",
-    leaderName: "",
-    leaderWhatsApp: "",
   });
+
+  useEffect(() => {
+    if (open && !user) {
+      onOpenChange(false);
+      onRequireAuth();
+    }
+  }, [open, user, onOpenChange, onRequireAuth]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    const selectedDonation = donationTypes.find(d => d.id === formData.donationType);
-    
-    toast({
-      title: "Grupo criado com sucesso! 🎉",
-      description: `O grupo "${formData.groupName}" está pronto para receber participantes. Meta: ${formData.goal} ${selectedDonation?.label.split(" ")[0].toLowerCase() || "itens"}.`,
+    if (!user) {
+      onRequireAuth();
+      return;
+    }
+
+    createGroup.mutate({
+      name: formData.groupName,
+      city: formData.city,
+      donation_type: formData.donationType,
+      goal_2026: parseInt(formData.goal),
+      leader_id: user.id,
     });
 
     setFormData({ 
@@ -48,17 +62,16 @@ export const CreateGroupModal = ({ open, onOpenChange }: CreateGroupModalProps) 
       city: "", 
       goal: "", 
       donationType: "",
-      leaderName: "",
-      leaderWhatsApp: "",
     });
     onOpenChange(false);
   };
+
+  if (!user) return null;
 
   return (
     <AnimatePresence>
       {open && (
         <>
-          {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -67,7 +80,6 @@ export const CreateGroupModal = ({ open, onOpenChange }: CreateGroupModalProps) 
             className="fixed inset-0 bg-foreground/60 backdrop-blur-sm z-50"
           />
 
-          {/* Modal */}
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -76,7 +88,6 @@ export const CreateGroupModal = ({ open, onOpenChange }: CreateGroupModalProps) 
             className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto"
           >
             <div className="bg-card rounded-2xl shadow-xl w-full max-w-md my-8">
-              {/* Header */}
               <div className="bg-gradient-stats p-6 relative rounded-t-2xl">
                 <button
                   onClick={() => onOpenChange(false)}
@@ -95,56 +106,8 @@ export const CreateGroupModal = ({ open, onOpenChange }: CreateGroupModalProps) 
                 </p>
               </div>
 
-              {/* Form */}
               <form onSubmit={handleSubmit} className="p-6 space-y-5">
-                {/* Leader Info Section */}
-                <div className="space-y-4 pb-4 border-b border-border">
-                  <p className="text-sm font-medium text-muted-foreground">Dados do Líder</p>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="leaderName" className="text-foreground font-medium">
-                      Nome Completo
-                    </Label>
-                    <div className="relative">
-                      <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                      <Input
-                        id="leaderName"
-                        placeholder="Seu nome completo"
-                        value={formData.leaderName}
-                        onChange={(e) =>
-                          setFormData({ ...formData, leaderName: e.target.value })
-                        }
-                        className="pl-11"
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="leaderWhatsApp" className="text-foreground font-medium">
-                      WhatsApp
-                    </Label>
-                    <div className="relative">
-                      <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                      <Input
-                        id="leaderWhatsApp"
-                        type="tel"
-                        placeholder="(00) 00000-0000"
-                        value={formData.leaderWhatsApp}
-                        onChange={(e) =>
-                          setFormData({ ...formData, leaderWhatsApp: e.target.value })
-                        }
-                        className="pl-11"
-                        required
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Group Info Section */}
                 <div className="space-y-4">
-                  <p className="text-sm font-medium text-muted-foreground">Dados do Grupo</p>
-                  
                   <div className="space-y-2">
                     <Label htmlFor="groupName" className="text-foreground font-medium">
                       Nome do Grupo
@@ -248,9 +211,9 @@ export const CreateGroupModal = ({ open, onOpenChange }: CreateGroupModalProps) 
                     type="submit" 
                     variant="hero" 
                     className="flex-1"
-                    disabled={!formData.donationType}
+                    disabled={!formData.donationType || createGroup.isPending}
                   >
-                    Criar Grupo
+                    {createGroup.isPending ? "Criando..." : "Criar Grupo"}
                   </Button>
                 </div>
               </form>

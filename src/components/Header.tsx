@@ -1,11 +1,17 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Scale, Menu, X } from "lucide-react";
+import { Scale, Menu, X, User, LogOut } from "lucide-react";
 import { Button } from "./ui/button";
+import { useAuth } from "@/hooks/useAuth";
 
-export const Header = () => {
+interface HeaderProps {
+  onAuthClick: () => void;
+}
+
+export const Header = ({ onAuthClick }: HeaderProps) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { user, signOut } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -17,6 +23,11 @@ export const Header = () => {
 
   const scrollToSection = (id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+    setIsMobileMenuOpen(false);
+  };
+
+  const handleSignOut = async () => {
+    await signOut();
     setIsMobileMenuOpen(false);
   };
 
@@ -63,15 +74,32 @@ export const Header = () => {
             ))}
           </nav>
 
-          {/* CTA Button */}
-          <div className="hidden md:block">
-            <Button
-              variant={isScrolled ? "default" : "hero-outline"}
-              size="sm"
-              onClick={() => scrollToSection("grupos")}
-            >
-              Criar Grupo
-            </Button>
+          {/* Auth Buttons */}
+          <div className="hidden md:flex items-center gap-3">
+            {user ? (
+              <>
+                <span className={`text-sm ${isScrolled ? "text-foreground" : "text-primary-foreground"}`}>
+                  {user.user_metadata?.full_name || user.email?.split("@")[0]}
+                </span>
+                <Button
+                  variant={isScrolled ? "outline" : "hero-outline"}
+                  size="sm"
+                  onClick={handleSignOut}
+                >
+                  <LogOut className="w-4 h-4" />
+                  Sair
+                </Button>
+              </>
+            ) : (
+              <Button
+                variant={isScrolled ? "default" : "hero-outline"}
+                size="sm"
+                onClick={onAuthClick}
+              >
+                <User className="w-4 h-4" />
+                Entrar
+              </Button>
+            )}
           </div>
 
           {/* Mobile Menu Toggle */}
@@ -114,13 +142,35 @@ export const Header = () => {
                   {item}
                 </button>
               ))}
-              <Button
-                variant="default"
-                className="mt-2"
-                onClick={() => scrollToSection("grupos")}
-              >
-                Criar Grupo
-              </Button>
+              {user ? (
+                <>
+                  <div className="border-t border-border mt-2 pt-2">
+                    <span className="text-sm text-muted-foreground px-3">
+                      {user.user_metadata?.full_name || user.email}
+                    </span>
+                  </div>
+                  <Button
+                    variant="outline"
+                    className="mt-2"
+                    onClick={handleSignOut}
+                  >
+                    <LogOut className="w-4 h-4" />
+                    Sair
+                  </Button>
+                </>
+              ) : (
+                <Button
+                  variant="default"
+                  className="mt-2"
+                  onClick={() => {
+                    onAuthClick();
+                    setIsMobileMenuOpen(false);
+                  }}
+                >
+                  <User className="w-4 h-4" />
+                  Entrar
+                </Button>
+              )}
             </nav>
           </motion.div>
         )}
