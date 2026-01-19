@@ -42,17 +42,19 @@ export const GroupsSection = ({ onRequireAuth }: GroupsSectionProps) => {
 
   const isUserMember = (groupId: string) => userMemberships.includes(groupId);
 
-  const handleJoinGroup = (groupId: string, isPrivate: boolean) => {
+  const handleGroupAction = (groupId: string, isPrivate: boolean) => {
     if (!user) {
       onRequireAuth();
       return;
     }
 
+    // If user is already a member, show group details (for now just a toast, can be a page later)
     if (isUserMember(groupId)) {
       toast({
-        title: "Você já é membro! 👥",
-        description: "Você já faz parte deste grupo.",
+        title: "Bem-vindo ao grupo! 🎉",
+        description: "Em breve você poderá acessar a página do grupo com todas as informações.",
       });
+      // TODO: Navigate to group page when implemented
       return;
     }
 
@@ -216,14 +218,14 @@ export const GroupsSection = ({ onRequireAuth }: GroupsSectionProps) => {
                     )}
                     <Button 
                       className={isGroupLeader(group.leader_id) && group.is_private ? "flex-1" : "w-full"}
-                      variant={isUserMember(group.id) ? "secondary" : "outline"}
-                      onClick={() => handleJoinGroup(group.id, group.is_private)}
-                      disabled={joinGroup.isPending || group.is_private || isUserMember(group.id)}
+                      variant={isUserMember(group.id) ? "default" : "outline"}
+                      onClick={() => handleGroupAction(group.id, group.is_private)}
+                      disabled={joinGroup.isPending || (group.is_private && !isUserMember(group.id))}
                     >
                       {isUserMember(group.id) ? (
                         <>
                           <Users className="w-4 h-4 mr-1" />
-                          Você é membro
+                          Acessar Grupo
                         </>
                       ) : group.is_private ? (
                         <>
