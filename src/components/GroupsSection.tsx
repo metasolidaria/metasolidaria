@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Users, Target, MapPin, Plus, Heart, Loader2, Lock, Globe, Mail } from "lucide-react";
 import { Button } from "./ui/button";
 import { CreateGroupModal } from "./CreateGroupModal";
@@ -39,6 +40,7 @@ export const GroupsSection = ({ onRequireAuth }: GroupsSectionProps) => {
   const { groups, isLoading, joinGroup, userMemberships } = useGroups();
   const { user } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const isUserMember = (groupId: string) => userMemberships.includes(groupId);
 
@@ -48,13 +50,9 @@ export const GroupsSection = ({ onRequireAuth }: GroupsSectionProps) => {
       return;
     }
 
-    // If user is already a member, show group details (for now just a toast, can be a page later)
+    // If user is already a member, navigate to group page
     if (isUserMember(groupId)) {
-      toast({
-        title: "Bem-vindo ao grupo! 🎉",
-        description: "Em breve você poderá acessar a página do grupo com todas as informações.",
-      });
-      // TODO: Navigate to group page when implemented
+      navigate(`/grupo/${groupId}`);
       return;
     }
 
@@ -68,10 +66,17 @@ export const GroupsSection = ({ onRequireAuth }: GroupsSectionProps) => {
     }
 
     const profile = user.user_metadata;
-    joinGroup.mutate({
-      groupId,
-      name: profile?.full_name || user.email || "Membro",
-    });
+    joinGroup.mutate(
+      {
+        groupId,
+        name: profile?.full_name || user.email || "Membro",
+      },
+      {
+        onSuccess: () => {
+          navigate(`/grupo/${groupId}`);
+        },
+      }
+    );
   };
 
   const handleInviteMembers = (groupId: string) => {
