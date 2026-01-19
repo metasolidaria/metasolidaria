@@ -36,13 +36,23 @@ export const GroupsSection = ({ onRequireAuth }: GroupsSectionProps) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [inviteModalOpen, setInviteModalOpen] = useState(false);
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
-  const { groups, isLoading, joinGroup } = useGroups();
+  const { groups, isLoading, joinGroup, userMemberships } = useGroups();
   const { user } = useAuth();
   const { toast } = useToast();
+
+  const isUserMember = (groupId: string) => userMemberships.includes(groupId);
 
   const handleJoinGroup = (groupId: string, isPrivate: boolean) => {
     if (!user) {
       onRequireAuth();
+      return;
+    }
+
+    if (isUserMember(groupId)) {
+      toast({
+        title: "Você já é membro! 👥",
+        description: "Você já faz parte deste grupo.",
+      });
       return;
     }
 
@@ -206,11 +216,16 @@ export const GroupsSection = ({ onRequireAuth }: GroupsSectionProps) => {
                     )}
                     <Button 
                       className={isGroupLeader(group.leader_id) && group.is_private ? "flex-1" : "w-full"}
-                      variant="outline"
+                      variant={isUserMember(group.id) ? "secondary" : "outline"}
                       onClick={() => handleJoinGroup(group.id, group.is_private)}
-                      disabled={joinGroup.isPending || group.is_private}
+                      disabled={joinGroup.isPending || group.is_private || isUserMember(group.id)}
                     >
-                      {group.is_private ? (
+                      {isUserMember(group.id) ? (
+                        <>
+                          <Users className="w-4 h-4 mr-1" />
+                          Você é membro
+                        </>
+                      ) : group.is_private ? (
                         <>
                           <Lock className="w-4 h-4 mr-1" />
                           Apenas Convite

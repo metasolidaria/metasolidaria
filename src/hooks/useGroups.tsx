@@ -31,6 +31,23 @@ export const useGroups = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  // Query to get user's current memberships
+  const { data: userMemberships } = useQuery({
+    queryKey: ["userMemberships"],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return [];
+
+      const { data, error } = await supabase
+        .from("group_members")
+        .select("group_id")
+        .eq("user_id", user.id);
+
+      if (error) throw error;
+      return data?.map(m => m.group_id) || [];
+    },
+  });
+
   const { data: groups, isLoading } = useQuery({
     queryKey: ["groups"],
     queryFn: async () => {
@@ -118,6 +135,18 @@ export const useGroups = () => {
         throw new Error("Você precisa estar logado para entrar em um grupo");
       }
 
+      // Check if user is already a member
+      const { data: existingMember } = await supabase
+        .from("group_members")
+        .select("id")
+        .eq("group_id", groupId)
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (existingMember) {
+        throw new Error("Você já é membro deste grupo");
+      }
+
       const { data, error } = await supabase
         .from("group_members")
         .insert([{ group_id: groupId, user_id: user.id, name }])
@@ -129,6 +158,7 @@ export const useGroups = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["groups"] });
+      queryClient.invalidateQueries({ queryKey: ["userMemberships"] });
       toast({
         title: "Você entrou no grupo! 🎉",
         description: "Agora você faz parte desta jornada solidária.",
@@ -243,5 +273,6 @@ export const useGroups = () => {
     joinGroup,
     inviteToGroup,
     acceptInvitation,
+    userMemberships: userMemberships || [],
   };
 };
