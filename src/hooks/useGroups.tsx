@@ -11,9 +11,11 @@ export interface Group {
   leader_id: string;
   created_at: string;
   is_private: boolean;
+  leader_name?: string;
+  leader_whatsapp?: string;
+  description?: string;
   member_count?: number;
   goals_reached?: number;
-  leader_name?: string;
 }
 
 export interface GroupInvitation {
@@ -100,6 +102,9 @@ export const useGroups = () => {
       goal_2026: number;
       leader_id: string;
       is_private?: boolean;
+      leader_name?: string;
+      leader_whatsapp?: string;
+      description?: string;
     }) => {
       const { data, error } = await supabase
         .from("groups")
