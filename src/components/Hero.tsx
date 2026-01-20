@@ -2,12 +2,21 @@ import { motion } from "framer-motion";
 import { ArrowDown, Heart, Scale, Users } from "lucide-react";
 import { Button } from "./ui/button";
 import heroImage from "@/assets/hero-community.jpg";
+import { useImpactStats } from "@/hooks/useImpactStats";
+
+const formatNumber = (num: number): string => {
+  if (num >= 1000) {
+    return (num / 1000).toFixed(1).replace(/\.0$/, '') + 'K';
+  }
+  return num.toString();
+};
 
 export const Hero = () => {
+  const { data: stats } = useImpactStats();
+
   const scrollToGroups = () => {
     document.getElementById("grupos")?.scrollIntoView({ behavior: "smooth" });
   };
-
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
       {/* Background Image with Overlay */}
@@ -69,10 +78,10 @@ export const Hero = () => {
             className="grid grid-cols-3 gap-4 md:gap-8 max-w-xl mx-auto"
           >
             {[
-              { icon: Users, label: "Grupos", value: "24" },
-              { icon: Scale, label: "Metas", value: "1.2K" },
-              { icon: Heart, label: "Doações", value: "1.2K" },
-            ].map((stat, index) => (
+              { icon: Users, label: "Grupos", value: formatNumber(stats?.groups || 0) },
+              { icon: Scale, label: "Metas", value: formatNumber(stats?.goalsReached || 0) },
+              { icon: Heart, label: "Doações", value: formatNumber(stats?.donations || 0) },
+            ].map((stat) => (
               <div
                 key={stat.label}
                 className="bg-primary-foreground/10 backdrop-blur-sm rounded-xl p-4 border border-primary-foreground/10"
