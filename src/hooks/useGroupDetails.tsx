@@ -189,6 +189,62 @@ export const useGroupDetails = (groupId: string | undefined) => {
     },
   });
 
+  // Remove member mutation (for leaders)
+  const removeMember = useMutation({
+    mutationFn: async (memberId: string) => {
+      const { error } = await supabase
+        .from("group_members")
+        .delete()
+        .eq("id", memberId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["groupMembers", groupId] });
+      queryClient.invalidateQueries({ queryKey: ["groupProgress", groupId] });
+      toast({
+        title: "Membro removido",
+        description: "O membro foi removido do grupo.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Erro ao remover membro",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Leave group mutation (for members)
+  const leaveGroup = useMutation({
+    mutationFn: async () => {
+      if (!userMember) throw new Error("Você não é membro deste grupo");
+
+      const { error } = await supabase
+        .from("group_members")
+        .delete()
+        .eq("id", userMember.id);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["groupMembers", groupId] });
+      queryClient.invalidateQueries({ queryKey: ["userGroups"] });
+      toast({
+        title: "Você saiu do grupo",
+        description: "Você não é mais membro deste grupo.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Erro ao sair do grupo",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   return {
     group,
     members,
@@ -198,5 +254,7 @@ export const useGroupDetails = (groupId: string | undefined) => {
     isLoading: groupLoading || membersLoading || progressLoading,
     addProgress,
     deleteProgress,
+    removeMember,
+    leaveGroup,
   };
 };

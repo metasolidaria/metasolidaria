@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, Users, Target, MapPin, Lock, Globe, Plus, Trash2, Loader2 } from "lucide-react";
+import { ArrowLeft, Users, Target, MapPin, Lock, Globe, Plus, Trash2, Loader2, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { useGroupDetails } from "@/hooks/useGroupDetails";
@@ -9,6 +9,16 @@ import { AddProgressModal } from "@/components/AddProgressModal";
 import { useState } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const donationTypeLabels: Record<string, { label: string; icon: string; unit: string }> = {
   alimentos: { label: "Alimentos", icon: "🍎", unit: "kg" },
@@ -26,6 +36,8 @@ export default function GroupPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [addProgressOpen, setAddProgressOpen] = useState(false);
+  const [leaveDialogOpen, setLeaveDialogOpen] = useState(false);
+  const [memberToRemove, setMemberToRemove] = useState<{ id: string; name: string } | null>(null);
 
   const { 
     group, 
@@ -34,8 +46,28 @@ export default function GroupPage() {
     totalProgress,
     userMember,
     isLoading, 
-    deleteProgress 
+    deleteProgress,
+    removeMember,
+    leaveGroup,
   } = useGroupDetails(id);
+
+  const handleLeaveGroup = () => {
+    leaveGroup.mutate(undefined, {
+      onSuccess: () => {
+        navigate("/");
+      },
+    });
+  };
+
+  const handleRemoveMember = () => {
+    if (memberToRemove) {
+      removeMember.mutate(memberToRemove.id, {
+        onSuccess: () => {
+          setMemberToRemove(null);
+        },
+      });
+    }
+  };
 
   if (isLoading) {
     return (
@@ -106,12 +138,24 @@ export default function GroupPage() {
               </div>
             </div>
 
-            {userMember && (
-              <Button onClick={() => setAddProgressOpen(true)}>
-                <Plus className="w-4 h-4 mr-2" />
-                Registrar Doação
-              </Button>
-            )}
+            <div className="flex gap-2">
+              {userMember && !isLeader && (
+                <Button 
+                  variant="outline" 
+                  onClick={() => setLeaveDialogOpen(true)}
+                  disabled={leaveGroup.isPending}
+                >
+                  <LogOut className="w-4 h-4 mr-2" />
+                  Sair do Grupo
+                </Button>
+              )}
+              {userMember && (
+                <Button onClick={() => setAddProgressOpen(true)}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Registrar Doação
+                </Button>
+              )}
+            </div>
           </motion.div>
         </div>
       </div>
@@ -246,6 +290,18 @@ export default function GroupPage() {
                           </p>
                         </div>
                       </div>
+                      
+                      {isLeader && member.user_id !== group.leader_id && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setMemberToRemove({ id: member.id, name: member.name })}
+                          disabled={removeMember.isPending}
+                          className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -296,6 +352,50 @@ export default function GroupPage() {
           donationType={donationType}
         />
       )}
+
+      {/* Leave Group Confirmation Dialog */}
+      <AlertDialog open={leaveDialogOpen} onOpenChange={setLeaveDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Sair do grupo?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Você tem certeza que deseja sair do grupo "{group.name}"? 
+              Suas doações registradas permanecerão no histórico.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleLeaveGroup}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Sair do Grupo
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Remove Member Confirmation Dialog */}
+      <AlertDialog open={!!memberToRemove} onOpenChange={(open) => !open && setMemberToRemove(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remover membro?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Você tem certeza que deseja remover "{memberToRemove?.name}" do grupo? 
+              As doações registradas por este membro permanecerão no histórico.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleRemoveMember}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Remover Membro
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
