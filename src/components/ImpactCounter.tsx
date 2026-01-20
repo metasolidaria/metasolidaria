@@ -1,37 +1,7 @@
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { Scale, Users, Heart, TrendingUp } from "lucide-react";
-
-const stats = [
-  {
-    icon: Users,
-    value: 247,
-    suffix: "",
-    label: "Participantes Ativos",
-    color: "text-primary",
-  },
-  {
-    icon: Scale,
-    value: 1234,
-    suffix: "",
-    label: "Metas Alcançadas",
-    color: "text-secondary",
-  },
-  {
-    icon: Heart,
-    value: 1580,
-    suffix: "",
-    label: "Doações Realizadas",
-    color: "text-primary",
-  },
-  {
-    icon: TrendingUp,
-    value: 24,
-    suffix: "",
-    label: "Grupos Ativos",
-    color: "text-secondary",
-  },
-];
+import { useImpactStats } from "@/hooks/useImpactStats";
 
 const AnimatedNumber = ({
   value,
@@ -71,6 +41,34 @@ const AnimatedNumber = ({
 
 export const ImpactCounter = () => {
   const [isInView, setIsInView] = useState(false);
+  const { data: impactData } = useImpactStats();
+
+  const stats = [
+    {
+      icon: Users,
+      value: impactData?.participants || 0,
+      suffix: "",
+      label: "Participantes Ativos",
+    },
+    {
+      icon: Scale,
+      value: impactData?.goalsReached || 0,
+      suffix: "",
+      label: "Metas Alcançadas",
+    },
+    {
+      icon: Heart,
+      value: impactData?.donations || 0,
+      suffix: "",
+      label: "Doações Realizadas",
+    },
+    {
+      icon: TrendingUp,
+      value: impactData?.groups || 0,
+      suffix: "",
+      label: "Grupos Ativos",
+    },
+  ];
 
   return (
     <section className="py-20 bg-gradient-stats relative overflow-hidden">
