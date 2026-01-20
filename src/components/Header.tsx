@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Scale, Menu, X, User, LogOut } from "lucide-react";
+import { Menu, X, User, LogOut } from "lucide-react";
 import { Button } from "./ui/button";
 import { useAuth } from "@/hooks/useAuth";
+import logo from "@/assets/logo.jpg";
 
 interface HeaderProps {
   onAuthClick: () => void;
@@ -45,9 +46,7 @@ export const Header = ({ onAuthClick }: HeaderProps) => {
         <div className="flex items-center justify-between h-16 md:h-20">
           {/* Logo */}
           <div className="flex items-center gap-2">
-            <div className="w-10 h-10 bg-gradient-hero rounded-xl flex items-center justify-center">
-              <Scale className="w-5 h-5 text-primary-foreground" />
-            </div>
+            <img src={logo} alt="Meta Solidária" className="w-10 h-10 rounded-xl object-cover" />
             <span
               className={`text-xl font-bold transition-colors ${
                 isScrolled ? "text-foreground" : "text-primary-foreground"
