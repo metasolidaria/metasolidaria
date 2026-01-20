@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Mail, Lock, User, Phone, Loader2, ArrowLeft } from "lucide-react";
+import { X, Mail, User, Phone, Loader2, ArrowLeft } from "lucide-react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { PasswordStrengthIndicator, validatePasswordStrength } from "./PasswordStrengthIndicator";
+import { PasswordInput } from "./PasswordInput";
 
 interface AuthModalProps {
   open: boolean;
@@ -208,21 +209,12 @@ export const AuthModal = ({ open, onOpenChange, defaultMode = "login" }: AuthMod
                         </button>
                       )}
                     </div>
-                    <div className="relative">
-                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                      <Input
-                        id="password"
-                        type="password"
-                        placeholder="••••••••"
-                        value={formData.password}
-                        onChange={(e) =>
-                          setFormData({ ...formData, password: e.target.value })
-                        }
-                        className="pl-11"
-                        required
-                        minLength={mode === "signup" ? 8 : 6}
-                      />
-                    </div>
+                    <PasswordInput
+                      id="password"
+                      value={formData.password}
+                      onChange={(value) => setFormData({ ...formData, password: value })}
+                      minLength={mode === "signup" ? 8 : 6}
+                    />
                     {mode === "signup" && (
                       <PasswordStrengthIndicator password={formData.password} />
                     )}
