@@ -6,6 +6,7 @@ import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { PasswordStrengthIndicator, validatePasswordStrength } from "./PasswordStrengthIndicator";
 
 interface AuthModalProps {
   open: boolean;
@@ -47,6 +48,16 @@ export const AuthModal = ({ open, onOpenChange, defaultMode = "login" }: AuthMod
         });
         onOpenChange(false);
       } else {
+        const passwordError = validatePasswordStrength(formData.password);
+        if (passwordError) {
+          toast({
+            title: "Senha inválida",
+            description: passwordError,
+            variant: "destructive",
+          });
+          setLoading(false);
+          return;
+        }
         const { error } = await signUp(
           formData.email,
           formData.password,
@@ -209,9 +220,12 @@ export const AuthModal = ({ open, onOpenChange, defaultMode = "login" }: AuthMod
                         }
                         className="pl-11"
                         required
-                        minLength={6}
+                        minLength={mode === "signup" ? 8 : 6}
                       />
                     </div>
+                    {mode === "signup" && (
+                      <PasswordStrengthIndicator password={formData.password} />
+                    )}
                   </div>
                 )}
 

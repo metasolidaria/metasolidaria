@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
+import { PasswordStrengthIndicator, validatePasswordStrength } from "@/components/PasswordStrengthIndicator";
 
 const ResetPassword = () => {
   const { updatePassword, session } = useAuth();
@@ -47,10 +48,11 @@ const ResetPassword = () => {
       return;
     }
 
-    if (formData.password.length < 6) {
+    const passwordError = validatePasswordStrength(formData.password);
+    if (passwordError) {
       toast({
-        title: "Senha muito curta",
-        description: "A senha deve ter pelo menos 6 caracteres.",
+        title: "Senha inválida",
+        description: passwordError,
         variant: "destructive",
       });
       return;
@@ -133,9 +135,10 @@ const ResetPassword = () => {
                 }
                 className="pl-11"
                 required
-                minLength={6}
+                minLength={8}
               />
             </div>
+            <PasswordStrengthIndicator password={formData.password} />
           </div>
 
           <div className="space-y-2">
@@ -152,7 +155,7 @@ const ResetPassword = () => {
                 }
                 className="pl-11"
                 required
-                minLength={6}
+                minLength={8}
               />
             </div>
           </div>
