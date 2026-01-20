@@ -190,6 +190,8 @@ export type Database = {
           description: string | null
           id: string
           is_approved: boolean
+          latitude: number | null
+          longitude: number | null
           name: string
           specialty: string
           submitted_by: string | null
@@ -202,6 +204,8 @@ export type Database = {
           description?: string | null
           id?: string
           is_approved?: boolean
+          latitude?: number | null
+          longitude?: number | null
           name: string
           specialty: string
           submitted_by?: string | null
@@ -214,6 +218,8 @@ export type Database = {
           description?: string | null
           id?: string
           is_approved?: boolean
+          latitude?: number | null
+          longitude?: number | null
           name?: string
           specialty?: string
           submitted_by?: string | null
