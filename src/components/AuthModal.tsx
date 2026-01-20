@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Mail, Lock, User, Phone, Loader2 } from "lucide-react";
+import { X, Mail, Lock, User, Phone, Loader2, ArrowLeft } from "lucide-react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
@@ -14,9 +14,9 @@ interface AuthModalProps {
 }
 
 export const AuthModal = ({ open, onOpenChange, defaultMode = "login" }: AuthModalProps) => {
-  const { signIn, signUp } = useAuth();
+  const { signIn, signUp, resetPassword } = useAuth();
   const { toast } = useToast();
-  const [mode, setMode] = useState<"login" | "signup">(defaultMode);
+  const [mode, setMode] = useState<"login" | "signup" | "forgot">(defaultMode);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
@@ -30,7 +30,15 @@ export const AuthModal = ({ open, onOpenChange, defaultMode = "login" }: AuthMod
     setLoading(true);
 
     try {
-      if (mode === "login") {
+      if (mode === "forgot") {
+        const { error } = await resetPassword(formData.email);
+        if (error) throw error;
+        toast({
+          title: "Email enviado! 📧",
+          description: "Verifique sua caixa de entrada para redefinir sua senha.",
+        });
+        setMode("login");
+      } else if (mode === "login") {
         const { error } = await signIn(formData.email, formData.password);
         if (error) throw error;
         toast({
@@ -84,6 +92,14 @@ export const AuthModal = ({ open, onOpenChange, defaultMode = "login" }: AuthMod
           >
             <div className="bg-card rounded-2xl shadow-xl w-full max-w-md">
               <div className="bg-gradient-stats p-6 relative rounded-t-2xl">
+                {mode === "forgot" && (
+                  <button
+                    onClick={() => setMode("login")}
+                    className="absolute top-4 left-4 w-8 h-8 rounded-full bg-primary-foreground/20 flex items-center justify-center hover:bg-primary-foreground/30 transition-colors"
+                  >
+                    <ArrowLeft className="w-4 h-4 text-primary-foreground" />
+                  </button>
+                )}
                 <button
                   onClick={() => onOpenChange(false)}
                   className="absolute top-4 right-4 w-8 h-8 rounded-full bg-primary-foreground/20 flex items-center justify-center hover:bg-primary-foreground/30 transition-colors"
@@ -91,15 +107,21 @@ export const AuthModal = ({ open, onOpenChange, defaultMode = "login" }: AuthMod
                   <X className="w-4 h-4 text-primary-foreground" />
                 </button>
                 <div className="w-14 h-14 bg-primary-foreground/20 rounded-xl flex items-center justify-center mb-4">
-                  <User className="w-7 h-7 text-primary-foreground" />
+                  {mode === "forgot" ? (
+                    <Mail className="w-7 h-7 text-primary-foreground" />
+                  ) : (
+                    <User className="w-7 h-7 text-primary-foreground" />
+                  )}
                 </div>
                 <h2 className="text-2xl font-bold text-primary-foreground">
-                  {mode === "login" ? "Entrar" : "Criar Conta"}
+                  {mode === "login" ? "Entrar" : mode === "signup" ? "Criar Conta" : "Recuperar Senha"}
                 </h2>
                 <p className="text-primary-foreground/80 mt-1">
                   {mode === "login"
                     ? "Acesse sua conta para gerenciar grupos"
-                    : "Junte-se à comunidade solidária"}
+                    : mode === "signup"
+                    ? "Junte-se à comunidade solidária"
+                    : "Digite seu email para receber o link"}
                 </p>
               </div>
 
@@ -161,55 +183,70 @@ export const AuthModal = ({ open, onOpenChange, defaultMode = "login" }: AuthMod
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="password">Senha</Label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                    <Input
-                      id="password"
-                      type="password"
-                      placeholder="••••••••"
-                      value={formData.password}
-                      onChange={(e) =>
-                        setFormData({ ...formData, password: e.target.value })
-                      }
-                      className="pl-11"
-                      required
-                      minLength={6}
-                    />
+                {mode !== "forgot" && (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="password">Senha</Label>
+                      {mode === "login" && (
+                        <button
+                          type="button"
+                          onClick={() => setMode("forgot")}
+                          className="text-xs text-primary hover:underline"
+                        >
+                          Esqueci minha senha
+                        </button>
+                      )}
+                    </div>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                      <Input
+                        id="password"
+                        type="password"
+                        placeholder="••••••••"
+                        value={formData.password}
+                        onChange={(e) =>
+                          setFormData({ ...formData, password: e.target.value })
+                        }
+                        className="pl-11"
+                        required
+                        minLength={6}
+                      />
+                    </div>
                   </div>
-                </div>
+                )}
 
                 <Button type="submit" variant="hero" className="w-full" disabled={loading}>
                   {loading && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
-                  {mode === "login" ? "Entrar" : "Criar Conta"}
+                  {mode === "login" ? "Entrar" : mode === "signup" ? "Criar Conta" : "Enviar link de recuperação"}
                 </Button>
 
-                <p className="text-center text-sm text-muted-foreground">
-                  {mode === "login" ? (
-                    <>
-                      Não tem conta?{" "}
-                      <button
-                        type="button"
-                        onClick={() => setMode("signup")}
-                        className="text-primary font-medium hover:underline"
-                      >
-                        Criar conta
-                      </button>
-                    </>
-                  ) : (
-                    <>
-                      Já tem conta?{" "}
-                      <button
-                        type="button"
-                        onClick={() => setMode("login")}
-                        className="text-primary font-medium hover:underline"
-                      >
-                        Entrar
-                      </button>
-                    </>
-                  )}
-                </p>
+                {mode !== "forgot" && (
+                  <p className="text-center text-sm text-muted-foreground">
+                    {mode === "login" ? (
+                      <>
+                        Não tem conta?{" "}
+                        <button
+                          type="button"
+                          onClick={() => setMode("signup")}
+                          className="text-primary font-medium hover:underline"
+                        >
+                          Criar conta
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        Já tem conta?{" "}
+                        <button
+                          type="button"
+                          onClick={() => setMode("login")}
+                          className="text-primary font-medium hover:underline"
+                        >
+                          Entrar
+                        </button>
+                      </>
+                    )}
+                  </p>
+                )}
               </form>
             </div>
           </motion.div>
