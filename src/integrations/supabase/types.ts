@@ -142,33 +142,42 @@ export type Database = {
         Row: {
           city: string
           created_at: string
+          description: string | null
           donation_type: string
           goal_2026: number
           id: string
           is_private: boolean
           leader_id: string
+          leader_name: string | null
+          leader_whatsapp: string | null
           name: string
           updated_at: string
         }
         Insert: {
           city: string
           created_at?: string
+          description?: string | null
           donation_type: string
           goal_2026?: number
           id?: string
           is_private?: boolean
           leader_id: string
+          leader_name?: string | null
+          leader_whatsapp?: string | null
           name: string
           updated_at?: string
         }
         Update: {
           city?: string
           created_at?: string
+          description?: string | null
           donation_type?: string
           goal_2026?: number
           id?: string
           is_private?: boolean
           leader_id?: string
+          leader_name?: string | null
+          leader_whatsapp?: string | null
           name?: string
           updated_at?: string
         }

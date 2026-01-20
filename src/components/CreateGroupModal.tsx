@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Users, MapPin, Target, Gift, Lock, Globe } from "lucide-react";
+import { X, Users, MapPin, Target, Gift, Lock, Globe, User, Phone, FileText } from "lucide-react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Switch } from "./ui/switch";
+import { Textarea } from "./ui/textarea";
 import { useAuth } from "@/hooks/useAuth";
 import { useGroups } from "@/hooks/useGroups";
 
@@ -34,6 +35,9 @@ export const CreateGroupModal = ({ open, onOpenChange, onRequireAuth }: CreateGr
     goal: "",
     donationType: "",
     isPrivate: false,
+    leaderName: "",
+    leaderWhatsapp: "",
+    description: "",
   });
 
   useEffect(() => {
@@ -58,6 +62,9 @@ export const CreateGroupModal = ({ open, onOpenChange, onRequireAuth }: CreateGr
       goal_2026: parseInt(formData.goal),
       leader_id: user.id,
       is_private: formData.isPrivate,
+      leader_name: formData.leaderName,
+      leader_whatsapp: formData.leaderWhatsapp,
+      description: formData.description,
     });
 
     setFormData({ 
@@ -66,6 +73,9 @@ export const CreateGroupModal = ({ open, onOpenChange, onRequireAuth }: CreateGr
       goal: "", 
       donationType: "",
       isPrivate: false,
+      leaderName: "",
+      leaderWhatsapp: "",
+      description: "",
     });
     onOpenChange(false);
   };
@@ -113,6 +123,44 @@ export const CreateGroupModal = ({ open, onOpenChange, onRequireAuth }: CreateGr
               <form onSubmit={handleSubmit} className="p-6 space-y-5">
                 <div className="space-y-4">
                   <div className="space-y-2">
+                    <Label htmlFor="leaderName" className="text-foreground font-medium">
+                      Nome do Líder
+                    </Label>
+                    <div className="relative">
+                      <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                      <Input
+                        id="leaderName"
+                        placeholder="Seu nome completo"
+                        value={formData.leaderName}
+                        onChange={(e) =>
+                          setFormData({ ...formData, leaderName: e.target.value })
+                        }
+                        className="pl-11"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="leaderWhatsapp" className="text-foreground font-medium">
+                      WhatsApp do Líder
+                    </Label>
+                    <div className="relative">
+                      <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                      <Input
+                        id="leaderWhatsapp"
+                        placeholder="(11) 99999-9999"
+                        value={formData.leaderWhatsapp}
+                        onChange={(e) =>
+                          setFormData({ ...formData, leaderWhatsapp: e.target.value })
+                        }
+                        className="pl-11"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
                     <Label htmlFor="groupName" className="text-foreground font-medium">
                       Nome do Grupo
                     </Label>
@@ -127,6 +175,24 @@ export const CreateGroupModal = ({ open, onOpenChange, onRequireAuth }: CreateGr
                         }
                         className="pl-11"
                         required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="description" className="text-foreground font-medium">
+                      Descrição do Grupo
+                    </Label>
+                    <div className="relative">
+                      <FileText className="absolute left-3 top-3 w-5 h-5 text-muted-foreground" />
+                      <Textarea
+                        id="description"
+                        placeholder="Descreva o propósito e objetivo do seu grupo..."
+                        value={formData.description}
+                        onChange={(e) =>
+                          setFormData({ ...formData, description: e.target.value })
+                        }
+                        className="pl-11 min-h-[80px]"
                       />
                     </div>
                   </div>
