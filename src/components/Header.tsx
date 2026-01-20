@@ -105,6 +105,7 @@ export const Header = ({ onAuthClick }: HeaderProps) => {
           <button
             className="md:hidden"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            aria-label={isMobileMenuOpen ? "Fechar menu" : "Abrir menu"}
           >
             {isMobileMenuOpen ? (
               <X
