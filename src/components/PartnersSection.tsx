@@ -10,8 +10,8 @@ import {
   Brain,
   Dumbbell,
   HeartPulse,
-  Baby,
-  Loader2
+  Loader2,
+  ShoppingCart
 } from "lucide-react";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
@@ -24,7 +24,8 @@ const categories = [
   { id: "Psicólogo", label: "Psicólogo", icon: Brain },
   { id: "Personal Trainer", label: "Personal Trainer", icon: Dumbbell },
   { id: "Fisioterapeuta", label: "Fisioterapeuta", icon: HeartPulse },
-  { id: "Pediatra", label: "Pediatra", icon: Baby },
+  { id: "Academia", label: "Academia", icon: Dumbbell },
+  { id: "Supermercado", label: "Supermercado", icon: ShoppingCart },
 ];
 
 const placeholderImages = [
