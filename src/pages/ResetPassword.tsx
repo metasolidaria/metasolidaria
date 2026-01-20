@@ -2,12 +2,12 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Lock, Loader2, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { PasswordStrengthIndicator, validatePasswordStrength } from "@/components/PasswordStrengthIndicator";
+import { PasswordInput } from "@/components/PasswordInput";
 
 const ResetPassword = () => {
   const { updatePassword, session } = useAuth();
@@ -123,41 +123,23 @@ const ResetPassword = () => {
         <form onSubmit={handleSubmit} className="p-6 space-y-5">
           <div className="space-y-2">
             <Label htmlFor="password">Nova Senha</Label>
-            <div className="relative">
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-              <Input
-                id="password"
-                type="password"
-                placeholder="••••••••"
-                value={formData.password}
-                onChange={(e) =>
-                  setFormData({ ...formData, password: e.target.value })
-                }
-                className="pl-11"
-                required
-                minLength={8}
-              />
-            </div>
+            <PasswordInput
+              id="password"
+              value={formData.password}
+              onChange={(value) => setFormData({ ...formData, password: value })}
+              minLength={8}
+            />
             <PasswordStrengthIndicator password={formData.password} />
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="confirmPassword">Confirmar Senha</Label>
-            <div className="relative">
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-              <Input
-                id="confirmPassword"
-                type="password"
-                placeholder="••••••••"
-                value={formData.confirmPassword}
-                onChange={(e) =>
-                  setFormData({ ...formData, confirmPassword: e.target.value })
-                }
-                className="pl-11"
-                required
-                minLength={8}
-              />
-            </div>
+            <PasswordInput
+              id="confirmPassword"
+              value={formData.confirmPassword}
+              onChange={(value) => setFormData({ ...formData, confirmPassword: value })}
+              minLength={8}
+            />
           </div>
 
           <Button type="submit" variant="hero" className="w-full" disabled={loading}>
