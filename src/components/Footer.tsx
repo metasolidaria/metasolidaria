@@ -1,4 +1,5 @@
-import { Heart, Scale } from "lucide-react";
+import { Heart } from "lucide-react";
+import logo from "@/assets/logo.jpg";
 
 export const Footer = () => {
   return (
@@ -6,9 +7,7 @@ export const Footer = () => {
       <div className="container mx-auto px-4">
         <div className="flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-2">
-            <div className="w-10 h-10 bg-gradient-hero rounded-xl flex items-center justify-center">
-              <Scale className="w-5 h-5 text-primary-foreground" />
-            </div>
+            <img src={logo} alt="Meta Solidária" className="w-10 h-10 rounded-xl object-cover" />
             <span className="text-xl font-bold text-primary-foreground">
               Meta Solidária
             </span>
