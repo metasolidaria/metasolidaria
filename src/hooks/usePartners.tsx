@@ -12,6 +12,8 @@ export interface Partner {
   is_approved: boolean;
   submitted_by: string | null;
   created_at: string;
+  latitude: number | null;
+  longitude: number | null;
 }
 
 export const usePartners = () => {

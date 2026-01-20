@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { 
   MapPin, 
   Phone, 
@@ -11,11 +11,15 @@ import {
   Dumbbell,
   HeartPulse,
   Loader2,
-  ShoppingCart
+  ShoppingCart,
+  Navigation,
+  X
 } from "lucide-react";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 import { usePartners } from "@/hooks/usePartners";
+import { useGeolocation, calculateDistance } from "@/hooks/useGeolocation";
+import { Slider } from "./ui/slider";
 
 const categories = [
   { id: "all", label: "Todos", icon: Star },
@@ -40,16 +44,59 @@ const placeholderImages = [
 export const PartnersSection = () => {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [searchCity, setSearchCity] = useState("");
+  const [radiusKm, setRadiusKm] = useState(50);
+  const [useProximity, setUseProximity] = useState(false);
+  
   const { partners, isLoading } = usePartners();
+  const { latitude, longitude, loading: geoLoading, error: geoError, requestLocation, hasLocation } = useGeolocation();
 
-  const filteredPartners = (partners || []).filter((partner) => {
-    const matchesCategory =
-      selectedCategory === "all" || partner.specialty === selectedCategory;
-    const matchesCity =
-      !searchCity ||
-      partner.city.toLowerCase().includes(searchCity.toLowerCase());
-    return matchesCategory && matchesCity;
-  });
+  const handleEnableProximity = () => {
+    if (!hasLocation) {
+      requestLocation();
+    }
+    setUseProximity(true);
+  };
+
+  const handleDisableProximity = () => {
+    setUseProximity(false);
+  };
+
+  const filteredAndSortedPartners = useMemo(() => {
+    let result = (partners || []).filter((partner) => {
+      const matchesCategory =
+        selectedCategory === "all" || partner.specialty === selectedCategory;
+      const matchesCity =
+        !searchCity ||
+        partner.city.toLowerCase().includes(searchCity.toLowerCase());
+      return matchesCategory && matchesCity;
+    });
+
+    // Se proximidade está ativa e temos localização
+    if (useProximity && hasLocation && latitude && longitude) {
+      result = result
+        .map((partner) => {
+          const distance =
+            partner.latitude && partner.longitude
+              ? calculateDistance(latitude, longitude, partner.latitude, partner.longitude)
+              : null;
+          return { ...partner, distance };
+        })
+        .filter((partner) => {
+          // Filtrar por raio apenas se o parceiro tem coordenadas
+          if (partner.distance === null) return true; // Mostrar parceiros sem coordenadas
+          return partner.distance <= radiusKm;
+        })
+        .sort((a, b) => {
+          // Ordenar por distância (parceiros sem coordenadas vão para o final)
+          if (a.distance === null && b.distance === null) return 0;
+          if (a.distance === null) return 1;
+          if (b.distance === null) return -1;
+          return a.distance - b.distance;
+        });
+    }
+
+    return result;
+  }, [partners, selectedCategory, searchCity, useProximity, hasLocation, latitude, longitude, radiusKm]);
 
   const handleWhatsAppClick = (phone: string, name: string) => {
     const cleanPhone = phone.replace(/\D/g, "");
@@ -96,7 +143,67 @@ export const PartnersSection = () => {
                 className="pl-11"
               />
             </div>
+
+            {/* Botão de Proximidade */}
+            {!useProximity ? (
+              <Button
+                variant="outline"
+                onClick={handleEnableProximity}
+                disabled={geoLoading}
+                className="gap-2"
+              >
+                {geoLoading ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Navigation className="w-4 h-4" />
+                )}
+                Buscar próximos a mim
+              </Button>
+            ) : (
+              <Button
+                variant="secondary"
+                onClick={handleDisableProximity}
+                className="gap-2"
+              >
+                <X className="w-4 h-4" />
+                Desativar proximidade
+              </Button>
+            )}
           </div>
+
+          {/* Slider de Raio */}
+          {useProximity && hasLocation && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className="mb-6 p-4 bg-card rounded-lg border border-border"
+            >
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium text-foreground">Raio de busca</span>
+                <span className="text-sm font-bold text-primary">{radiusKm} km</span>
+              </div>
+              <Slider
+                value={[radiusKm]}
+                onValueChange={(value) => setRadiusKm(value[0])}
+                min={5}
+                max={200}
+                step={5}
+                className="w-full"
+              />
+              <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                <span>5 km</span>
+                <span>200 km</span>
+              </div>
+            </motion.div>
+          )}
+
+          {/* Erro de geolocalização */}
+          {geoError && useProximity && (
+            <div className="mb-4 p-3 bg-destructive/10 text-destructive rounded-lg text-sm">
+              {geoError}. Você ainda pode buscar por cidade.
+            </div>
+          )}
 
           <div className="flex flex-wrap gap-2">
             {categories.map((category) => (
@@ -119,9 +226,9 @@ export const PartnersSection = () => {
           <div className="flex items-center justify-center py-12">
             <Loader2 className="w-8 h-8 animate-spin text-primary" />
           </div>
-        ) : filteredPartners.length > 0 ? (
+        ) : filteredAndSortedPartners.length > 0 ? (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredPartners.map((partner, index) => (
+            {filteredAndSortedPartners.map((partner, index) => (
               <motion.div
                 key={partner.id}
                 initial={{ opacity: 0, y: 30 }}
@@ -146,6 +253,13 @@ export const PartnersSection = () => {
                     <div className="flex items-center gap-1 text-sm text-muted-foreground mt-1">
                       <MapPin className="w-3 h-3" />
                       {partner.city}
+                      {"distance" in partner && typeof (partner as { distance: number | null }).distance === "number" && (
+                        <span className="ml-2 text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">
+                          {(partner as { distance: number }).distance < 1 
+                            ? `${Math.round((partner as { distance: number }).distance * 1000)}m` 
+                            : `${(partner as { distance: number }).distance.toFixed(1)}km`}
+                        </span>
+                      )}
                     </div>
                     {partner.description && (
                       <p className="text-xs text-muted-foreground mt-2 line-clamp-2">
@@ -177,6 +291,8 @@ export const PartnersSection = () => {
             <p className="text-muted-foreground text-lg">
               {partners && partners.length === 0
                 ? "Ainda não há parceiros cadastrados."
+                : useProximity && hasLocation
+                ? `Nenhum parceiro encontrado em um raio de ${radiusKm}km.`
                 : "Nenhum parceiro encontrado com os filtros selecionados."}
             </p>
           </motion.div>
