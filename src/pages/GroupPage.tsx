@@ -401,7 +401,7 @@ export default function GroupPage() {
                             }
                           >
                             <Target className="w-4 h-4" />
-                            {!member.personal_goal && <span className="ml-1">DEFINIR META</span>}
+                            <span className="ml-1">{!member.personal_goal ? "DEFINIR META" : "EDITAR META"}</span>
                           </Button>
                         )}
                         
