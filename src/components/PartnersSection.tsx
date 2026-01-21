@@ -13,13 +13,15 @@ import {
   Loader2,
   ShoppingCart,
   Navigation,
-  X
+  X,
+  UserPlus
 } from "lucide-react";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 import { usePartners } from "@/hooks/usePartners";
 import { useGeolocation, calculateDistance } from "@/hooks/useGeolocation";
 import { Slider } from "./ui/slider";
+import { RecommendPartnerModal } from "./RecommendPartnerModal";
 
 const categories = [
   { id: "all", label: "Todos", icon: Star },
@@ -46,6 +48,7 @@ export const PartnersSection = () => {
   const [searchCity, setSearchCity] = useState("");
   const [radiusKm, setRadiusKm] = useState(50);
   const [useProximity, setUseProximity] = useState(false);
+  const [isRecommendModalOpen, setIsRecommendModalOpen] = useState(false);
   
   const { partners, isLoading } = usePartners();
   const { latitude, longitude, loading: geoLoading, error: geoError, requestLocation, hasLocation } = useGeolocation();
@@ -119,10 +122,18 @@ export const PartnersSection = () => {
           <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
             Guia de Parceiros
           </h2>
-          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+          <p className="text-muted-foreground text-lg max-w-2xl mx-auto mb-6">
             Encontre profissionais de saúde próximos de você para ajudar na sua
             jornada de transformação
           </p>
+          <Button
+            variant="hero"
+            onClick={() => setIsRecommendModalOpen(true)}
+            className="gap-2"
+          >
+            <UserPlus className="w-4 h-4" />
+            Recomendar ou Seja Parceiro
+          </Button>
         </motion.div>
 
         {/* Filters */}
@@ -297,6 +308,11 @@ export const PartnersSection = () => {
             </p>
           </motion.div>
         )}
+
+        <RecommendPartnerModal
+          open={isRecommendModalOpen}
+          onOpenChange={setIsRecommendModalOpen}
+        />
       </div>
     </section>
   );
