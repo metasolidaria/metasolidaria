@@ -265,6 +265,7 @@ export const useGroupDetails = (groupId: string | undefined) => {
       is_private: boolean;
       leader_name: string;
       leader_whatsapp: string;
+      end_date: string;
     }) => {
       if (!groupId) throw new Error("Grupo não encontrado");
 

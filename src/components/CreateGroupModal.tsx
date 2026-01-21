@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Users, Lock, Globe, User, Phone, FileText } from "lucide-react";
+import { X, Users, Lock, Globe, User, Phone, FileText, CalendarIcon } from "lucide-react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
@@ -10,6 +10,11 @@ import { CityAutocomplete } from "./CityAutocomplete";
 import { useAuth } from "@/hooks/useAuth";
 import { useGroups } from "@/hooks/useGroups";
 import { supabase } from "@/integrations/supabase/client";
+import { Calendar } from "./ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { cn } from "@/lib/utils";
 
 interface CreateGroupModalProps {
   open: boolean;
@@ -39,6 +44,7 @@ export const CreateGroupModal = ({ open, onOpenChange, onRequireAuth }: CreateGr
     leaderName: "",
     leaderWhatsapp: "",
     description: "",
+    endDate: new Date("2026-12-31"),
   });
 
   // Buscar perfil do usuário para preencher nome e WhatsApp automaticamente
@@ -90,6 +96,7 @@ export const CreateGroupModal = ({ open, onOpenChange, onRequireAuth }: CreateGr
       leader_name: formData.leaderName,
       leader_whatsapp: formData.leaderWhatsapp,
       description: formData.description,
+      end_date: format(formData.endDate, "yyyy-MM-dd"),
     });
 
     setFormData({ 
@@ -100,6 +107,7 @@ export const CreateGroupModal = ({ open, onOpenChange, onRequireAuth }: CreateGr
       leaderName: "",
       leaderWhatsapp: "",
       description: "",
+      endDate: new Date("2026-12-31"),
     });
     onOpenChange(false);
   };
@@ -231,6 +239,43 @@ export const CreateGroupModal = ({ open, onOpenChange, onRequireAuth }: CreateGr
                       placeholder="Digite o nome da cidade"
                       required
                     />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-foreground font-medium">
+                      Data de Finalização das Metas
+                    </Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-full justify-start text-left font-normal",
+                            !formData.endDate && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {formData.endDate ? (
+                            format(formData.endDate, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })
+                          ) : (
+                            <span>Selecione uma data</span>
+                          )}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={formData.endDate}
+                          onSelect={(date) => date && setFormData({ ...formData, endDate: date })}
+                          disabled={(date) => date < new Date()}
+                          initialFocus
+                          className={cn("p-3 pointer-events-auto")}
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    <p className="text-xs text-muted-foreground">
+                      Até quando os membros devem cumprir suas metas
+                    </p>
                   </div>
 
                   <div className="space-y-2">

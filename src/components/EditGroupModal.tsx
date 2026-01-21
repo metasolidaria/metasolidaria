@@ -1,11 +1,16 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Settings, Lock, Globe, User, Phone, FileText } from "lucide-react";
+import { X, Settings, Lock, Globe, User, Phone, FileText, CalendarIcon } from "lucide-react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Switch } from "./ui/switch";
 import { Textarea } from "./ui/textarea";
+import { Calendar } from "./ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { cn } from "@/lib/utils";
 
 interface Group {
   id: string;
@@ -16,6 +21,7 @@ interface Group {
   is_private: boolean;
   leader_name: string | null;
   leader_whatsapp: string | null;
+  end_date: string | null;
 }
 
 interface EditGroupModalProps {
@@ -28,6 +34,7 @@ interface EditGroupModalProps {
     is_private: boolean;
     leader_name: string;
     leader_whatsapp: string;
+    end_date: string;
   }) => void;
   isPending?: boolean;
 }
@@ -56,6 +63,7 @@ export const EditGroupModal = ({
     isPrivate: group.is_private,
     leaderName: group.leader_name || "",
     leaderWhatsapp: group.leader_whatsapp || "",
+    endDate: group.end_date ? new Date(group.end_date) : new Date("2026-12-31"),
   });
 
   useEffect(() => {
@@ -66,6 +74,7 @@ export const EditGroupModal = ({
         isPrivate: group.is_private,
         leaderName: group.leader_name || "",
         leaderWhatsapp: group.leader_whatsapp || "",
+        endDate: group.end_date ? new Date(group.end_date) : new Date("2026-12-31"),
       });
     }
   }, [open, group]);
@@ -79,6 +88,7 @@ export const EditGroupModal = ({
       is_private: formData.isPrivate,
       leader_name: formData.leaderName,
       leader_whatsapp: formData.leaderWhatsapp,
+      end_date: format(formData.endDate, "yyyy-MM-dd"),
     });
   };
 
@@ -203,6 +213,40 @@ export const EditGroupModal = ({
                         </button>
                       ))}
                     </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-foreground font-medium">
+                      Data de Finalização das Metas
+                    </Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-full justify-start text-left font-normal",
+                            !formData.endDate && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {formData.endDate ? (
+                            format(formData.endDate, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })
+                          ) : (
+                            <span>Selecione uma data</span>
+                          )}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={formData.endDate}
+                          onSelect={(date) => date && setFormData({ ...formData, endDate: date })}
+                          disabled={(date) => date < new Date()}
+                          initialFocus
+                          className={cn("p-3 pointer-events-auto")}
+                        />
+                      </PopoverContent>
+                    </Popover>
                   </div>
 
                   <div className="flex items-center justify-between p-4 rounded-xl border border-border bg-muted/30">
