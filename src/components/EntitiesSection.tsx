@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
-import { Building2, Plus, MapPin, Loader2, Search } from "lucide-react";
+import { Building2, Plus, MapPin, Loader2, Search, Phone } from "lucide-react";
 import { Button } from "./ui/button";
 import { Card, CardContent } from "./ui/card";
 import { Input } from "./ui/input";
@@ -24,7 +24,7 @@ export const EntitiesSection = ({ onRequireAuth }: EntitiesSectionProps) => {
   const { entities, isLoading, createEntity } = useEntities();
   const { user } = useAuth();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [newEntity, setNewEntity] = useState({ name: "", city: "" });
+  const [newEntity, setNewEntity] = useState({ name: "", city: "", phone: "" });
   const [searchCity, setSearchCity] = useState("");
 
   const filteredEntities = useMemo(() => {
@@ -49,8 +49,9 @@ export const EntitiesSection = ({ onRequireAuth }: EntitiesSectionProps) => {
       await createEntity.mutateAsync({
         name: newEntity.name,
         city: newEntity.city,
+        phone: newEntity.phone,
       });
-      setNewEntity({ name: "", city: "" });
+      setNewEntity({ name: "", city: "", phone: "" });
       setIsModalOpen(false);
     } catch (error) {
       // Error is handled by the hook
@@ -140,9 +141,15 @@ export const EntitiesSection = ({ onRequireAuth }: EntitiesSectionProps) => {
                           {entity.name}
                         </h3>
                         <div className="flex items-center gap-1 text-sm text-muted-foreground mt-1">
-                          <MapPin className="w-3 h-3" />
+                          <MapPin className="w-3 h-3 flex-shrink-0" />
                           <span className="truncate">{entity.city}</span>
                         </div>
+                        {entity.phone && (
+                          <div className="flex items-center gap-1 text-sm text-muted-foreground mt-1">
+                            <Phone className="w-3 h-3 flex-shrink-0" />
+                            <span className="truncate">{entity.phone}</span>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </CardContent>
@@ -181,14 +188,25 @@ export const EntitiesSection = ({ onRequireAuth }: EntitiesSectionProps) => {
                 onChange={(city) =>
                   setNewEntity((prev) => ({ ...prev, city }))
                 }
-                placeholder="Digite a cidade..."
+              placeholder="Digite a cidade..."
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="entity-phone">Telefone (opcional)</Label>
+              <Input
+                id="entity-phone"
+                placeholder="(00) 00000-0000"
+                value={newEntity.phone}
+                onChange={(e) =>
+                  setNewEntity((prev) => ({ ...prev, phone: e.target.value }))
+                }
               />
             </div>
             <div className="flex justify-end gap-3 pt-4">
               <Button
                 variant="outline"
-                onClick={() => {
-                  setNewEntity({ name: "", city: "" });
+              onClick={() => {
+                  setNewEntity({ name: "", city: "", phone: "" });
                   setIsModalOpen(false);
                 }}
               >

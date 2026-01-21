@@ -21,6 +21,7 @@ export type Database = {
           created_by: string | null
           id: string
           name: string
+          phone: string | null
         }
         Insert: {
           city: string
@@ -28,6 +29,7 @@ export type Database = {
           created_by?: string | null
           id?: string
           name: string
+          phone?: string | null
         }
         Update: {
           city?: string
@@ -35,6 +37,7 @@ export type Database = {
           created_by?: string | null
           id?: string
           name?: string
+          phone?: string | null
         }
         Relationships: []
       }
