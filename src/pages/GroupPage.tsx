@@ -1,11 +1,12 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, Users, Target, MapPin, Lock, Globe, Plus, Trash2, Loader2, LogOut } from "lucide-react";
+import { ArrowLeft, Users, Target, MapPin, Lock, Globe, Plus, Trash2, Loader2, LogOut, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { useGroupDetails } from "@/hooks/useGroupDetails";
 import { useAuth } from "@/hooks/useAuth";
 import { AddProgressModal } from "@/components/AddProgressModal";
+import { ProgressCharts } from "@/components/ProgressCharts";
 import { useState } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -189,6 +190,28 @@ export default function GroupPage() {
                 </p>
               </div>
             </motion.div>
+
+            {/* Progress Charts */}
+            {progressEntries && progressEntries.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.15 }}
+                className="bg-card rounded-2xl p-6 shadow-soft"
+              >
+                <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
+                  <TrendingUp className="w-5 h-5 text-primary" />
+                  Evolução do Progresso
+                </h2>
+                
+                <ProgressCharts
+                  progressEntries={progressEntries}
+                  members={members || []}
+                  goal={group.goal_2026}
+                  donationType={donationType}
+                />
+              </motion.div>
+            )}
 
             {/* Progress Entries */}
             <motion.div
