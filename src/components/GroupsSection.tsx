@@ -37,12 +37,22 @@ export const GroupsSection = ({ onRequireAuth }: GroupsSectionProps) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [inviteModalOpen, setInviteModalOpen] = useState(false);
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
+  const [filter, setFilter] = useState<"all" | "mine">("all");
   const { groups, isLoading, joinGroup, userMemberships } = useGroups();
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
   const isUserMember = (groupId: string) => userMemberships.includes(groupId);
+
+  // Filtra os grupos baseado na seleção
+  const filteredGroups = groups?.filter((group) => {
+    if (filter === "mine") {
+      return isUserMember(group.id);
+    }
+    return true; // "all" mostra todos
+  });
+
 
   const handleGroupAction = (groupId: string, isPrivate: boolean) => {
     if (!user) {
@@ -126,13 +136,40 @@ export const GroupsSection = ({ onRequireAuth }: GroupsSectionProps) => {
           </Button>
         </motion.div>
 
+        {/* Filtros */}
+        {user && (
+          <div className="flex gap-2 mb-8">
+            <Button
+              variant={filter === "all" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setFilter("all")}
+            >
+              <Globe className="w-4 h-4 mr-1" />
+              Todos os Grupos
+            </Button>
+            <Button
+              variant={filter === "mine" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setFilter("mine")}
+            >
+              <Users className="w-4 h-4 mr-1" />
+              Meus Grupos
+              {userMemberships.length > 0 && (
+                <span className="ml-1 bg-primary-foreground/20 px-1.5 py-0.5 rounded-full text-xs">
+                  {userMemberships.length}
+                </span>
+              )}
+            </Button>
+          </div>
+        )}
+
         {isLoading ? (
           <div className="flex items-center justify-center py-12">
             <Loader2 className="w-8 h-8 animate-spin text-primary" />
           </div>
-        ) : groups && groups.length > 0 ? (
+        ) : filteredGroups && filteredGroups.length > 0 ? (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {groups.map((group, index) => (
+            {filteredGroups.map((group, index) => (
               <motion.div
                 key={group.id}
                 initial={{ opacity: 0, y: 30 }}
@@ -246,6 +283,27 @@ export const GroupsSection = ({ onRequireAuth }: GroupsSectionProps) => {
               </motion.div>
             ))}
           </div>
+        ) : filter === "mine" ? (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="text-center py-12"
+          >
+            <Users className="w-12 h-12 mx-auto text-muted-foreground/50 mb-4" />
+            <p className="text-muted-foreground text-lg mb-4">
+              Você ainda não faz parte de nenhum grupo.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-2 justify-center">
+              <Button variant="outline" onClick={() => setFilter("all")}>
+                <Globe className="w-4 h-4 mr-1" />
+                Ver Todos os Grupos
+              </Button>
+              <Button variant="hero" onClick={handleCreateGroup}>
+                <Plus className="w-5 h-5" />
+                Criar Meu Grupo
+              </Button>
+            </div>
+          </motion.div>
         ) : (
           <motion.div
             initial={{ opacity: 0 }}
