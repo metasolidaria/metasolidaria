@@ -14,6 +14,7 @@ import {
 import { useEntities } from "@/hooks/useEntities";
 import { useAuth } from "@/hooks/useAuth";
 import { CityAutocomplete } from "./CityAutocomplete";
+import { CitySearchAutocomplete } from "./CitySearchAutocomplete";
 
 interface EntitiesSectionProps {
   onRequireAuth: () => void;
@@ -77,13 +78,11 @@ export const EntitiesSection = ({ onRequireAuth }: EntitiesSectionProps) => {
           </Button>
 
           {/* Filtro por cidade */}
-          <div className="relative max-w-md mx-auto mt-6">
-            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-            <Input
-              placeholder="Buscar por cidade..."
+          <div className="max-w-md mx-auto mt-6">
+            <CitySearchAutocomplete
               value={searchCity}
-              onChange={(e) => setSearchCity(e.target.value)}
-              className="pl-11"
+              onChange={setSearchCity}
+              placeholder="Buscar por cidade..."
             />
           </div>
         </motion.div>

@@ -29,6 +29,7 @@ import { usePartners, PartnerTier } from "@/hooks/usePartners";
 import { useGeolocation, calculateDistance } from "@/hooks/useGeolocation";
 import { Slider } from "./ui/slider";
 import { RecommendPartnerModal } from "./RecommendPartnerModal";
+import { CitySearchAutocomplete } from "./CitySearchAutocomplete";
 
 // Configuração de tiers
 const tierConfig: Record<PartnerTier, { label: string; colorClass: string; icon: typeof Diamond }> = {
@@ -180,13 +181,11 @@ export const PartnersSection = () => {
           className="mb-10"
         >
           <div className="flex flex-col md:flex-row gap-4 mb-6">
-            <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-              <Input
-                placeholder="Buscar por cidade..."
+            <div className="flex-1 max-w-md">
+              <CitySearchAutocomplete
                 value={searchCity}
-                onChange={(e) => setSearchCity(e.target.value)}
-                className="pl-11"
+                onChange={setSearchCity}
+                placeholder="Buscar por cidade..."
               />
             </div>
 
