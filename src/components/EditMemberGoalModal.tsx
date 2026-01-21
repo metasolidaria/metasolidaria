@@ -50,6 +50,7 @@ interface CommitmentData {
   commitment_type: string | null;
   commitment_metric: string | null;
   commitment_ratio: number;
+  commitment_donation: number;
 }
 
 interface EditMemberGoalModalProps {
@@ -60,6 +61,7 @@ interface EditMemberGoalModalProps {
   currentCommitmentType?: string | null;
   currentCommitmentMetric?: string | null;
   currentCommitmentRatio?: number | null;
+  currentCommitmentDonation?: number | null;
   onSave: (data: CommitmentData) => void;
   isPending?: boolean;
   unit: string;
@@ -73,6 +75,7 @@ export const EditMemberGoalModal = ({
   currentCommitmentType,
   currentCommitmentMetric,
   currentCommitmentRatio,
+  currentCommitmentDonation,
   onSave,
   isPending = false,
   unit
@@ -81,6 +84,7 @@ export const EditMemberGoalModal = ({
   const [commitmentType, setCommitmentType] = useState<string>(currentCommitmentType || "");
   const [commitmentMetric, setCommitmentMetric] = useState<string>(currentCommitmentMetric || "");
   const [commitmentRatio, setCommitmentRatio] = useState<string>((currentCommitmentRatio || 1).toString());
+  const [commitmentDonation, setCommitmentDonation] = useState<string>((currentCommitmentDonation || 1).toString());
 
   useEffect(() => {
     if (open) {
@@ -88,8 +92,9 @@ export const EditMemberGoalModal = ({
       setCommitmentType(currentCommitmentType || "");
       setCommitmentMetric(currentCommitmentMetric || "");
       setCommitmentRatio((currentCommitmentRatio || 1).toString());
+      setCommitmentDonation((currentCommitmentDonation || 1).toString());
     }
-  }, [open, currentGoal, currentCommitmentType, currentCommitmentMetric, currentCommitmentRatio]);
+  }, [open, currentGoal, currentCommitmentType, currentCommitmentMetric, currentCommitmentRatio, currentCommitmentDonation]);
 
   const handleTypeChange = (type: string) => {
     setCommitmentType(type);
@@ -103,12 +108,14 @@ export const EditMemberGoalModal = ({
     e.preventDefault();
     const goalValue = parseInt(goal) || 0;
     const ratioValue = parseInt(commitmentRatio) || 1;
+    const donationValue = parseInt(commitmentDonation) || 1;
     
     onSave({
       personal_goal: goalValue,
       commitment_type: commitmentType || null,
       commitment_metric: commitmentMetric || null,
       commitment_ratio: ratioValue,
+      commitment_donation: donationValue,
     });
   };
 
@@ -206,14 +213,21 @@ export const EditMemberGoalModal = ({
                     
                     <div className="flex items-center gap-2 text-sm">
                       <span className="text-muted-foreground">doarei</span>
-                      <span className="font-bold text-primary">1 {unit}</span>
+                      <Input
+                        type="number"
+                        value={commitmentDonation}
+                        onChange={(e) => setCommitmentDonation(e.target.value)}
+                        className="w-16 text-center"
+                        min="1"
+                      />
+                      <span className="font-medium text-foreground">{unit}</span>
                     </div>
 
                     {/* Preview */}
                     {commitmentMetric && (
                       <div className="mt-3 p-3 bg-primary/10 rounded-lg">
                         <p className="text-sm text-primary font-medium">
-                          📌 "{parseInt(commitmentRatio) || 1} {commitmentMetric} = 1 {unit} doado"
+                          📌 "{parseInt(commitmentRatio) || 1} {commitmentMetric} = {parseInt(commitmentDonation) || 1} {unit} doado{(parseInt(commitmentDonation) || 1) > 1 ? 's' : ''}"
                         </p>
                       </div>
                     )}
