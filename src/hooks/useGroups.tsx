@@ -16,7 +16,8 @@ export interface Group {
   leader_whatsapp?: string; // Only available for group members/leaders
   description?: string;
   member_count?: number;
-  goals_reached?: number;
+  total_goals?: number;
+  total_donations?: number;
 }
 
 // Type for public view (without sensitive data)
@@ -85,12 +86,21 @@ export const useGroups = () => {
             .select("*", { count: "exact", head: true })
             .eq("group_id", group.id);
 
+          // Buscar metas pessoais dos membros
           const { data: members } = await supabase
             .from("group_members")
-            .select("goals_reached")
+            .select("personal_goal")
             .eq("group_id", group.id);
 
-          const goalsReached = members?.reduce((sum, m) => sum + (m.goals_reached || 0), 0) || 0;
+          const totalGoals = members?.reduce((sum, m) => sum + (m.personal_goal || 0), 0) || 0;
+
+          // Buscar total de doações do progresso
+          const { data: progressData } = await supabase
+            .from("goal_progress")
+            .select("amount")
+            .eq("group_id", group.id);
+
+          const totalDonations = progressData?.reduce((sum, p) => sum + (p.amount || 0), 0) || 0;
 
           const { data: profile } = await supabase
             .from("profiles")
@@ -101,7 +111,8 @@ export const useGroups = () => {
           return {
             ...group,
             member_count: memberCount || 0,
-            goals_reached: goalsReached,
+            total_goals: totalGoals,
+            total_donations: totalDonations,
             leader_name: profile?.full_name || group.leader_name || "Líder",
           } as Group;
         })
