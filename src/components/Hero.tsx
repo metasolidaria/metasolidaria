@@ -1,18 +1,9 @@
 import { motion } from "framer-motion";
-import { ArrowDown, Heart, Scale, Users } from "lucide-react";
+import { ArrowDown, Heart, Users } from "lucide-react";
 import { Button } from "./ui/button";
 import heroImage from "@/assets/hero-donation.jpg";
-import { useImpactStats } from "@/hooks/useImpactStats";
-
-const formatNumber = (num: number): string => {
-  if (num >= 1000) {
-    return (num / 1000).toFixed(1).replace(/\.0$/, '') + 'K';
-  }
-  return num.toString();
-};
 
 export const Hero = () => {
-  const { data: stats } = useImpactStats();
 
   const scrollToGroups = () => {
     document.getElementById("grupos")?.scrollIntoView({ behavior: "smooth" });
@@ -70,32 +61,6 @@ export const Hero = () => {
             </Button>
           </div>
 
-          {/* Stats Preview */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5, duration: 0.6 }}
-            className="grid grid-cols-3 gap-4 md:gap-8 max-w-xl mx-auto"
-          >
-            {[
-              { icon: Users, label: "Grupos", value: formatNumber(stats?.groups || 0) },
-              { icon: Scale, label: "Metas", value: formatNumber(stats?.goalsReached || 0) },
-              { icon: Heart, label: "Doações", value: formatNumber(stats?.donations || 0) },
-            ].map((stat) => (
-              <div
-                key={stat.label}
-                className="bg-primary-foreground/10 backdrop-blur-sm rounded-xl p-4 border border-primary-foreground/10"
-              >
-                <stat.icon className="w-6 h-6 text-secondary mx-auto mb-2" />
-                <div className="text-2xl md:text-3xl font-bold text-primary-foreground">
-                  {stat.value}
-                </div>
-                <div className="text-xs md:text-sm text-primary-foreground/60">
-                  {stat.label}
-                </div>
-              </div>
-            ))}
-          </motion.div>
         </motion.div>
 
         {/* Scroll Indicator */}
