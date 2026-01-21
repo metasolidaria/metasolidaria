@@ -358,15 +358,16 @@ export default function GroupPage() {
                   {members.map((member) => (
                     <div 
                       key={member.id}
-                      className="flex items-center justify-between p-3 bg-muted/30 rounded-lg"
+                      className="p-3 bg-muted/30 rounded-lg"
                     >
-                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                      {/* Header: Avatar + Name + Edit Button */}
+                      <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                           <span className="text-primary font-medium">
                             {member.name.charAt(0).toUpperCase()}
                           </span>
                         </div>
-                        <div className="min-w-0 flex-1">
+                        <div className="flex-1 min-w-0">
                           <p className="font-medium text-foreground truncate">
                             {member.name}
                             {member.user_id === group.leader_id && (
@@ -378,49 +379,7 @@ export default function GroupPage() {
                           <p className="text-sm text-muted-foreground">
                             {member.total_contributed || 0} / {(member.commitments || []).reduce((sum, c) => sum + (c.personal_goal || 0), 0)} {donationType.unit}
                           </p>
-                          {member.commitments && member.commitments.length > 0 && (
-                            <div className="mt-2 space-y-2">
-                              {member.commitments.map((c, idx) => (
-                                <div key={c.id || idx} className="flex items-center gap-2">
-                                  <div className="flex-1">
-                                    <p className="text-xs text-primary">
-                                      📌 {c.name ? `${c.name}: ` : ''}{c.ratio} {c.metric} = {c.donation_amount} {donationType.unit} (meta: {c.personal_goal} {donationType.unit})
-                                    </p>
-                                    {c.penalty_donation && c.penalty_donation > 0 && (
-                                      <p className="text-xs text-amber-600 dark:text-amber-400 ml-4">
-                                        🔥 Desafio: {c.penalty_donation} {donationType.unit}
-                                      </p>
-                                    )}
-                                  </div>
-                                  {member.user_id === user?.id && (
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      onClick={() => {
-                                        setSelectedCommitment({
-                                          id: c.id,
-                                          name: c.name,
-                                          metric: c.metric,
-                                          ratio: c.ratio,
-                                          donation_amount: c.donation_amount,
-                                          personal_goal: c.personal_goal,
-                                        });
-                                        setAddProgressOpen(true);
-                                      }}
-                                      className="h-6 px-2 text-green-600 hover:text-green-700 hover:bg-green-50"
-                                    >
-                                      <Plus className="w-3 h-3" />
-                                      <span className="ml-1 text-xs">Doar</span>
-                                    </Button>
-                                  )}
-                                </div>
-                              ))}
-                            </div>
-                          )}
                         </div>
-                      </div>
-                      
-                      <div className="flex flex-col items-end gap-1 flex-shrink-0">
                         {member.user_id === user?.id && (
                           <Button
                             variant={(member.commitments || []).length === 0 ? "default" : "ghost"}
@@ -435,8 +394,52 @@ export default function GroupPage() {
                             <span className="ml-1">{(member.commitments || []).length === 0 ? "DEFINIR META" : "EDITAR META"}</span>
                           </Button>
                         )}
-                        
-                        {isLeader && member.user_id !== group.leader_id && (
+                      </div>
+                      
+                      {/* Commitments list */}
+                      {member.commitments && member.commitments.length > 0 && (
+                        <div className="mt-3 ml-13 space-y-2 pl-13">
+                          {member.commitments.map((c, idx) => (
+                            <div key={c.id || idx} className="flex items-center gap-2 ml-13 pl-[52px]">
+                              <div className="flex-1">
+                                <p className="text-xs text-primary">
+                                  📌 {c.name ? `${c.name}: ` : ''}{c.ratio} {c.metric} = {c.donation_amount} {donationType.unit} (meta: {c.personal_goal} {donationType.unit})
+                                </p>
+                                {c.penalty_donation && c.penalty_donation > 0 && (
+                                  <p className="text-xs text-amber-600 dark:text-amber-400 ml-4">
+                                    🔥 Desafio: {c.penalty_donation} {donationType.unit}
+                                  </p>
+                                )}
+                              </div>
+                              {member.user_id === user?.id && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => {
+                                    setSelectedCommitment({
+                                      id: c.id,
+                                      name: c.name,
+                                      metric: c.metric,
+                                      ratio: c.ratio,
+                                      donation_amount: c.donation_amount,
+                                      personal_goal: c.personal_goal,
+                                    });
+                                    setAddProgressOpen(true);
+                                  }}
+                                  className="h-6 px-2 text-green-600 hover:text-green-700 hover:bg-green-50"
+                                >
+                                  <Plus className="w-3 h-3" />
+                                  <span className="ml-1 text-xs">Doar</span>
+                                </Button>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      
+                      {/* Leader remove button */}
+                      {isLeader && member.user_id !== group.leader_id && (
+                        <div className="mt-2 flex justify-end">
                           <Button
                             variant="ghost"
                             size="sm"
@@ -445,9 +448,10 @@ export default function GroupPage() {
                             className="text-destructive hover:text-destructive hover:bg-destructive/10"
                           >
                             <Trash2 className="w-4 h-4" />
+                            <span className="ml-1">Remover</span>
                           </Button>
-                        )}
-                      </div>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
