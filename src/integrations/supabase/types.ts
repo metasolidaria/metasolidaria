@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      entities: {
+        Row: {
+          city: string
+          created_at: string
+          created_by: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          city: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          city?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
       goal_progress: {
         Row: {
           amount: number
@@ -184,6 +208,7 @@ export type Database = {
           description: string | null
           donation_type: string
           end_date: string | null
+          entity_id: string | null
           goal_2026: number
           id: string
           is_private: boolean
@@ -199,6 +224,7 @@ export type Database = {
           description?: string | null
           donation_type: string
           end_date?: string | null
+          entity_id?: string | null
           goal_2026?: number
           id?: string
           is_private?: boolean
@@ -214,6 +240,7 @@ export type Database = {
           description?: string | null
           donation_type?: string
           end_date?: string | null
+          entity_id?: string | null
           goal_2026?: number
           id?: string
           is_private?: boolean
@@ -223,7 +250,15 @@ export type Database = {
           name?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "groups_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: false
+            referencedRelation: "entities"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       partners: {
         Row: {
