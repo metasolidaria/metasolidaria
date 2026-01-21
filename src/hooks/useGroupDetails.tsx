@@ -14,6 +14,7 @@ interface GroupMember {
   commitment_metric: string | null;
   commitment_ratio: number | null;
   commitment_donation: number | null;
+  penalty_donation: number | null;
 }
 
 interface ProgressEntry {
@@ -82,6 +83,7 @@ export const useGroupDetails = (groupId: string | undefined) => {
         commitment_metric: member.commitment_metric || null,
         commitment_ratio: member.commitment_ratio || null,
         commitment_donation: member.commitment_donation || null,
+        penalty_donation: member.penalty_donation || null,
       })) as GroupMember[];
     },
     enabled: !!groupId,
@@ -299,6 +301,7 @@ export const useGroupDetails = (groupId: string | undefined) => {
       commitment_metric,
       commitment_ratio,
       commitment_donation,
+      penalty_donation,
     }: { 
       memberId: string; 
       personal_goal: number;
@@ -306,6 +309,7 @@ export const useGroupDetails = (groupId: string | undefined) => {
       commitment_metric?: string | null;
       commitment_ratio?: number;
       commitment_donation?: number;
+      penalty_donation?: number | null;
     }) => {
       const { error } = await supabase
         .from("group_members")
@@ -315,6 +319,7 @@ export const useGroupDetails = (groupId: string | undefined) => {
           commitment_metric,
           commitment_ratio,
           commitment_donation,
+          penalty_donation,
         })
         .eq("id", memberId);
 

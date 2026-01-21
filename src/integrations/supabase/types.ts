@@ -125,6 +125,7 @@ export type Database = {
           group_id: string
           id: string
           name: string
+          penalty_donation: number | null
           personal_goal: number | null
           updated_at: string
           user_id: string | null
@@ -139,6 +140,7 @@ export type Database = {
           group_id: string
           id?: string
           name: string
+          penalty_donation?: number | null
           personal_goal?: number | null
           updated_at?: string
           user_id?: string | null
@@ -153,6 +155,7 @@ export type Database = {
           group_id?: string
           id?: string
           name?: string
+          penalty_donation?: number | null
           personal_goal?: number | null
           updated_at?: string
           user_id?: string | null

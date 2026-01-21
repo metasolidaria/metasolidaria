@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Target, Dumbbell, Scale, Footprints, Flame, Sparkles } from "lucide-react";
+import { X, Target, Dumbbell, Scale, Footprints, Flame, Sparkles, AlertTriangle } from "lucide-react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
@@ -11,6 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
+import { Checkbox } from "./ui/checkbox";
 
 const commitmentTypes = [
   { 
@@ -51,6 +52,7 @@ interface CommitmentData {
   commitment_metric: string | null;
   commitment_ratio: number;
   commitment_donation: number;
+  penalty_donation: number | null;
 }
 
 interface EditMemberGoalModalProps {
@@ -62,6 +64,7 @@ interface EditMemberGoalModalProps {
   currentCommitmentMetric?: string | null;
   currentCommitmentRatio?: number | null;
   currentCommitmentDonation?: number | null;
+  currentPenaltyDonation?: number | null;
   onSave: (data: CommitmentData) => void;
   isPending?: boolean;
   unit: string;
@@ -76,6 +79,7 @@ export const EditMemberGoalModal = ({
   currentCommitmentMetric,
   currentCommitmentRatio,
   currentCommitmentDonation,
+  currentPenaltyDonation,
   onSave,
   isPending = false,
   unit
@@ -85,6 +89,8 @@ export const EditMemberGoalModal = ({
   const [commitmentMetric, setCommitmentMetric] = useState<string>(currentCommitmentMetric || "");
   const [commitmentRatio, setCommitmentRatio] = useState<string>((currentCommitmentRatio || 1).toString());
   const [commitmentDonation, setCommitmentDonation] = useState<string>((currentCommitmentDonation || 1).toString());
+  const [penaltyEnabled, setPenaltyEnabled] = useState<boolean>(!!currentPenaltyDonation);
+  const [penaltyDonation, setPenaltyDonation] = useState<string>((currentPenaltyDonation || 0).toString());
 
   useEffect(() => {
     if (open) {
@@ -93,9 +99,18 @@ export const EditMemberGoalModal = ({
       setCommitmentMetric(currentCommitmentMetric || "");
       setCommitmentRatio((currentCommitmentRatio || 1).toString());
       setCommitmentDonation((currentCommitmentDonation || 1).toString());
+      setPenaltyEnabled(!!currentPenaltyDonation);
+      setPenaltyDonation((currentPenaltyDonation || (currentGoal * 2)).toString());
     }
-  }, [open, currentGoal, currentCommitmentType, currentCommitmentMetric, currentCommitmentRatio, currentCommitmentDonation]);
+  }, [open, currentGoal, currentCommitmentType, currentCommitmentMetric, currentCommitmentRatio, currentCommitmentDonation, currentPenaltyDonation]);
 
+  // Atualiza sugestão de penalidade quando meta muda
+  useEffect(() => {
+    const goalValue = parseInt(goal) || 0;
+    if (!currentPenaltyDonation && goalValue > 0) {
+      setPenaltyDonation((goalValue * 2).toString());
+    }
+  }, [goal, currentPenaltyDonation]);
   const handleTypeChange = (type: string) => {
     setCommitmentType(type);
     const typeConfig = commitmentTypes.find(t => t.id === type);
@@ -109,6 +124,7 @@ export const EditMemberGoalModal = ({
     const goalValue = parseInt(goal) || 0;
     const ratioValue = parseInt(commitmentRatio) || 1;
     const donationValue = parseInt(commitmentDonation) || 1;
+    const penaltyValue = penaltyEnabled ? (parseInt(penaltyDonation) || goalValue * 2) : null;
     
     onSave({
       personal_goal: goalValue,
@@ -116,6 +132,7 @@ export const EditMemberGoalModal = ({
       commitment_metric: commitmentMetric || null,
       commitment_ratio: ratioValue,
       commitment_donation: donationValue,
+      penalty_donation: penaltyValue,
     });
   };
 
@@ -255,6 +272,49 @@ export const EditMemberGoalModal = ({
                   <p className="text-xs text-muted-foreground">
                     Defina quantos {unit} você pretende doar até 2026
                   </p>
+                </div>
+
+                {/* Penalty Challenge */}
+                <div className="space-y-3 p-4 bg-amber-500/10 border border-amber-500/20 rounded-xl">
+                  <div className="flex items-start gap-3">
+                    <Checkbox
+                      id="penaltyEnabled"
+                      checked={penaltyEnabled}
+                      onCheckedChange={(checked) => setPenaltyEnabled(checked === true)}
+                      className="mt-0.5"
+                    />
+                    <div className="flex-1">
+                      <Label htmlFor="penaltyEnabled" className="text-foreground font-medium cursor-pointer flex items-center gap-2">
+                        <AlertTriangle className="w-4 h-4 text-amber-500" />
+                        Aceito o desafio!
+                      </Label>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Se eu não bater minha meta pessoal, me comprometo a doar mais
+                      </p>
+                    </div>
+                  </div>
+
+                  {penaltyEnabled && (
+                    <div className="flex items-center gap-2 text-sm mt-3 pl-7">
+                      <span className="text-muted-foreground">Se não bater a meta, doarei</span>
+                      <Input
+                        type="number"
+                        value={penaltyDonation}
+                        onChange={(e) => setPenaltyDonation(e.target.value)}
+                        className="w-20 text-center"
+                        min="1"
+                      />
+                      <span className="font-medium text-foreground">{unit}</span>
+                    </div>
+                  )}
+
+                  {penaltyEnabled && (
+                    <div className="p-3 bg-amber-500/10 rounded-lg mt-2">
+                      <p className="text-sm text-amber-700 dark:text-amber-400 font-medium">
+                        🔥 Meta: {parseInt(goal) || 0} {unit} → Desafio: {parseInt(penaltyDonation) || 0} {unit} se não bater!
+                      </p>
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex gap-3 pt-2">
