@@ -60,10 +60,10 @@ export const RecommendPartnerModal = ({
       return;
     }
 
-    if (!formData.name || !formData.specialty || !formData.city || !formData.whatsapp) {
+    if (!formData.name || !formData.city) {
       toast({
         title: "Preencha os campos obrigatórios",
-        description: "Nome, especialidade, cidade e WhatsApp são obrigatórios.",
+        description: "Nome e cidade são obrigatórios.",
         variant: "destructive",
       });
       return;
@@ -79,9 +79,9 @@ export const RecommendPartnerModal = ({
       const { error } = await supabase.from("partners").insert([
         {
           name: formData.name.trim(),
-          specialty: formData.specialty,
+          specialty: formData.specialty || null,
           city: formData.city,
-          whatsapp: formData.whatsapp.replace(/\D/g, ""),
+          whatsapp: formData.whatsapp ? formData.whatsapp.replace(/\D/g, "") : null,
           description: description || null,
           submitted_by: user.id,
           is_approved: false,
@@ -163,7 +163,7 @@ export const RecommendPartnerModal = ({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="specialty">Especialidade *</Label>
+                <Label htmlFor="specialty">Especialidade (opcional)</Label>
                 <Select
                   value={formData.specialty}
                   onValueChange={(value) =>
@@ -199,7 +199,7 @@ export const RecommendPartnerModal = ({
               <div className="space-y-2">
                 <Label htmlFor="whatsapp" className="flex items-center gap-2">
                   <Phone className="w-4 h-4" />
-                  WhatsApp *
+                  WhatsApp (opcional)
                 </Label>
                 <Input
                   id="whatsapp"
@@ -258,7 +258,7 @@ export const RecommendPartnerModal = ({
                   type="submit"
                   variant="hero"
                   className="flex-1"
-                  disabled={isSubmitting || !formData.name || !formData.specialty || !formData.city || !formData.whatsapp}
+                  disabled={isSubmitting || !formData.name || !formData.city}
                 >
                   {isSubmitting ? (
                     <Loader2 className="w-4 h-4 animate-spin mr-2" />
@@ -268,7 +268,7 @@ export const RecommendPartnerModal = ({
               </div>
 
               <p className="text-xs text-muted-foreground text-center">
-                * Campos obrigatórios. Sua indicação será analisada antes de ser publicada.
+                Apenas nome e cidade são obrigatórios. Sua indicação será analisada antes de ser publicada.
               </p>
             </form>
           </motion.div>
