@@ -7,6 +7,7 @@ import {
   Search,
   Stethoscope,
   Apple,
+  Instagram,
   Brain,
   Dumbbell,
   HeartPulse,
@@ -333,15 +334,25 @@ export const PartnersSection = () => {
                   </div>
                 </div>
 
-                <div className="px-5 pb-5">
+                <div className="px-5 pb-5 flex gap-2">
                   <Button
-                    className="w-full gap-2"
+                    className="flex-1 gap-2"
                     variant="hero"
                     onClick={() => handleWhatsAppClick(partner.whatsapp, partner.name)}
                   >
                     <Phone className="w-4 h-4" />
                     Entrar em Contato
                   </Button>
+                  {partner.instagram && (
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => window.open(`https://instagram.com/${partner.instagram}`, "_blank")}
+                      title="Ver Instagram"
+                    >
+                      <Instagram className="w-4 h-4" />
+                    </Button>
+                  )}
                 </div>
               </motion.div>
             ))}

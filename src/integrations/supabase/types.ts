@@ -213,6 +213,7 @@ export type Database = {
           created_at: string
           description: string | null
           id: string
+          instagram: string | null
           is_approved: boolean
           latitude: number | null
           longitude: number | null
@@ -228,6 +229,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          instagram?: string | null
           is_approved?: boolean
           latitude?: number | null
           longitude?: number | null
@@ -243,6 +245,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          instagram?: string | null
           is_approved?: boolean
           latitude?: number | null
           longitude?: number | null
