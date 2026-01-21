@@ -6,27 +6,26 @@ import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Checkbox } from "./ui/checkbox";
 
-export interface Commitment {
+export interface CommitmentBlock {
   id?: string;
+  name: string;
   metric: string;
   ratio: number;
   donation_amount: number;
+  personal_goal: number;
+  penalty_donation: number | null;
   isNew?: boolean;
 }
 
-interface CommitmentData {
-  personal_goal: number;
-  penalty_donation: number | null;
-  commitments: Commitment[];
+export interface CommitmentData {
+  commitments: CommitmentBlock[];
 }
 
 interface EditMemberGoalModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   memberName: string;
-  currentGoal: number;
-  currentCommitments: Commitment[];
-  currentPenaltyDonation?: number | null;
+  currentCommitments: CommitmentBlock[];
   onSave: (data: CommitmentData) => void;
   isPending?: boolean;
   unit: string;
@@ -36,68 +35,65 @@ export const EditMemberGoalModal = ({
   open, 
   onOpenChange, 
   memberName,
-  currentGoal,
   currentCommitments,
-  currentPenaltyDonation,
   onSave,
   isPending = false,
   unit
 }: EditMemberGoalModalProps) => {
-  const [goal, setGoal] = useState(currentGoal.toString());
-  const [commitments, setCommitments] = useState<Commitment[]>(currentCommitments);
-  const [penaltyEnabled, setPenaltyEnabled] = useState<boolean>(!!currentPenaltyDonation);
-  const [penaltyDonation, setPenaltyDonation] = useState<string>((currentPenaltyDonation || 0).toString());
+  const [blocks, setBlocks] = useState<CommitmentBlock[]>([]);
 
   useEffect(() => {
     if (open) {
-      setGoal(currentGoal.toString());
-      setCommitments(currentCommitments && currentCommitments.length > 0 ? currentCommitments : []);
-      setPenaltyEnabled(!!currentPenaltyDonation);
-      setPenaltyDonation((currentPenaltyDonation || (currentGoal * 2)).toString());
+      setBlocks(currentCommitments && currentCommitments.length > 0 
+        ? currentCommitments.map(c => ({
+            ...c,
+            name: c.name || "",
+            personal_goal: c.personal_goal || 0,
+            penalty_donation: c.penalty_donation || null,
+          }))
+        : []);
     }
-  }, [open, currentGoal, currentCommitments, currentPenaltyDonation]);
+  }, [open, currentCommitments]);
 
-  // Atualiza sugestão de penalidade quando meta muda
-  useEffect(() => {
-    const goalValue = parseInt(goal) || 0;
-    if (!currentPenaltyDonation && goalValue > 0) {
-      setPenaltyDonation((goalValue * 2).toString());
-    }
-  }, [goal, currentPenaltyDonation]);
-
-  const addNewCommitment = () => {
-    setCommitments([...commitments, { 
+  const addNewBlock = () => {
+    setBlocks([...blocks, { 
+      name: `Meta ${blocks.length + 1}`,
       metric: "", 
       ratio: 1, 
       donation_amount: 1,
+      personal_goal: 0,
+      penalty_donation: null,
       isNew: true 
     }]);
   };
 
-  const updateCommitment = (index: number, field: keyof Commitment, value: string | number) => {
-    const updated = [...commitments];
+  const updateBlock = (index: number, field: keyof CommitmentBlock, value: string | number | null) => {
+    const updated = [...blocks];
     updated[index] = { ...updated[index], [field]: value };
-    setCommitments(updated);
+    setBlocks(updated);
   };
 
-  const removeCommitment = (index: number) => {
-    setCommitments(commitments.filter((_, i) => i !== index));
+  const removeBlock = (index: number) => {
+    setBlocks(blocks.filter((_, i) => i !== index));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const goalValue = parseInt(goal) || 0;
-    const penaltyValue = penaltyEnabled ? (parseInt(penaltyDonation) || goalValue * 2) : null;
     
-    // Filtrar compromissos vazios
-    const validCommitments = commitments.filter(c => c.metric.trim() !== "");
+    // Filtrar blocos com métrica preenchida
+    const validBlocks = blocks.filter(b => b.metric.trim() !== "").map(b => ({
+      ...b,
+      name: b.name || `Meta de ${b.metric}`,
+      personal_goal: b.personal_goal || 0,
+      penalty_donation: b.penalty_donation || null,
+    }));
     
-    onSave({
-      personal_goal: goalValue,
-      penalty_donation: penaltyValue,
-      commitments: validCommitments,
-    });
+    onSave({ commitments: validBlocks });
   };
+
+  // Calcula o total de metas de todos os blocos
+  const totalGoal = blocks.reduce((sum, b) => sum + (b.personal_goal || 0), 0);
+  const totalPenalty = blocks.reduce((sum, b) => sum + (b.penalty_donation || 0), 0);
 
   return (
     <AnimatePresence>
@@ -118,7 +114,7 @@ export const EditMemberGoalModal = ({
             transition={{ type: "spring", duration: 0.5 }}
             className="fixed inset-0 z-50 flex items-center justify-center p-4"
           >
-            <div className="bg-card rounded-2xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+            <div className="bg-card rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
               <div className="bg-gradient-stats p-6 relative rounded-t-2xl">
                 <button
                   onClick={() => onOpenChange(false)}
@@ -133,170 +129,185 @@ export const EditMemberGoalModal = ({
                   Definir Compromissos
                 </h2>
                 <p className="text-primary-foreground/80 mt-1">
-                  Crie regras de doação personalizadas, {memberName}
+                  Crie blocos de metas independentes, {memberName}
                 </p>
               </div>
 
               <form onSubmit={handleSubmit} className="p-6 space-y-5">
-                {/* Goal */}
-                <div className="space-y-2">
-                  <Label htmlFor="goal" className="text-foreground font-medium">
-                    Meta de Doação para 2026 ({unit})
-                  </Label>
-                  <div className="relative">
-                    <Target className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                    <Input
-                      id="goal"
-                      type="number"
-                      placeholder="Ex: 50"
-                      value={goal}
-                      onChange={(e) => setGoal(e.target.value)}
-                      className="pl-11"
-                      min="0"
-                      required
-                    />
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    Defina quantos {unit} você pretende doar até 2026
-                  </p>
-                </div>
-
-                {/* Commitments List */}
-                <div className="space-y-3">
+                {/* Blocks List */}
+                <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <Label className="text-foreground font-medium">
-                      Regras de Doação
+                      Blocos de Metas
                     </Label>
                     <Button
                       type="button"
                       variant="outline"
                       size="sm"
-                      onClick={addNewCommitment}
+                      onClick={addNewBlock}
                       className="text-xs"
                     >
                       <Plus className="w-3 h-3 mr-1" />
-                      Adicionar Meta
+                      Adicionar Bloco
                     </Button>
                   </div>
 
-                  {commitments.length === 0 ? (
-                    <div className="text-center py-6 bg-muted/30 rounded-xl border-2 border-dashed border-muted">
-                      <Target className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
-                      <p className="text-sm text-muted-foreground">
-                        Nenhuma regra definida ainda
+                  {blocks.length === 0 ? (
+                    <div className="text-center py-8 bg-muted/30 rounded-xl border-2 border-dashed border-muted">
+                      <Target className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+                      <p className="text-sm text-muted-foreground font-medium">
+                        Nenhum bloco de meta definido
                       </p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Clique em "Adicionar Meta" para criar suas regras
+                      <p className="text-xs text-muted-foreground mt-1 max-w-[200px] mx-auto">
+                        Clique em "Adicionar Bloco" para criar suas metas de doação
                       </p>
                     </div>
                   ) : (
-                    <div className="space-y-3">
-                      {commitments.map((commitment, index) => (
+                    <div className="space-y-4">
+                      {blocks.map((block, index) => (
                         <div 
-                          key={commitment.id || `new-${index}`}
-                          className="p-4 bg-muted/50 rounded-xl space-y-3"
+                          key={block.id || `new-${index}`}
+                          className="p-4 bg-muted/50 rounded-xl space-y-4 border border-border"
                         >
+                          {/* Block Header */}
                           <div className="flex items-center justify-between">
-                            <span className="text-xs font-medium text-primary">
-                              META {index + 1}
-                            </span>
+                            <Input
+                              type="text"
+                              value={block.name}
+                              onChange={(e) => updateBlock(index, 'name', e.target.value)}
+                              placeholder={`Meta ${index + 1}`}
+                              className="font-semibold text-primary bg-transparent border-none p-0 h-auto text-sm focus-visible:ring-0"
+                            />
                             <Button
                               type="button"
                               variant="ghost"
                               size="sm"
-                              onClick={() => removeCommitment(index)}
-                              className="text-destructive hover:text-destructive h-6 w-6 p-0"
+                              onClick={() => removeBlock(index)}
+                              className="text-destructive hover:text-destructive h-7 w-7 p-0"
                             >
-                              <Trash2 className="w-3 h-3" />
+                              <Trash2 className="w-4 h-4" />
                             </Button>
                           </div>
-                          
-                          <div className="flex flex-wrap items-center gap-2 text-sm">
-                            <span className="text-muted-foreground">A cada</span>
-                            <Input
-                              type="number"
-                              value={commitment.ratio}
-                              onChange={(e) => updateCommitment(index, 'ratio', parseInt(e.target.value) || 1)}
-                              className="w-14 text-center h-8"
-                              min="1"
-                            />
-                            <Input
-                              type="text"
-                              value={commitment.metric}
-                              onChange={(e) => updateCommitment(index, 'metric', e.target.value)}
-                              placeholder="ex: gol, km, kg"
-                              className="flex-1 min-w-[100px] h-8"
-                            />
+
+                          {/* Goal */}
+                          <div className="space-y-1">
+                            <Label className="text-xs text-muted-foreground">
+                              Meta de Doação ({unit})
+                            </Label>
+                            <div className="flex items-center gap-2">
+                              <Input
+                                type="number"
+                                value={block.personal_goal || ""}
+                                onChange={(e) => updateBlock(index, 'personal_goal', parseInt(e.target.value) || 0)}
+                                placeholder="10"
+                                className="w-24 h-9"
+                                min="0"
+                              />
+                              <span className="text-sm text-muted-foreground">{unit}</span>
+                            </div>
                           </div>
                           
-                          <div className="flex items-center gap-2 text-sm">
-                            <span className="text-muted-foreground">doarei</span>
-                            <Input
-                              type="number"
-                              value={commitment.donation_amount}
-                              onChange={(e) => updateCommitment(index, 'donation_amount', parseInt(e.target.value) || 1)}
-                              className="w-14 text-center h-8"
-                              min="1"
-                            />
-                            <span className="font-medium text-foreground">{unit}</span>
+                          {/* Rule */}
+                          <div className="space-y-1">
+                            <Label className="text-xs text-muted-foreground">
+                              Regra de Doação
+                            </Label>
+                            <div className="flex flex-wrap items-center gap-2 text-sm">
+                              <span className="text-muted-foreground">A cada</span>
+                              <Input
+                                type="number"
+                                value={block.ratio}
+                                onChange={(e) => updateBlock(index, 'ratio', parseInt(e.target.value) || 1)}
+                                className="w-14 text-center h-9"
+                                min="1"
+                              />
+                              <Input
+                                type="text"
+                                value={block.metric}
+                                onChange={(e) => updateBlock(index, 'metric', e.target.value)}
+                                placeholder="ex: gol, km, kg"
+                                className="flex-1 min-w-[100px] h-9"
+                              />
+                              <span className="text-muted-foreground">=</span>
+                              <Input
+                                type="number"
+                                value={block.donation_amount}
+                                onChange={(e) => updateBlock(index, 'donation_amount', parseInt(e.target.value) || 1)}
+                                className="w-14 text-center h-9"
+                                min="1"
+                              />
+                              <span className="font-medium text-foreground">{unit}</span>
+                            </div>
                           </div>
 
-                          {/* Preview */}
-                          {commitment.metric && (
+                          {/* Preview Rule */}
+                          {block.metric && (
                             <div className="p-2 bg-primary/10 rounded-lg">
                               <p className="text-xs text-primary font-medium">
-                                📌 "{commitment.ratio} {commitment.metric} = {commitment.donation_amount} {unit}"
+                                📌 "{block.ratio} {block.metric} = {block.donation_amount} {unit}"
                               </p>
                             </div>
                           )}
+
+                          {/* Challenge/Penalty */}
+                          <div className="space-y-2 p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg">
+                            <div className="flex items-start gap-2">
+                              <Checkbox
+                                id={`penalty-${index}`}
+                                checked={block.penalty_donation !== null && block.penalty_donation > 0}
+                                onCheckedChange={(checked) => {
+                                  if (checked) {
+                                    updateBlock(index, 'penalty_donation', (block.personal_goal || 10) * 2);
+                                  } else {
+                                    updateBlock(index, 'penalty_donation', null);
+                                  }
+                                }}
+                                className="mt-0.5"
+                              />
+                              <div className="flex-1">
+                                <Label htmlFor={`penalty-${index}`} className="text-xs font-medium cursor-pointer flex items-center gap-1">
+                                  <AlertTriangle className="w-3 h-3 text-amber-500" />
+                                  Aceito o desafio!
+                                </Label>
+                              </div>
+                            </div>
+
+                            {block.penalty_donation !== null && block.penalty_donation > 0 && (
+                              <div className="flex items-center gap-2 text-xs mt-2 pl-5">
+                                <span className="text-muted-foreground">Se não bater, doarei</span>
+                                <Input
+                                  type="number"
+                                  value={block.penalty_donation || ""}
+                                  onChange={(e) => updateBlock(index, 'penalty_donation', parseInt(e.target.value) || 0)}
+                                  className="w-16 text-center h-7 text-xs"
+                                  min="1"
+                                />
+                                <span className="font-medium text-foreground">{unit}</span>
+                              </div>
+                            )}
+                          </div>
                         </div>
                       ))}
                     </div>
                   )}
                 </div>
 
-                {/* Penalty Challenge */}
-                <div className="space-y-3 p-4 bg-amber-500/10 border border-amber-500/20 rounded-xl">
-                  <div className="flex items-start gap-3">
-                    <Checkbox
-                      id="penaltyEnabled"
-                      checked={penaltyEnabled}
-                      onCheckedChange={(checked) => setPenaltyEnabled(checked === true)}
-                      className="mt-0.5"
-                    />
-                    <div className="flex-1">
-                      <Label htmlFor="penaltyEnabled" className="text-foreground font-medium cursor-pointer flex items-center gap-2">
-                        <AlertTriangle className="w-4 h-4 text-amber-500" />
-                        Aceito o desafio!
-                      </Label>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Se eu não bater minha meta pessoal, me comprometo a doar mais
-                      </p>
+                {/* Summary */}
+                {blocks.length > 0 && (
+                  <div className="p-4 bg-gradient-to-r from-primary/10 to-secondary/10 rounded-xl space-y-2">
+                    <h4 className="font-semibold text-foreground text-sm">Resumo Total</h4>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Meta de Doação:</span>
+                      <span className="font-bold text-primary">{totalGoal} {unit}</span>
                     </div>
+                    {totalPenalty > 0 && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Desafio Total:</span>
+                        <span className="font-bold text-amber-600">{totalPenalty} {unit}</span>
+                      </div>
+                    )}
                   </div>
-
-                  {penaltyEnabled && (
-                    <div className="flex items-center gap-2 text-sm mt-3 pl-7">
-                      <span className="text-muted-foreground">Se não bater a meta, doarei</span>
-                      <Input
-                        type="number"
-                        value={penaltyDonation}
-                        onChange={(e) => setPenaltyDonation(e.target.value)}
-                        className="w-20 text-center"
-                        min="1"
-                      />
-                      <span className="font-medium text-foreground">{unit}</span>
-                    </div>
-                  )}
-
-                  {penaltyEnabled && (
-                    <div className="p-3 bg-amber-500/10 rounded-lg mt-2">
-                      <p className="text-sm text-amber-700 dark:text-amber-400 font-medium">
-                        🔥 Meta: {parseInt(goal) || 0} {unit} → Desafio: {parseInt(penaltyDonation) || 0} {unit} se não bater!
-                      </p>
-                    </div>
-                  )}
-                </div>
+                )}
 
                 <div className="flex gap-3 pt-2">
                   <Button

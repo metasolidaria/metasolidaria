@@ -5,9 +5,12 @@ import { useToast } from "@/hooks/use-toast";
 
 interface MemberCommitment {
   id: string;
+  name: string | null;
   metric: string;
   ratio: number;
   donation_amount: number;
+  personal_goal: number;
+  penalty_donation: number | null;
 }
 
 interface GroupMember {
@@ -16,8 +19,6 @@ interface GroupMember {
   user_id: string | null;
   goals_reached: number;
   total_contributed: number;
-  personal_goal: number;
-  penalty_donation: number | null;
   commitments: MemberCommitment[];
 }
 
@@ -90,9 +91,12 @@ export const useGroupDetails = (groupId: string | undefined) => {
         if (!acc[c.member_id]) acc[c.member_id] = [];
         acc[c.member_id].push({
           id: c.id,
+          name: c.name,
           metric: c.metric,
           ratio: c.ratio,
           donation_amount: c.donation_amount,
+          personal_goal: c.personal_goal || 0,
+          penalty_donation: c.penalty_donation || null,
         });
         return acc;
       }, {} as Record<string, MemberCommitment[]>);
@@ -100,8 +104,6 @@ export const useGroupDetails = (groupId: string | undefined) => {
       return membersData.map((member) => ({
         ...member,
         total_contributed: contributionsByMember[member.id] || 0,
-        personal_goal: member.personal_goal || 0,
-        penalty_donation: member.penalty_donation || null,
         commitments: commitmentsByMember[member.id] || [],
       })) as GroupMember[];
     },
@@ -321,51 +323,45 @@ export const useGroupDetails = (groupId: string | undefined) => {
   const updateMemberGoal = useMutation({
     mutationFn: async ({ 
       memberId, 
-      personal_goal,
-      penalty_donation,
       commitments,
     }: { 
       memberId: string; 
-      personal_goal: number;
-      penalty_donation?: number | null;
-      commitments?: Array<{ id?: string; metric: string; ratio: number; donation_amount: number }>;
+      commitments: Array<{ 
+        id?: string; 
+        name?: string;
+        metric: string; 
+        ratio: number; 
+        donation_amount: number;
+        personal_goal: number;
+        penalty_donation?: number | null;
+      }>;
     }) => {
-      // Update member's personal goal and penalty
-      const { error: memberError } = await supabase
-        .from("group_members")
-        .update({ 
-          personal_goal,
-          penalty_donation,
-        })
-        .eq("id", memberId);
-
-      if (memberError) throw memberError;
-
       // Handle commitments - delete old ones and insert new ones
-      if (commitments !== undefined) {
-        // Delete existing commitments for this member
-        const { error: deleteError } = await supabase
+      // Delete existing commitments for this member
+      const { error: deleteError } = await supabase
+        .from("member_commitments")
+        .delete()
+        .eq("member_id", memberId);
+
+      if (deleteError) throw deleteError;
+
+      // Insert new commitments with all fields
+      if (commitments.length > 0) {
+        const newCommitments = commitments.map(c => ({
+          member_id: memberId,
+          name: c.name || `Meta de ${c.metric}`,
+          metric: c.metric,
+          ratio: c.ratio,
+          donation_amount: c.donation_amount,
+          personal_goal: c.personal_goal || 0,
+          penalty_donation: c.penalty_donation || null,
+        }));
+
+        const { error: insertError } = await supabase
           .from("member_commitments")
-          .delete()
-          .eq("member_id", memberId);
+          .insert(newCommitments);
 
-        if (deleteError) throw deleteError;
-
-        // Insert new commitments
-        if (commitments.length > 0) {
-          const newCommitments = commitments.map(c => ({
-            member_id: memberId,
-            metric: c.metric,
-            ratio: c.ratio,
-            donation_amount: c.donation_amount,
-          }));
-
-          const { error: insertError } = await supabase
-            .from("member_commitments")
-            .insert(newCommitments);
-
-          if (insertError) throw insertError;
-        }
+        if (insertError) throw insertError;
       }
     },
     onSuccess: () => {
@@ -384,8 +380,11 @@ export const useGroupDetails = (groupId: string | undefined) => {
     },
   });
 
-  // Calculate total group goal from members' personal goals
-  const totalGroupGoal = (members || []).reduce((sum, m) => sum + (m.personal_goal || 0), 0);
+  // Calculate total group goal from members' commitments
+  const totalGroupGoal = (members || []).reduce((sum, m) => {
+    const memberTotal = (m.commitments || []).reduce((cSum, c) => cSum + (c.personal_goal || 0), 0);
+    return sum + memberTotal;
+  }, 0);
 
   return {
     group,
