@@ -217,10 +217,10 @@ export type Database = {
           latitude: number | null
           longitude: number | null
           name: string
-          specialty: string
+          specialty: string | null
           submitted_by: string | null
           updated_at: string
-          whatsapp: string
+          whatsapp: string | null
         }
         Insert: {
           city: string
@@ -231,10 +231,10 @@ export type Database = {
           latitude?: number | null
           longitude?: number | null
           name: string
-          specialty: string
+          specialty?: string | null
           submitted_by?: string | null
           updated_at?: string
-          whatsapp: string
+          whatsapp?: string | null
         }
         Update: {
           city?: string
@@ -245,10 +245,10 @@ export type Database = {
           latitude?: number | null
           longitude?: number | null
           name?: string
-          specialty?: string
+          specialty?: string | null
           submitted_by?: string | null
           updated_at?: string
-          whatsapp?: string
+          whatsapp?: string | null
         }
         Relationships: []
       }
