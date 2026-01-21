@@ -86,13 +86,24 @@ export const useGroups = () => {
             .select("*", { count: "exact", head: true })
             .eq("group_id", group.id);
 
-          // Buscar metas pessoais dos membros
+          // Buscar IDs dos membros do grupo
           const { data: members } = await supabase
             .from("group_members")
-            .select("personal_goal")
+            .select("id")
             .eq("group_id", group.id);
 
-          const totalGoals = members?.reduce((sum, m) => sum + (m.personal_goal || 0), 0) || 0;
+          // Buscar metas de todos os compromissos dos membros
+          const memberIds = members?.map(m => m.id) || [];
+          let totalGoals = 0;
+
+          if (memberIds.length > 0) {
+            const { data: commitments } = await supabase
+              .from("member_commitments")
+              .select("personal_goal")
+              .in("member_id", memberIds);
+
+            totalGoals = commitments?.reduce((sum, c) => sum + (c.personal_goal || 0), 0) || 0;
+          }
 
           // Buscar total de doações do progresso
           const { data: progressData } = await supabase
