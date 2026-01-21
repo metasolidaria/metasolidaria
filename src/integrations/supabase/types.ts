@@ -116,6 +116,9 @@ export type Database = {
       }
       group_members: {
         Row: {
+          commitment_metric: string | null
+          commitment_ratio: number | null
+          commitment_type: string | null
           created_at: string
           goals_reached: number
           group_id: string
@@ -126,6 +129,9 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          commitment_metric?: string | null
+          commitment_ratio?: number | null
+          commitment_type?: string | null
           created_at?: string
           goals_reached?: number
           group_id: string
@@ -136,6 +142,9 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          commitment_metric?: string | null
+          commitment_ratio?: number | null
+          commitment_type?: string | null
           created_at?: string
           goals_reached?: number
           group_id?: string

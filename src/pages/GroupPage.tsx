@@ -337,16 +337,16 @@ export default function GroupPage() {
                   {members.map((member) => (
                     <div 
                       key={member.id}
-                      className="flex items-center justify-between p-2"
+                      className="flex items-center justify-between p-3 bg-muted/30 rounded-lg"
                     >
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                           <span className="text-primary font-medium">
                             {member.name.charAt(0).toUpperCase()}
                           </span>
                         </div>
-                        <div>
-                          <p className="font-medium text-foreground">
+                        <div className="min-w-0 flex-1">
+                          <p className="font-medium text-foreground truncate">
                             {member.name}
                             {member.user_id === group.leader_id && (
                               <span className="ml-2 text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">
@@ -357,10 +357,15 @@ export default function GroupPage() {
                           <p className="text-sm text-muted-foreground">
                             {member.total_contributed || 0} / {member.personal_goal || 0} {donationType.unit}
                           </p>
+                          {member.commitment_metric && (
+                            <p className="text-xs text-primary mt-1">
+                              📌 {member.commitment_ratio || 1} {member.commitment_metric} = 1 {donationType.unit}
+                            </p>
+                          )}
                         </div>
                       </div>
                       
-                      <div className="flex items-center gap-1">
+                      <div className="flex items-center gap-1 flex-shrink-0">
                         {member.user_id === user?.id && (
                           <Button
                             variant="ghost"
@@ -457,9 +462,18 @@ export default function GroupPage() {
           onOpenChange={setEditGoalOpen}
           memberName={userMember.name}
           currentGoal={userMember.personal_goal || 0}
-          onSave={(goal) => {
+          currentCommitmentType={userMember.commitment_type}
+          currentCommitmentMetric={userMember.commitment_metric}
+          currentCommitmentRatio={userMember.commitment_ratio}
+          onSave={(data) => {
             updateMemberGoal.mutate(
-              { memberId: userMember.id, personal_goal: goal },
+              { 
+                memberId: userMember.id, 
+                personal_goal: data.personal_goal,
+                commitment_type: data.commitment_type,
+                commitment_metric: data.commitment_metric,
+                commitment_ratio: data.commitment_ratio,
+              },
               { onSuccess: () => setEditGoalOpen(false) }
             );
           }}

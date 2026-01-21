@@ -10,6 +10,9 @@ interface GroupMember {
   goals_reached: number;
   total_contributed: number;
   personal_goal: number;
+  commitment_type: string | null;
+  commitment_metric: string | null;
+  commitment_ratio: number | null;
 }
 
 interface ProgressEntry {
@@ -74,6 +77,9 @@ export const useGroupDetails = (groupId: string | undefined) => {
         ...member,
         total_contributed: contributionsByMember[member.id] || 0,
         personal_goal: member.personal_goal || 0,
+        commitment_type: member.commitment_type || null,
+        commitment_metric: member.commitment_metric || null,
+        commitment_ratio: member.commitment_ratio || null,
       })) as GroupMember[];
     },
     enabled: !!groupId,
@@ -284,10 +290,27 @@ export const useGroupDetails = (groupId: string | undefined) => {
 
   // Update member goal mutation
   const updateMemberGoal = useMutation({
-    mutationFn: async ({ memberId, personal_goal }: { memberId: string; personal_goal: number }) => {
+    mutationFn: async ({ 
+      memberId, 
+      personal_goal,
+      commitment_type,
+      commitment_metric,
+      commitment_ratio,
+    }: { 
+      memberId: string; 
+      personal_goal: number;
+      commitment_type?: string | null;
+      commitment_metric?: string | null;
+      commitment_ratio?: number;
+    }) => {
       const { error } = await supabase
         .from("group_members")
-        .update({ personal_goal })
+        .update({ 
+          personal_goal,
+          commitment_type,
+          commitment_metric,
+          commitment_ratio,
+        })
         .eq("id", memberId);
 
       if (error) throw error;
@@ -295,13 +318,13 @@ export const useGroupDetails = (groupId: string | undefined) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["groupMembers", groupId] });
       toast({
-        title: "Meta atualizada! 🎯",
-        description: "Sua meta pessoal foi definida com sucesso.",
+        title: "Compromisso salvo! 🎯",
+        description: "Seu compromisso de doação foi definido com sucesso.",
       });
     },
     onError: (error: Error) => {
       toast({
-        title: "Erro ao atualizar meta",
+        title: "Erro ao salvar compromisso",
         description: error.message,
         variant: "destructive",
       });
