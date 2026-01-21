@@ -189,6 +189,7 @@ export default function GroupPage() {
                   Editar Grupo
                 </Button>
               )}
+              {/* Temporariamente desabilitado para economizar recursos
               {userMember && (
                 <Button 
                   variant="outline"
@@ -210,6 +211,7 @@ export default function GroupPage() {
                   Analisar com IA
                 </Button>
               )}
+              */}
               {userMember && !isLeader && (
                 <Button 
                   variant="outline" 
