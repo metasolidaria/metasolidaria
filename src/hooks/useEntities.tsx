@@ -6,6 +6,7 @@ export interface Entity {
   id: string;
   name: string;
   city: string;
+  phone: string | null;
   created_at: string;
 }
 
@@ -27,7 +28,7 @@ export const useEntities = () => {
   });
 
   const createEntity = useMutation({
-    mutationFn: async ({ name, city }: { name: string; city: string }) => {
+    mutationFn: async ({ name, city, phone }: { name: string; city: string; phone?: string }) => {
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) throw new Error("User not authenticated");
 
@@ -36,6 +37,7 @@ export const useEntities = () => {
         .insert({ 
           name: name.trim(), 
           city: city.trim(),
+          phone: phone?.trim() || null,
           created_by: userData.user.id 
         })
         .select()
