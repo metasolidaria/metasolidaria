@@ -17,14 +17,30 @@ import {
   UserPlus,
   Store,
   Building2,
-  MoreHorizontal
+  MoreHorizontal,
+  Diamond,
+  Crown,
+  Medal
 } from "lucide-react";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
-import { usePartners } from "@/hooks/usePartners";
+import { usePartners, PartnerTier } from "@/hooks/usePartners";
 import { useGeolocation, calculateDistance } from "@/hooks/useGeolocation";
 import { Slider } from "./ui/slider";
 import { RecommendPartnerModal } from "./RecommendPartnerModal";
+
+// Configuração de tiers
+const tierConfig: Record<PartnerTier, { label: string; colorClass: string; icon: typeof Diamond }> = {
+  diamante: { label: "Diamante", colorClass: "bg-cyan-500 text-white", icon: Diamond },
+  ouro: { label: "Ouro", colorClass: "bg-yellow-500 text-yellow-900", icon: Crown },
+  apoiador: { label: "Apoiador", colorClass: "bg-muted text-muted-foreground", icon: Medal },
+};
+
+const tierOrder: Record<PartnerTier, number> = {
+  diamante: 1,
+  ouro: 2,
+  apoiador: 3,
+};
 
 const categories = [
   { id: "all", label: "Todos", icon: Star },
@@ -96,12 +112,24 @@ export const PartnersSection = () => {
           return partner.distance <= radiusKm;
         })
         .sort((a, b) => {
+          // Primeiro por tier, depois por distância
+          const tierA = tierOrder[a.tier] || 3;
+          const tierB = tierOrder[b.tier] || 3;
+          if (tierA !== tierB) return tierA - tierB;
+          
           // Ordenar por distância (parceiros sem coordenadas vão para o final)
           if (a.distance === null && b.distance === null) return 0;
           if (a.distance === null) return 1;
           if (b.distance === null) return -1;
           return a.distance - b.distance;
         });
+    } else {
+      // Ordenar por tier quando não está usando proximidade
+      result = result.sort((a, b) => {
+        const tierA = tierOrder[a.tier] || 3;
+        const tierB = tierOrder[b.tier] || 3;
+        return tierA - tierB;
+      });
     }
 
     return result;
@@ -252,9 +280,28 @@ export const PartnersSection = () => {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: index * 0.1 }}
-                className="bg-card rounded-2xl overflow-hidden shadow-soft hover:shadow-glow transition-all duration-300 hover:-translate-y-1"
+                className={`bg-card rounded-2xl overflow-hidden shadow-soft hover:shadow-glow transition-all duration-300 hover:-translate-y-1 ${
+                  partner.tier === 'diamante' ? 'ring-2 ring-cyan-500/50' : 
+                  partner.tier === 'ouro' ? 'ring-2 ring-yellow-500/50' : ''
+                }`}
               >
-                <div className="flex gap-4 p-5">
+                {/* Badge de Tier */}
+                {partner.tier && (
+                  <div className="px-5 pt-4">
+                    {(() => {
+                      const config = tierConfig[partner.tier];
+                      const TierIcon = config.icon;
+                      return (
+                        <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full ${config.colorClass}`}>
+                          <TierIcon className="w-3 h-3" />
+                          {config.label}
+                        </span>
+                      );
+                    })()}
+                  </div>
+                )}
+                
+                <div className="flex gap-4 p-5 pt-3">
                   <img
                     src={placeholderImages[index % placeholderImages.length]}
                     alt={partner.name}
