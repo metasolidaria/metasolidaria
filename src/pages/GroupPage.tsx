@@ -1,12 +1,14 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, Users, Target, MapPin, Lock, Globe, Plus, Trash2, Loader2, LogOut, TrendingUp } from "lucide-react";
+import { ArrowLeft, Users, Target, MapPin, Lock, Globe, Plus, Trash2, Loader2, LogOut, TrendingUp, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { useGroupDetails } from "@/hooks/useGroupDetails";
 import { useAuth } from "@/hooks/useAuth";
 import { AddProgressModal } from "@/components/AddProgressModal";
 import { ProgressCharts } from "@/components/ProgressCharts";
+import { ProgressAnalysisModal } from "@/components/ProgressAnalysisModal";
+import { useProgressAnalysis } from "@/hooks/useProgressAnalysis";
 import { useState } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -38,7 +40,10 @@ export default function GroupPage() {
   const { user } = useAuth();
   const [addProgressOpen, setAddProgressOpen] = useState(false);
   const [leaveDialogOpen, setLeaveDialogOpen] = useState(false);
+  const [analysisModalOpen, setAnalysisModalOpen] = useState(false);
   const [memberToRemove, setMemberToRemove] = useState<{ id: string; name: string } | null>(null);
+  
+  const { analyzeProgress, analysis, isLoading: analysisLoading, clearAnalysis } = useProgressAnalysis();
 
   const { 
     group, 
@@ -139,7 +144,28 @@ export default function GroupPage() {
               </div>
             </div>
 
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
+              {userMember && (
+                <Button 
+                  variant="outline"
+                  onClick={() => {
+                    setAnalysisModalOpen(true);
+                    if (group && members && progressEntries) {
+                      analyzeProgress(
+                        group,
+                        members,
+                        progressEntries,
+                        totalProgress,
+                        donationType
+                      );
+                    }
+                  }}
+                  disabled={analysisLoading || !progressEntries?.length}
+                >
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  Analisar com IA
+                </Button>
+              )}
               {userMember && !isLeader && (
                 <Button 
                   variant="outline" 
@@ -419,6 +445,18 @@ export default function GroupPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Progress Analysis Modal */}
+      <ProgressAnalysisModal
+        open={analysisModalOpen}
+        onOpenChange={(open) => {
+          setAnalysisModalOpen(open);
+          if (!open) clearAnalysis();
+        }}
+        analysis={analysis}
+        isLoading={analysisLoading}
+        groupName={group?.name || ""}
+      />
     </div>
   );
 }
