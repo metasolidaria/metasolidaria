@@ -194,7 +194,7 @@ export const GroupsSection = ({ onRequireAuth }: GroupsSectionProps) => {
                         <Target className="w-4 h-4" />
                       </div>
                       <div className="text-lg font-bold text-primary">
-                        {group.goals_reached || 0}
+                        {group.total_goals || 0}
                       </div>
                       <div className="text-xs text-muted-foreground">Metas</div>
                     </div>
@@ -203,7 +203,7 @@ export const GroupsSection = ({ onRequireAuth }: GroupsSectionProps) => {
                         <Heart className="w-4 h-4" />
                       </div>
                       <div className="text-lg font-bold text-secondary">
-                        {group.goals_reached || 0}
+                        {group.total_donations || 0}
                       </div>
                       <div className="text-xs text-muted-foreground">Doações</div>
                     </div>
