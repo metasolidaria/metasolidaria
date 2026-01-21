@@ -116,6 +116,7 @@ export type Database = {
       }
       group_members: {
         Row: {
+          commitment_donation: number | null
           commitment_metric: string | null
           commitment_ratio: number | null
           commitment_type: string | null
@@ -129,6 +130,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          commitment_donation?: number | null
           commitment_metric?: string | null
           commitment_ratio?: number | null
           commitment_type?: string | null
@@ -142,6 +144,7 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          commitment_donation?: number | null
           commitment_metric?: string | null
           commitment_ratio?: number | null
           commitment_type?: string | null
