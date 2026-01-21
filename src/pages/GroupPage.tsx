@@ -392,12 +392,16 @@ export default function GroupPage() {
                       <div className="flex items-center gap-1 flex-shrink-0">
                         {member.user_id === user?.id && (
                           <Button
-                            variant="ghost"
+                            variant={!member.personal_goal ? "default" : "ghost"}
                             size="sm"
                             onClick={() => setEditGoalOpen(true)}
-                            className="text-primary hover:text-primary hover:bg-primary/10"
+                            className={!member.personal_goal 
+                              ? "bg-primary text-primary-foreground hover:bg-primary/90" 
+                              : "text-primary hover:text-primary hover:bg-primary/10"
+                            }
                           >
                             <Target className="w-4 h-4" />
+                            {!member.personal_goal && <span className="ml-1">DEFINIR META</span>}
                           </Button>
                         )}
                         
