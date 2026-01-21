@@ -101,9 +101,9 @@ export const AuthModal = ({ open, onOpenChange, defaultMode = "login" }: AuthMod
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             transition={{ type: "spring", duration: 0.5 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto"
           >
-            <div className="bg-card rounded-2xl shadow-xl w-full max-w-md">
+            <div className="bg-card rounded-2xl shadow-xl w-full max-w-md my-auto max-h-[95vh] overflow-y-auto">
               <div className="bg-gradient-stats p-6 relative rounded-t-2xl">
                 {mode === "forgot" && (
                   <button
