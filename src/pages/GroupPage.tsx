@@ -249,7 +249,7 @@ export default function GroupPage() {
                 <Progress value={progressPercentage} className="h-3" />
                 <div className="flex justify-between text-sm text-muted-foreground mt-1">
                   <span>
-                    {members?.filter(m => m.personal_goal > 0).length || 0} membro(s) com meta definida
+                    {members?.filter(m => m.commitments?.some(c => c.personal_goal > 0)).length || 0} membro(s) com meta definida
                   </span>
                   <span>{progressPercentage.toFixed(1)}% concluído</span>
                 </div>
@@ -374,21 +374,23 @@ export default function GroupPage() {
                             )}
                           </p>
                           <p className="text-sm text-muted-foreground">
-                            {member.total_contributed || 0} / {member.personal_goal || 0} {donationType.unit}
+                            {member.total_contributed || 0} / {(member.commitments || []).reduce((sum, c) => sum + (c.personal_goal || 0), 0)} {donationType.unit}
                           </p>
                           {member.commitments && member.commitments.length > 0 && (
                             <div className="mt-1 space-y-0.5">
                               {member.commitments.map((c, idx) => (
-                                <p key={c.id || idx} className="text-xs text-primary">
-                                  📌 {c.ratio} {c.metric} = {c.donation_amount} {donationType.unit}
-                                </p>
+                                <div key={c.id || idx}>
+                                  <p className="text-xs text-primary">
+                                    📌 {c.ratio} {c.metric} = {c.donation_amount} {donationType.unit} (meta: {c.personal_goal} {donationType.unit})
+                                  </p>
+                                  {c.penalty_donation && c.penalty_donation > 0 && (
+                                    <p className="text-xs text-amber-600 dark:text-amber-400 ml-4">
+                                      🔥 Desafio: {c.penalty_donation} {donationType.unit}
+                                    </p>
+                                  )}
+                                </div>
                               ))}
                             </div>
-                          )}
-                          {member.penalty_donation && (
-                            <p className="text-xs text-amber-600 dark:text-amber-400">
-                              🔥 Desafio: {member.penalty_donation} {donationType.unit} se não bater a meta
-                            </p>
                           )}
                         </div>
                       </div>
@@ -396,16 +398,16 @@ export default function GroupPage() {
                       <div className="flex items-center gap-1 flex-shrink-0">
                         {member.user_id === user?.id && (
                           <Button
-                            variant={!member.personal_goal ? "default" : "ghost"}
+                            variant={(member.commitments || []).length === 0 ? "default" : "ghost"}
                             size="sm"
                             onClick={() => setEditGoalOpen(true)}
-                            className={!member.personal_goal 
+                            className={(member.commitments || []).length === 0
                               ? "bg-primary text-primary-foreground hover:bg-primary/90" 
                               : "text-primary hover:text-primary hover:bg-primary/10"
                             }
                           >
                             <Target className="w-4 h-4" />
-                            <span className="ml-1">{!member.personal_goal ? "DEFINIR META" : "EDITAR META"}</span>
+                            <span className="ml-1">{(member.commitments || []).length === 0 ? "DEFINIR META" : "EDITAR META"}</span>
                           </Button>
                         )}
                         
@@ -493,15 +495,19 @@ export default function GroupPage() {
           open={editGoalOpen}
           onOpenChange={setEditGoalOpen}
           memberName={userMember.name}
-          currentGoal={userMember.personal_goal || 0}
-          currentCommitments={userMember.commitments || []}
-          currentPenaltyDonation={userMember.penalty_donation}
+          currentCommitments={(userMember.commitments || []).map(c => ({
+            id: c.id,
+            name: c.name || "",
+            metric: c.metric,
+            ratio: c.ratio,
+            donation_amount: c.donation_amount,
+            personal_goal: c.personal_goal || 0,
+            penalty_donation: c.penalty_donation || null,
+          }))}
           onSave={(data) => {
             updateMemberGoal.mutate(
               { 
                 memberId: userMember.id, 
-                personal_goal: data.personal_goal,
-                penalty_donation: data.penalty_donation,
                 commitments: data.commitments,
               },
               { onSuccess: () => setEditGoalOpen(false) }

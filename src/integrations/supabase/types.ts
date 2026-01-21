@@ -270,6 +270,9 @@ export type Database = {
           id: string
           member_id: string
           metric: string
+          name: string | null
+          penalty_donation: number | null
+          personal_goal: number | null
           ratio: number
         }
         Insert: {
@@ -278,6 +281,9 @@ export type Database = {
           id?: string
           member_id: string
           metric: string
+          name?: string | null
+          penalty_donation?: number | null
+          personal_goal?: number | null
           ratio?: number
         }
         Update: {
@@ -286,6 +292,9 @@ export type Database = {
           id?: string
           member_id?: string
           metric?: string
+          name?: string | null
+          penalty_donation?: number | null
+          personal_goal?: number | null
           ratio?: number
         }
         Relationships: [
