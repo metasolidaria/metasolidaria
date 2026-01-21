@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
-import { Building2, Plus, MapPin, Loader2 } from "lucide-react";
+import { Building2, Plus, MapPin, Loader2, Search } from "lucide-react";
 import { Button } from "./ui/button";
 import { Card, CardContent } from "./ui/card";
 import { Input } from "./ui/input";
@@ -24,6 +24,14 @@ export const EntitiesSection = ({ onRequireAuth }: EntitiesSectionProps) => {
   const { user } = useAuth();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newEntity, setNewEntity] = useState({ name: "", city: "" });
+  const [searchCity, setSearchCity] = useState("");
+
+  const filteredEntities = useMemo(() => {
+    if (!searchCity.trim()) return entities;
+    return entities.filter((entity) =>
+      entity.city.toLowerCase().includes(searchCity.toLowerCase())
+    );
+  }, [entities, searchCity]);
 
   const handleOpenModal = () => {
     if (!user) {
@@ -67,6 +75,17 @@ export const EntitiesSection = ({ onRequireAuth }: EntitiesSectionProps) => {
             <Plus className="w-5 h-5" />
             Cadastrar Entidade
           </Button>
+
+          {/* Filtro por cidade */}
+          <div className="relative max-w-md mx-auto mt-6">
+            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+            <Input
+              placeholder="Buscar por cidade..."
+              value={searchCity}
+              onChange={(e) => setSearchCity(e.target.value)}
+              className="pl-11"
+            />
+          </div>
         </motion.div>
 
         {isLoading ? (
@@ -87,9 +106,23 @@ export const EntitiesSection = ({ onRequireAuth }: EntitiesSectionProps) => {
               Seja o primeiro a cadastrar uma entidade beneficiária!
             </p>
           </motion.div>
+        ) : filteredEntities.length === 0 ? (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="text-center py-12"
+          >
+            <Search className="w-16 h-16 text-muted-foreground/50 mx-auto mb-4" />
+            <p className="text-muted-foreground">
+              Nenhuma entidade encontrada em "{searchCity}".
+            </p>
+            <p className="text-sm text-muted-foreground mt-2">
+              Tente buscar por outra cidade.
+            </p>
+          </motion.div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {entities.map((entity, index) => (
+            {filteredEntities.map((entity, index) => (
               <motion.div
                 key={entity.id}
                 initial={{ opacity: 0, y: 20 }}
