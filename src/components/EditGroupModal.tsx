@@ -1,19 +1,35 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Users, Lock, Globe, User, Phone, FileText } from "lucide-react";
+import { X, Settings, Lock, Globe, User, Phone, FileText } from "lucide-react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Switch } from "./ui/switch";
 import { Textarea } from "./ui/textarea";
-import { CityAutocomplete } from "./CityAutocomplete";
-import { useAuth } from "@/hooks/useAuth";
-import { useGroups } from "@/hooks/useGroups";
 
-interface CreateGroupModalProps {
+interface Group {
+  id: string;
+  name: string;
+  city: string;
+  donation_type: string;
+  description: string | null;
+  is_private: boolean;
+  leader_name: string | null;
+  leader_whatsapp: string | null;
+}
+
+interface EditGroupModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onRequireAuth: () => void;
+  group: Group;
+  onSave: (data: {
+    donation_type: string;
+    description: string | null;
+    is_private: boolean;
+    leader_name: string;
+    leader_whatsapp: string;
+  }) => void;
+  isPending?: boolean;
 }
 
 const donationTypes = [
@@ -27,59 +43,44 @@ const donationTypes = [
   { id: "outro", label: "Outro", icon: "📦" },
 ];
 
-export const CreateGroupModal = ({ open, onOpenChange, onRequireAuth }: CreateGroupModalProps) => {
-  const { user } = useAuth();
-  const { createGroup } = useGroups();
+export const EditGroupModal = ({ 
+  open, 
+  onOpenChange, 
+  group, 
+  onSave,
+  isPending = false 
+}: EditGroupModalProps) => {
   const [formData, setFormData] = useState({
-    groupName: "",
-    city: "",
-    donationType: "",
-    isPrivate: true,
-    leaderName: "",
-    leaderWhatsapp: "",
-    description: "",
+    donationType: group.donation_type,
+    description: group.description || "",
+    isPrivate: group.is_private,
+    leaderName: group.leader_name || "",
+    leaderWhatsapp: group.leader_whatsapp || "",
   });
 
   useEffect(() => {
-    if (open && !user) {
-      onOpenChange(false);
-      onRequireAuth();
+    if (open) {
+      setFormData({
+        donationType: group.donation_type,
+        description: group.description || "",
+        isPrivate: group.is_private,
+        leaderName: group.leader_name || "",
+        leaderWhatsapp: group.leader_whatsapp || "",
+      });
     }
-  }, [open, user, onOpenChange, onRequireAuth]);
+  }, [open, group]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!user) {
-      onRequireAuth();
-      return;
-    }
-
-    createGroup.mutate({
-      name: formData.groupName,
-      city: formData.city,
+    onSave({
       donation_type: formData.donationType,
-      goal_2026: 0,
-      leader_id: user.id,
+      description: formData.description || null,
       is_private: formData.isPrivate,
       leader_name: formData.leaderName,
       leader_whatsapp: formData.leaderWhatsapp,
-      description: formData.description,
     });
-
-    setFormData({ 
-      groupName: "", 
-      city: "", 
-      donationType: "",
-      isPrivate: false,
-      leaderName: "",
-      leaderWhatsapp: "",
-      description: "",
-    });
-    onOpenChange(false);
   };
-
-  if (!user) return null;
 
   return (
     <AnimatePresence>
@@ -101,7 +102,7 @@ export const CreateGroupModal = ({ open, onOpenChange, onRequireAuth }: CreateGr
             className="fixed inset-0 z-50 flex items-start justify-center p-4 pt-8 overflow-y-auto"
           >
             <div className="bg-card rounded-2xl shadow-xl w-full max-w-md my-auto max-h-[calc(100vh-4rem)] overflow-y-auto flex flex-col">
-              <div className="bg-gradient-stats p-6 relative rounded-t-2xl">
+              <div className="bg-gradient-stats p-6 relative rounded-t-2xl flex-shrink-0">
                 <button
                   onClick={() => onOpenChange(false)}
                   className="absolute top-4 right-4 w-8 h-8 rounded-full bg-primary-foreground/20 flex items-center justify-center hover:bg-primary-foreground/30 transition-colors"
@@ -109,17 +110,17 @@ export const CreateGroupModal = ({ open, onOpenChange, onRequireAuth }: CreateGr
                   <X className="w-4 h-4 text-primary-foreground" />
                 </button>
                 <div className="w-14 h-14 bg-primary-foreground/20 rounded-xl flex items-center justify-center mb-4">
-                  <Users className="w-7 h-7 text-primary-foreground" />
+                  <Settings className="w-7 h-7 text-primary-foreground" />
                 </div>
                 <h2 className="text-2xl font-bold text-primary-foreground">
-                  Criar Novo Grupo
+                  Editar Grupo
                 </h2>
                 <p className="text-primary-foreground/80 mt-1">
-                  Inicie uma jornada de transformação coletiva
+                  {group.name}
                 </p>
               </div>
 
-              <form onSubmit={handleSubmit} className="p-6 space-y-5">
+              <form onSubmit={handleSubmit} className="p-6 space-y-5 overflow-y-auto">
                 <div className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="leaderName" className="text-foreground font-medium">
@@ -160,25 +161,6 @@ export const CreateGroupModal = ({ open, onOpenChange, onRequireAuth }: CreateGr
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="groupName" className="text-foreground font-medium">
-                      Nome do Grupo
-                    </Label>
-                    <div className="relative">
-                      <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                      <Input
-                        id="groupName"
-                        placeholder="Ex: Equipe Solidária"
-                        value={formData.groupName}
-                        onChange={(e) =>
-                          setFormData({ ...formData, groupName: e.target.value })
-                        }
-                        className="pl-11"
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
                     <Label htmlFor="description" className="text-foreground font-medium">
                       Descrição do Grupo
                     </Label>
@@ -194,18 +176,6 @@ export const CreateGroupModal = ({ open, onOpenChange, onRequireAuth }: CreateGr
                         className="pl-11 min-h-[80px]"
                       />
                     </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="city" className="text-foreground font-medium">
-                      Cidade
-                    </Label>
-                    <CityAutocomplete
-                      value={formData.city}
-                      onChange={(value) => setFormData({ ...formData, city: value })}
-                      placeholder="Digite o nome da cidade"
-                      required
-                    />
                   </div>
 
                   <div className="space-y-2">
@@ -275,9 +245,9 @@ export const CreateGroupModal = ({ open, onOpenChange, onRequireAuth }: CreateGr
                     type="submit" 
                     variant="hero" 
                     className="flex-1"
-                    disabled={!formData.donationType || createGroup.isPending}
+                    disabled={!formData.donationType || isPending}
                   >
-                    {createGroup.isPending ? "Criando..." : "Criar Grupo"}
+                    {isPending ? "Salvando..." : "Salvar Alterações"}
                   </Button>
                 </div>
               </form>

@@ -9,6 +9,7 @@ interface GroupMember {
   user_id: string | null;
   goals_reached: number;
   total_contributed: number;
+  personal_goal: number;
 }
 
 interface ProgressEntry {
@@ -72,6 +73,7 @@ export const useGroupDetails = (groupId: string | undefined) => {
       return membersData.map((member) => ({
         ...member,
         total_contributed: contributionsByMember[member.id] || 0,
+        personal_goal: member.personal_goal || 0,
       })) as GroupMember[];
     },
     enabled: !!groupId,
@@ -245,16 +247,83 @@ export const useGroupDetails = (groupId: string | undefined) => {
     },
   });
 
+  // Update group mutation (for leaders)
+  const updateGroup = useMutation({
+    mutationFn: async (data: {
+      donation_type: string;
+      description: string | null;
+      is_private: boolean;
+      leader_name: string;
+      leader_whatsapp: string;
+    }) => {
+      if (!groupId) throw new Error("Grupo não encontrado");
+
+      const { error } = await supabase
+        .from("groups")
+        .update(data)
+        .eq("id", groupId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["group", groupId] });
+      queryClient.invalidateQueries({ queryKey: ["groups"] });
+      toast({
+        title: "Grupo atualizado! ✅",
+        description: "As alterações foram salvas com sucesso.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Erro ao atualizar grupo",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Update member goal mutation
+  const updateMemberGoal = useMutation({
+    mutationFn: async ({ memberId, personal_goal }: { memberId: string; personal_goal: number }) => {
+      const { error } = await supabase
+        .from("group_members")
+        .update({ personal_goal })
+        .eq("id", memberId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["groupMembers", groupId] });
+      toast({
+        title: "Meta atualizada! 🎯",
+        description: "Sua meta pessoal foi definida com sucesso.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Erro ao atualizar meta",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Calculate total group goal from members' personal goals
+  const totalGroupGoal = (members || []).reduce((sum, m) => sum + (m.personal_goal || 0), 0);
+
   return {
     group,
     members,
     progressEntries,
     totalProgress,
+    totalGroupGoal,
     userMember,
     isLoading: groupLoading || membersLoading || progressLoading,
     addProgress,
     deleteProgress,
     removeMember,
     leaveGroup,
+    updateGroup,
+    updateMemberGoal,
   };
 };
