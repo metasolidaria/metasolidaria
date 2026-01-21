@@ -8,6 +8,7 @@ import { Switch } from "./ui/switch";
 import { Textarea } from "./ui/textarea";
 import { Calendar } from "./ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
+import { EntitySelect } from "./EntitySelect";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
@@ -22,6 +23,7 @@ interface Group {
   leader_name: string | null;
   leader_whatsapp: string | null;
   end_date: string | null;
+  entity_id: string | null;
 }
 
 interface EditGroupModalProps {
@@ -35,6 +37,7 @@ interface EditGroupModalProps {
     leader_name: string;
     leader_whatsapp: string;
     end_date: string;
+    entity_id: string | null;
   }) => void;
   isPending?: boolean;
 }
@@ -64,6 +67,7 @@ export const EditGroupModal = ({
     leaderName: group.leader_name || "",
     leaderWhatsapp: group.leader_whatsapp || "",
     endDate: group.end_date ? new Date(group.end_date) : new Date("2026-12-31"),
+    entityId: group.entity_id,
   });
 
   useEffect(() => {
@@ -75,6 +79,7 @@ export const EditGroupModal = ({
         leaderName: group.leader_name || "",
         leaderWhatsapp: group.leader_whatsapp || "",
         endDate: group.end_date ? new Date(group.end_date) : new Date("2026-12-31"),
+        entityId: group.entity_id,
       });
     }
   }, [open, group]);
@@ -89,6 +94,7 @@ export const EditGroupModal = ({
       leader_name: formData.leaderName,
       leader_whatsapp: formData.leaderWhatsapp,
       end_date: format(formData.endDate, "yyyy-MM-dd"),
+      entity_id: formData.entityId,
     });
   };
 
@@ -248,6 +254,11 @@ export const EditGroupModal = ({
                       </PopoverContent>
                     </Popover>
                   </div>
+
+                  <EntitySelect
+                    value={formData.entityId}
+                    onChange={(entityId) => setFormData({ ...formData, entityId })}
+                  />
 
                   <div className="flex items-center justify-between p-4 rounded-xl border border-border bg-muted/30">
                     <div className="flex items-center gap-3">

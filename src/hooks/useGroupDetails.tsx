@@ -33,7 +33,7 @@ export const useGroupDetails = (groupId: string | undefined) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Fetch group details
+  // Fetch group details with entity
   const { data: group, isLoading: groupLoading } = useQuery({
     queryKey: ["group", groupId],
     queryFn: async () => {
@@ -41,7 +41,7 @@ export const useGroupDetails = (groupId: string | undefined) => {
 
       const { data, error } = await supabase
         .from("groups")
-        .select("*")
+        .select("*, entity:entities(id, name, city)")
         .eq("id", groupId)
         .single();
 
@@ -270,6 +270,7 @@ export const useGroupDetails = (groupId: string | undefined) => {
       leader_name: string;
       leader_whatsapp: string;
       end_date: string;
+      entity_id: string | null;
     }) => {
       if (!groupId) throw new Error("Grupo não encontrado");
 

@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, Users, Target, MapPin, Lock, Globe, Plus, Trash2, Loader2, LogOut, TrendingUp, Sparkles, Pencil, CalendarDays } from "lucide-react";
+import { ArrowLeft, Users, Target, MapPin, Lock, Globe, Plus, Trash2, Loader2, LogOut, TrendingUp, Sparkles, Pencil, CalendarDays, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { useGroupDetails } from "@/hooks/useGroupDetails";
@@ -155,6 +155,17 @@ export default function GroupPage() {
                   <span className="flex items-center gap-1">
                     <CalendarDays className="w-4 h-4" />
                     Meta até {format(new Date(group.end_date), "dd/MM/yyyy")}
+                  </span>
+                )}
+                {(group as any).entity ? (
+                  <span className="flex items-center gap-1 text-primary">
+                    <Building2 className="w-4 h-4" />
+                    {(group as any).entity.name} ({(group as any).entity.city})
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-1 text-muted-foreground/70 italic">
+                    <Building2 className="w-4 h-4" />
+                    Entidade não definida
                   </span>
                 )}
               </div>
