@@ -212,12 +212,6 @@ export default function GroupPage() {
                   Sair do Grupo
                 </Button>
               )}
-              {userMember && (
-                <Button onClick={() => setAddProgressOpen(true)}>
-                  <Plus className="w-4 h-4 mr-2" />
-                  Registrar Doação
-                </Button>
-              )}
             </div>
           </motion.div>
         </div>
@@ -395,20 +389,31 @@ export default function GroupPage() {
                         </div>
                       </div>
                       
-                      <div className="flex items-center gap-1 flex-shrink-0">
+                      <div className="flex flex-col items-end gap-1 flex-shrink-0">
                         {member.user_id === user?.id && (
-                          <Button
-                            variant={(member.commitments || []).length === 0 ? "default" : "ghost"}
-                            size="sm"
-                            onClick={() => setEditGoalOpen(true)}
-                            className={(member.commitments || []).length === 0
-                              ? "bg-primary text-primary-foreground hover:bg-primary/90" 
-                              : "text-primary hover:text-primary hover:bg-primary/10"
-                            }
-                          >
-                            <Target className="w-4 h-4" />
-                            <span className="ml-1">{(member.commitments || []).length === 0 ? "DEFINIR META" : "EDITAR META"}</span>
-                          </Button>
+                          <>
+                            <Button
+                              variant={(member.commitments || []).length === 0 ? "default" : "ghost"}
+                              size="sm"
+                              onClick={() => setEditGoalOpen(true)}
+                              className={(member.commitments || []).length === 0
+                                ? "bg-primary text-primary-foreground hover:bg-primary/90" 
+                                : "text-primary hover:text-primary hover:bg-primary/10"
+                              }
+                            >
+                              <Target className="w-4 h-4" />
+                              <span className="ml-1">{(member.commitments || []).length === 0 ? "DEFINIR META" : "EDITAR META"}</span>
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setAddProgressOpen(true)}
+                              className="text-green-600 hover:text-green-700 hover:bg-green-50 border-green-200"
+                            >
+                              <Plus className="w-4 h-4" />
+                              <span className="ml-1">Registrar Doação</span>
+                            </Button>
+                          </>
                         )}
                         
                         {isLeader && member.user_id !== group.leader_id && (
