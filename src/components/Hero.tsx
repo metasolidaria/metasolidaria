@@ -57,7 +57,7 @@ export const Hero = () => {
           <p className="text-lg md:text-xl text-primary-foreground/80 mb-10 max-w-3xl mx-auto leading-relaxed">
             Junte-se a grupos comprometidos em transformar metas pessoais em
             ações solidárias. Doe alimentos, livros, roupas, cobertores e muito mais. 
-            Em 2026, sua jornada pode mudar vidas.
+            Sua atitude, mudará vidas.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
