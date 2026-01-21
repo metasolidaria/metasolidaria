@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Building2, MapPin, Phone, User, FileText, Loader2, Diamond, Crown, Medal } from "lucide-react";
+import { X, Building2, MapPin, Phone, User, FileText, Loader2, Diamond, Crown, Medal, Instagram } from "lucide-react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea";
@@ -57,6 +57,7 @@ export const RecommendPartnerModal = ({
     responsible: "",
     description: "",
     tier: "apoiador" as PartnerTier,
+    instagram: "",
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -94,6 +95,7 @@ export const RecommendPartnerModal = ({
           submitted_by: user.id,
           is_approved: false,
           tier: formData.tier,
+          instagram: formData.instagram ? formData.instagram.replace("@", "").trim() : null,
         },
       ]);
 
@@ -112,6 +114,7 @@ export const RecommendPartnerModal = ({
         responsible: "",
         description: "",
         tier: "apoiador",
+        instagram: "",
       });
       onOpenChange(false);
     } catch (error: any) {
@@ -235,6 +238,22 @@ export const RecommendPartnerModal = ({
                     setFormData((prev) => ({ ...prev, responsible: e.target.value }))
                   }
                   maxLength={100}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="instagram" className="flex items-center gap-2">
+                  <Instagram className="w-4 h-4" />
+                  Instagram (opcional)
+                </Label>
+                <Input
+                  id="instagram"
+                  placeholder="@usuario"
+                  value={formData.instagram}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, instagram: e.target.value }))
+                  }
+                  maxLength={50}
                 />
               </div>
 
