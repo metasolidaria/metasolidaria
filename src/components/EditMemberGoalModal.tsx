@@ -1,58 +1,23 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Target, Dumbbell, Scale, Footprints, Flame, Sparkles, AlertTriangle } from "lucide-react";
+import { X, Target, Plus, Trash2, AlertTriangle } from "lucide-react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "./ui/select";
 import { Checkbox } from "./ui/checkbox";
 
-const commitmentTypes = [
-  { 
-    id: 'peso', 
-    label: 'Perda de Peso', 
-    icon: Scale,
-    defaultMetric: 'kg perdido',
-  },
-  { 
-    id: 'gordura', 
-    label: 'Redução de Gordura', 
-    icon: Flame,
-    defaultMetric: '% de gordura reduzido',
-  },
-  { 
-    id: 'exercicio', 
-    label: 'Exercício', 
-    icon: Dumbbell,
-    defaultMetric: 'km corridos',
-  },
-  { 
-    id: 'passos', 
-    label: 'Passos', 
-    icon: Footprints,
-    defaultMetric: 'mil passos',
-  },
-  { 
-    id: 'custom', 
-    label: 'Personalizado', 
-    icon: Sparkles,
-    defaultMetric: '',
-  },
-];
+export interface Commitment {
+  id?: string;
+  metric: string;
+  ratio: number;
+  donation_amount: number;
+  isNew?: boolean;
+}
 
 interface CommitmentData {
   personal_goal: number;
-  commitment_type: string | null;
-  commitment_metric: string | null;
-  commitment_ratio: number;
-  commitment_donation: number;
   penalty_donation: number | null;
+  commitments: Commitment[];
 }
 
 interface EditMemberGoalModalProps {
@@ -60,10 +25,7 @@ interface EditMemberGoalModalProps {
   onOpenChange: (open: boolean) => void;
   memberName: string;
   currentGoal: number;
-  currentCommitmentType?: string | null;
-  currentCommitmentMetric?: string | null;
-  currentCommitmentRatio?: number | null;
-  currentCommitmentDonation?: number | null;
+  currentCommitments: Commitment[];
   currentPenaltyDonation?: number | null;
   onSave: (data: CommitmentData) => void;
   isPending?: boolean;
@@ -75,34 +37,25 @@ export const EditMemberGoalModal = ({
   onOpenChange, 
   memberName,
   currentGoal,
-  currentCommitmentType,
-  currentCommitmentMetric,
-  currentCommitmentRatio,
-  currentCommitmentDonation,
+  currentCommitments,
   currentPenaltyDonation,
   onSave,
   isPending = false,
   unit
 }: EditMemberGoalModalProps) => {
   const [goal, setGoal] = useState(currentGoal.toString());
-  const [commitmentType, setCommitmentType] = useState<string>(currentCommitmentType || "");
-  const [commitmentMetric, setCommitmentMetric] = useState<string>(currentCommitmentMetric || "");
-  const [commitmentRatio, setCommitmentRatio] = useState<string>((currentCommitmentRatio || 1).toString());
-  const [commitmentDonation, setCommitmentDonation] = useState<string>((currentCommitmentDonation || 1).toString());
+  const [commitments, setCommitments] = useState<Commitment[]>(currentCommitments);
   const [penaltyEnabled, setPenaltyEnabled] = useState<boolean>(!!currentPenaltyDonation);
   const [penaltyDonation, setPenaltyDonation] = useState<string>((currentPenaltyDonation || 0).toString());
 
   useEffect(() => {
     if (open) {
       setGoal(currentGoal.toString());
-      setCommitmentType(currentCommitmentType || "");
-      setCommitmentMetric(currentCommitmentMetric || "");
-      setCommitmentRatio((currentCommitmentRatio || 1).toString());
-      setCommitmentDonation((currentCommitmentDonation || 1).toString());
+      setCommitments(currentCommitments.length > 0 ? currentCommitments : []);
       setPenaltyEnabled(!!currentPenaltyDonation);
       setPenaltyDonation((currentPenaltyDonation || (currentGoal * 2)).toString());
     }
-  }, [open, currentGoal, currentCommitmentType, currentCommitmentMetric, currentCommitmentRatio, currentCommitmentDonation, currentPenaltyDonation]);
+  }, [open, currentGoal, currentCommitments, currentPenaltyDonation]);
 
   // Atualiza sugestão de penalidade quando meta muda
   useEffect(() => {
@@ -111,33 +64,40 @@ export const EditMemberGoalModal = ({
       setPenaltyDonation((goalValue * 2).toString());
     }
   }, [goal, currentPenaltyDonation]);
-  const handleTypeChange = (type: string) => {
-    setCommitmentType(type);
-    const typeConfig = commitmentTypes.find(t => t.id === type);
-    if (typeConfig && typeConfig.defaultMetric) {
-      setCommitmentMetric(typeConfig.defaultMetric);
-    }
+
+  const addNewCommitment = () => {
+    setCommitments([...commitments, { 
+      metric: "", 
+      ratio: 1, 
+      donation_amount: 1,
+      isNew: true 
+    }]);
+  };
+
+  const updateCommitment = (index: number, field: keyof Commitment, value: string | number) => {
+    const updated = [...commitments];
+    updated[index] = { ...updated[index], [field]: value };
+    setCommitments(updated);
+  };
+
+  const removeCommitment = (index: number) => {
+    setCommitments(commitments.filter((_, i) => i !== index));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const goalValue = parseInt(goal) || 0;
-    const ratioValue = parseInt(commitmentRatio) || 1;
-    const donationValue = parseInt(commitmentDonation) || 1;
     const penaltyValue = penaltyEnabled ? (parseInt(penaltyDonation) || goalValue * 2) : null;
+    
+    // Filtrar compromissos vazios
+    const validCommitments = commitments.filter(c => c.metric.trim() !== "");
     
     onSave({
       personal_goal: goalValue,
-      commitment_type: commitmentType || null,
-      commitment_metric: commitmentMetric || null,
-      commitment_ratio: ratioValue,
-      commitment_donation: donationValue,
       penalty_donation: penaltyValue,
+      commitments: validCommitments,
     });
   };
-
-  const selectedType = commitmentTypes.find(t => t.id === commitmentType);
-  const TypeIcon = selectedType?.icon || Target;
 
   return (
     <AnimatePresence>
@@ -167,90 +127,17 @@ export const EditMemberGoalModal = ({
                   <X className="w-4 h-4 text-primary-foreground" />
                 </button>
                 <div className="w-14 h-14 bg-primary-foreground/20 rounded-xl flex items-center justify-center mb-4">
-                  <TypeIcon className="w-7 h-7 text-primary-foreground" />
+                  <Target className="w-7 h-7 text-primary-foreground" />
                 </div>
                 <h2 className="text-2xl font-bold text-primary-foreground">
-                  Definir Compromisso
+                  Definir Compromissos
                 </h2>
                 <p className="text-primary-foreground/80 mt-1">
-                  Vincule sua meta pessoal a uma doação, {memberName}
+                  Crie regras de doação personalizadas, {memberName}
                 </p>
               </div>
 
               <form onSubmit={handleSubmit} className="p-6 space-y-5">
-                {/* Commitment Type */}
-                <div className="space-y-2">
-                  <Label htmlFor="commitmentType" className="text-foreground font-medium">
-                    Tipo de Compromisso
-                  </Label>
-                  <Select value={commitmentType} onValueChange={handleTypeChange}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione um tipo (opcional)" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {commitmentTypes.map((type) => {
-                        const Icon = type.icon;
-                        return (
-                          <SelectItem key={type.id} value={type.id}>
-                            <div className="flex items-center gap-2">
-                              <Icon className="w-4 h-4" />
-                              {type.label}
-                            </div>
-                          </SelectItem>
-                        );
-                      })}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Commitment Rule - Only show when type is selected */}
-                {commitmentType && (
-                  <div className="space-y-3 p-4 bg-muted/50 rounded-xl">
-                    <Label className="text-foreground font-medium">
-                      Minha Regra de Doação
-                    </Label>
-                    
-                    <div className="flex flex-wrap items-center gap-2 text-sm">
-                      <span className="text-muted-foreground">A cada</span>
-                      <Input
-                        type="number"
-                        value={commitmentRatio}
-                        onChange={(e) => setCommitmentRatio(e.target.value)}
-                        className="w-16 text-center"
-                        min="1"
-                      />
-                      <Input
-                        type="text"
-                        value={commitmentMetric}
-                        onChange={(e) => setCommitmentMetric(e.target.value)}
-                        placeholder="ex: kg perdido"
-                        className="flex-1 min-w-[120px]"
-                      />
-                    </div>
-                    
-                    <div className="flex items-center gap-2 text-sm">
-                      <span className="text-muted-foreground">doarei</span>
-                      <Input
-                        type="number"
-                        value={commitmentDonation}
-                        onChange={(e) => setCommitmentDonation(e.target.value)}
-                        className="w-16 text-center"
-                        min="1"
-                      />
-                      <span className="font-medium text-foreground">{unit}</span>
-                    </div>
-
-                    {/* Preview */}
-                    {commitmentMetric && (
-                      <div className="mt-3 p-3 bg-primary/10 rounded-lg">
-                        <p className="text-sm text-primary font-medium">
-                          📌 "{parseInt(commitmentRatio) || 1} {commitmentMetric} = {parseInt(commitmentDonation) || 1} {unit} doado{(parseInt(commitmentDonation) || 1) > 1 ? 's' : ''}"
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                )}
-
                 {/* Goal */}
                 <div className="space-y-2">
                   <Label htmlFor="goal" className="text-foreground font-medium">
@@ -272,6 +159,100 @@ export const EditMemberGoalModal = ({
                   <p className="text-xs text-muted-foreground">
                     Defina quantos {unit} você pretende doar até 2026
                   </p>
+                </div>
+
+                {/* Commitments List */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-foreground font-medium">
+                      Regras de Doação
+                    </Label>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={addNewCommitment}
+                      className="text-xs"
+                    >
+                      <Plus className="w-3 h-3 mr-1" />
+                      Adicionar Meta
+                    </Button>
+                  </div>
+
+                  {commitments.length === 0 ? (
+                    <div className="text-center py-6 bg-muted/30 rounded-xl border-2 border-dashed border-muted">
+                      <Target className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+                      <p className="text-sm text-muted-foreground">
+                        Nenhuma regra definida ainda
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Clique em "Adicionar Meta" para criar suas regras
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {commitments.map((commitment, index) => (
+                        <div 
+                          key={commitment.id || `new-${index}`}
+                          className="p-4 bg-muted/50 rounded-xl space-y-3"
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-medium text-primary">
+                              META {index + 1}
+                            </span>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => removeCommitment(index)}
+                              className="text-destructive hover:text-destructive h-6 w-6 p-0"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </Button>
+                          </div>
+                          
+                          <div className="flex flex-wrap items-center gap-2 text-sm">
+                            <span className="text-muted-foreground">A cada</span>
+                            <Input
+                              type="number"
+                              value={commitment.ratio}
+                              onChange={(e) => updateCommitment(index, 'ratio', parseInt(e.target.value) || 1)}
+                              className="w-14 text-center h-8"
+                              min="1"
+                            />
+                            <Input
+                              type="text"
+                              value={commitment.metric}
+                              onChange={(e) => updateCommitment(index, 'metric', e.target.value)}
+                              placeholder="ex: gol, km, kg"
+                              className="flex-1 min-w-[100px] h-8"
+                            />
+                          </div>
+                          
+                          <div className="flex items-center gap-2 text-sm">
+                            <span className="text-muted-foreground">doarei</span>
+                            <Input
+                              type="number"
+                              value={commitment.donation_amount}
+                              onChange={(e) => updateCommitment(index, 'donation_amount', parseInt(e.target.value) || 1)}
+                              className="w-14 text-center h-8"
+                              min="1"
+                            />
+                            <span className="font-medium text-foreground">{unit}</span>
+                          </div>
+
+                          {/* Preview */}
+                          {commitment.metric && (
+                            <div className="p-2 bg-primary/10 rounded-lg">
+                              <p className="text-xs text-primary font-medium">
+                                📌 "{commitment.ratio} {commitment.metric} = {commitment.donation_amount} {unit}"
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 {/* Penalty Challenge */}
@@ -332,7 +313,7 @@ export const EditMemberGoalModal = ({
                     className="flex-1"
                     disabled={isPending}
                   >
-                    {isPending ? "Salvando..." : "Salvar Compromisso"}
+                    {isPending ? "Salvando..." : "Salvar Compromissos"}
                   </Button>
                 </div>
               </form>
