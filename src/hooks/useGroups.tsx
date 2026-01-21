@@ -10,12 +10,28 @@ export interface Group {
   goal_2026: number;
   leader_id: string;
   created_at: string;
+  updated_at?: string;
   is_private: boolean;
   leader_name?: string;
-  leader_whatsapp?: string;
+  leader_whatsapp?: string; // Only available for group members/leaders
   description?: string;
   member_count?: number;
   goals_reached?: number;
+}
+
+// Type for public view (without sensitive data)
+interface GroupPublic {
+  id: string;
+  name: string;
+  city: string;
+  donation_type: string;
+  goal_2026: number;
+  leader_id: string;
+  created_at: string;
+  updated_at: string;
+  is_private: boolean;
+  leader_name: string | null;
+  description: string | null;
 }
 
 export interface GroupInvitation {
@@ -53,16 +69,17 @@ export const useGroups = () => {
   const { data: groups, isLoading } = useQuery({
     queryKey: ["groups"],
     queryFn: async () => {
+      // Use the public view that excludes sensitive leader contact info
       const { data: groupsData, error: groupsError } = await supabase
-        .from("groups")
+        .from("groups_public" as any)
         .select("*")
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false }) as { data: GroupPublic[] | null, error: any };
 
       if (groupsError) throw groupsError;
 
       // Get member counts and goals reached for each group
       const groupsWithStats = await Promise.all(
-        (groupsData || []).map(async (group) => {
+        (groupsData || []).map(async (group: GroupPublic) => {
           const { count: memberCount } = await supabase
             .from("group_members")
             .select("*", { count: "exact", head: true })
@@ -85,12 +102,12 @@ export const useGroups = () => {
             ...group,
             member_count: memberCount || 0,
             goals_reached: goalsReached,
-            leader_name: profile?.full_name || "Líder",
-          };
+            leader_name: profile?.full_name || group.leader_name || "Líder",
+          } as Group;
         })
       );
 
-      return groupsWithStats as Group[];
+      return groupsWithStats;
     },
   });
 
