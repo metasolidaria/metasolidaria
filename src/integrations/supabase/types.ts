@@ -335,6 +335,19 @@ export type Database = {
         Args: { _invite_code: string }
         Returns: string
       }
+      create_group_with_leader: {
+        Args: {
+          _city: string
+          _description: string
+          _donation_type: string
+          _goal_2026: number
+          _is_private: boolean
+          _leader_name: string
+          _leader_whatsapp: string
+          _name: string
+        }
+        Returns: string
+      }
       is_current_user_email: { Args: { _email: string }; Returns: boolean }
       is_group_member: {
         Args: { _group_id: string; _user_id: string }

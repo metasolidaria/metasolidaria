@@ -123,27 +123,21 @@ export const useGroups = () => {
       leader_whatsapp?: string;
       description?: string;
     }) => {
-      const { data, error } = await supabase
-        .from("groups")
-        .insert([newGroup])
-        .select()
-        .single();
+      // Usar função SECURITY DEFINER que cria grupo E adiciona líder como membro
+      const { data, error } = await supabase.rpc('create_group_with_leader', {
+        _name: newGroup.name,
+        _city: newGroup.city,
+        _donation_type: newGroup.donation_type,
+        _goal_2026: newGroup.goal_2026,
+        _is_private: newGroup.is_private || false,
+        _leader_name: newGroup.leader_name || 'Líder',
+        _leader_whatsapp: newGroup.leader_whatsapp || '',
+        _description: newGroup.description || '',
+      });
 
       if (error) throw error;
 
-      // Adicionar o líder como membro do grupo automaticamente
-      const { error: memberError } = await supabase
-        .from("group_members")
-        .insert([{
-          group_id: data.id,
-          user_id: newGroup.leader_id,
-          name: newGroup.leader_name || "Líder",
-          personal_goal: 0,
-        }]);
-
-      if (memberError) throw memberError;
-
-      return data;
+      return { id: data };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["groups"] });

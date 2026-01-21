@@ -9,6 +9,7 @@ import { Textarea } from "./ui/textarea";
 import { CityAutocomplete } from "./CityAutocomplete";
 import { useAuth } from "@/hooks/useAuth";
 import { useGroups } from "@/hooks/useGroups";
+import { supabase } from "@/integrations/supabase/client";
 
 interface CreateGroupModalProps {
   open: boolean;
@@ -40,10 +41,34 @@ export const CreateGroupModal = ({ open, onOpenChange, onRequireAuth }: CreateGr
     description: "",
   });
 
+  // Buscar perfil do usuário para preencher nome e WhatsApp automaticamente
   useEffect(() => {
     if (open && !user) {
       onOpenChange(false);
       onRequireAuth();
+      return;
+    }
+
+    const fetchProfile = async () => {
+      if (!user) return;
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("full_name, whatsapp")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (profile) {
+        setFormData((prev) => ({
+          ...prev,
+          leaderName: profile.full_name || "",
+          leaderWhatsapp: profile.whatsapp || "",
+        }));
+      }
+    };
+
+    if (open && user) {
+      fetchProfile();
     }
   }, [open, user, onOpenChange, onRequireAuth]);
 
