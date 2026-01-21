@@ -1,10 +1,11 @@
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Users, Target, MapPin, Plus, Heart, Loader2, Lock, Globe, Mail } from "lucide-react";
 import { Button } from "./ui/button";
 import { CreateGroupModal } from "./CreateGroupModal";
 import { InviteMemberModal } from "./InviteMemberModal";
+import { CitySearchAutocomplete } from "./CitySearchAutocomplete";
 import { useGroups } from "@/hooks/useGroups";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -38,6 +39,7 @@ export const GroupsSection = ({ onRequireAuth }: GroupsSectionProps) => {
   const [inviteModalOpen, setInviteModalOpen] = useState(false);
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
   const [filter, setFilter] = useState<"all" | "mine">("all");
+  const [searchCity, setSearchCity] = useState("");
   const { groups, isLoading, joinGroup, userMemberships } = useGroups();
   const { user } = useAuth();
   const { toast } = useToast();
@@ -45,13 +47,22 @@ export const GroupsSection = ({ onRequireAuth }: GroupsSectionProps) => {
 
   const isUserMember = (groupId: string) => userMemberships.includes(groupId);
 
-  // Filtra os grupos baseado na seleção
-  const filteredGroups = groups?.filter((group) => {
-    if (filter === "mine") {
-      return isUserMember(group.id);
-    }
-    return true; // "all" mostra todos
-  });
+  // Filtra os grupos baseado na seleção e cidade
+  const filteredGroups = useMemo(() => {
+    return groups?.filter((group) => {
+      // Filtro de membro
+      if (filter === "mine" && !isUserMember(group.id)) {
+        return false;
+      }
+      // Filtro de cidade
+      if (searchCity.trim()) {
+        const normalizedSearch = searchCity.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        const normalizedCity = group.city.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        return normalizedCity.includes(normalizedSearch);
+      }
+      return true;
+    });
+  }, [groups, filter, searchCity, userMemberships]);
 
 
   const handleGroupAction = (groupId: string, isPrivate: boolean) => {
@@ -137,31 +148,42 @@ export const GroupsSection = ({ onRequireAuth }: GroupsSectionProps) => {
         </motion.div>
 
         {/* Filtros */}
-        {user && (
-          <div className="flex gap-2 mb-8">
-            <Button
-              variant={filter === "all" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setFilter("all")}
-            >
-              <Globe className="w-4 h-4 mr-1" />
-              Todos os Grupos
-            </Button>
-            <Button
-              variant={filter === "mine" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setFilter("mine")}
-            >
-              <Users className="w-4 h-4 mr-1" />
-              Meus Grupos
-              {userMemberships.length > 0 && (
-                <span className="ml-1 bg-primary-foreground/20 px-1.5 py-0.5 rounded-full text-xs">
-                  {userMemberships.length}
-                </span>
-              )}
-            </Button>
+        <div className="flex flex-col sm:flex-row gap-4 mb-8">
+          {user && (
+            <div className="flex gap-2">
+              <Button
+                variant={filter === "all" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setFilter("all")}
+              >
+                <Globe className="w-4 h-4 mr-1" />
+                Todos os Grupos
+              </Button>
+              <Button
+                variant={filter === "mine" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setFilter("mine")}
+              >
+                <Users className="w-4 h-4 mr-1" />
+                Meus Grupos
+                {userMemberships.length > 0 && (
+                  <span className="ml-1 bg-primary-foreground/20 px-1.5 py-0.5 rounded-full text-xs">
+                    {userMemberships.length}
+                  </span>
+                )}
+              </Button>
+            </div>
+          )}
+          
+          {/* Busca por cidade */}
+          <div className="w-full sm:w-64">
+            <CitySearchAutocomplete
+              value={searchCity}
+              onChange={setSearchCity}
+              placeholder="Filtrar por cidade..."
+            />
           </div>
-        )}
+        </div>
 
         {isLoading ? (
           <div className="flex items-center justify-center py-12">
@@ -283,6 +305,20 @@ export const GroupsSection = ({ onRequireAuth }: GroupsSectionProps) => {
               </motion.div>
             ))}
           </div>
+        ) : searchCity.trim() ? (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="text-center py-12"
+          >
+            <MapPin className="w-12 h-12 mx-auto text-muted-foreground/50 mb-4" />
+            <p className="text-muted-foreground text-lg mb-4">
+              Nenhum grupo encontrado em "{searchCity}".
+            </p>
+            <Button variant="outline" onClick={() => setSearchCity("")}>
+              Limpar filtro
+            </Button>
+          </motion.div>
         ) : filter === "mine" ? (
           <motion.div
             initial={{ opacity: 0 }}
