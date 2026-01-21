@@ -21,7 +21,7 @@ export default defineConfig(({ mode }) => ({
       includeAssets: ["favicon.jpg", "robots.txt"],
       manifest: {
         name: "Meta Solidária",
-        short_name: "Meta Solidária",
+        short_name: "Meta Solid",
         description: "Junte-se a grupos solidários e transforme vidas através de doações colaborativas.",
         theme_color: "#22c55e",
         background_color: "#ffffff",
@@ -35,11 +35,13 @@ export default defineConfig(({ mode }) => ({
             src: "/icon-192x192.png",
             sizes: "192x192",
             type: "image/png",
+            purpose: "any",
           },
           {
             src: "/icon-512x512.png",
             sizes: "512x512",
             type: "image/png",
+            purpose: "any",
           },
           {
             src: "/icon-maskable-512x512.png",
