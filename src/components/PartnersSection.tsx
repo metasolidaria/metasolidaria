@@ -14,7 +14,10 @@ import {
   ShoppingCart,
   Navigation,
   X,
-  UserPlus
+  UserPlus,
+  Store,
+  Building2,
+  MoreHorizontal
 } from "lucide-react";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
@@ -32,6 +35,9 @@ const categories = [
   { id: "Fisioterapeuta", label: "Fisioterapeuta", icon: HeartPulse },
   { id: "Academia", label: "Academia", icon: Dumbbell },
   { id: "Supermercado", label: "Supermercado", icon: ShoppingCart },
+  { id: "Comércio", label: "Comércio", icon: Store },
+  { id: "Clínica", label: "Clínica", icon: Building2 },
+  { id: "Outros", label: "Outros", icon: MoreHorizontal },
 ];
 
 const placeholderImages = [
