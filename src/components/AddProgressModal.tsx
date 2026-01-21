@@ -13,12 +13,22 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useGroupDetails } from "@/hooks/useGroupDetails";
 
+interface CommitmentInfo {
+  id: string;
+  name: string | null;
+  metric: string;
+  ratio: number;
+  donation_amount: number;
+  personal_goal: number;
+}
+
 interface AddProgressModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   groupId: string;
   memberId: string;
   donationType: { label: string; icon: string; unit: string };
+  commitment?: CommitmentInfo;
 }
 
 export const AddProgressModal = ({
@@ -27,6 +37,7 @@ export const AddProgressModal = ({
   groupId,
   memberId,
   donationType,
+  commitment,
 }: AddProgressModalProps) => {
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
@@ -62,7 +73,17 @@ export const AddProgressModal = ({
             {donationType.icon} Registrar Doação
           </DialogTitle>
           <DialogDescription>
-            Adicione sua contribuição ao progresso do grupo
+            {commitment ? (
+              <span>
+                Registrando para: <strong>{commitment.name || commitment.metric}</strong>
+                <br />
+                <span className="text-xs text-muted-foreground">
+                  ({commitment.ratio} {commitment.metric} = {commitment.donation_amount} {donationType.unit})
+                </span>
+              </span>
+            ) : (
+              "Adicione sua contribuição ao progresso do grupo"
+            )}
           </DialogDescription>
         </DialogHeader>
 
