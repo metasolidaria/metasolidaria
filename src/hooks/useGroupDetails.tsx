@@ -3,6 +3,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 import { useToast } from "@/hooks/use-toast";
 
+interface MemberCommitment {
+  id: string;
+  metric: string;
+  ratio: number;
+  donation_amount: number;
+}
+
 interface GroupMember {
   id: string;
   name: string;
@@ -10,11 +17,8 @@ interface GroupMember {
   goals_reached: number;
   total_contributed: number;
   personal_goal: number;
-  commitment_type: string | null;
-  commitment_metric: string | null;
-  commitment_ratio: number | null;
-  commitment_donation: number | null;
   penalty_donation: number | null;
+  commitments: MemberCommitment[];
 }
 
 interface ProgressEntry {
@@ -51,7 +55,7 @@ export const useGroupDetails = (groupId: string | undefined) => {
     enabled: !!groupId,
   });
 
-  // Fetch group members with their total contributions
+  // Fetch group members with their total contributions and commitments
   const { data: members, isLoading: membersLoading } = useQuery({
     queryKey: ["groupMembers", groupId],
     queryFn: async () => {
@@ -75,15 +79,30 @@ export const useGroupDetails = (groupId: string | undefined) => {
         return acc;
       }, {} as Record<string, number>);
 
+      // Get commitments for all members
+      const memberIds = membersData.map(m => m.id);
+      const { data: commitmentsData } = await supabase
+        .from("member_commitments")
+        .select("*")
+        .in("member_id", memberIds);
+
+      const commitmentsByMember = (commitmentsData || []).reduce((acc, c) => {
+        if (!acc[c.member_id]) acc[c.member_id] = [];
+        acc[c.member_id].push({
+          id: c.id,
+          metric: c.metric,
+          ratio: c.ratio,
+          donation_amount: c.donation_amount,
+        });
+        return acc;
+      }, {} as Record<string, MemberCommitment[]>);
+
       return membersData.map((member) => ({
         ...member,
         total_contributed: contributionsByMember[member.id] || 0,
         personal_goal: member.personal_goal || 0,
-        commitment_type: member.commitment_type || null,
-        commitment_metric: member.commitment_metric || null,
-        commitment_ratio: member.commitment_ratio || null,
-        commitment_donation: member.commitment_donation || null,
         penalty_donation: member.penalty_donation || null,
+        commitments: commitmentsByMember[member.id] || [],
       })) as GroupMember[];
     },
     enabled: !!groupId,
@@ -303,44 +322,62 @@ export const useGroupDetails = (groupId: string | undefined) => {
     mutationFn: async ({ 
       memberId, 
       personal_goal,
-      commitment_type,
-      commitment_metric,
-      commitment_ratio,
-      commitment_donation,
       penalty_donation,
+      commitments,
     }: { 
       memberId: string; 
       personal_goal: number;
-      commitment_type?: string | null;
-      commitment_metric?: string | null;
-      commitment_ratio?: number;
-      commitment_donation?: number;
       penalty_donation?: number | null;
+      commitments?: Array<{ id?: string; metric: string; ratio: number; donation_amount: number }>;
     }) => {
-      const { error } = await supabase
+      // Update member's personal goal and penalty
+      const { error: memberError } = await supabase
         .from("group_members")
         .update({ 
           personal_goal,
-          commitment_type,
-          commitment_metric,
-          commitment_ratio,
-          commitment_donation,
           penalty_donation,
         })
         .eq("id", memberId);
 
-      if (error) throw error;
+      if (memberError) throw memberError;
+
+      // Handle commitments - delete old ones and insert new ones
+      if (commitments !== undefined) {
+        // Delete existing commitments for this member
+        const { error: deleteError } = await supabase
+          .from("member_commitments")
+          .delete()
+          .eq("member_id", memberId);
+
+        if (deleteError) throw deleteError;
+
+        // Insert new commitments
+        if (commitments.length > 0) {
+          const newCommitments = commitments.map(c => ({
+            member_id: memberId,
+            metric: c.metric,
+            ratio: c.ratio,
+            donation_amount: c.donation_amount,
+          }));
+
+          const { error: insertError } = await supabase
+            .from("member_commitments")
+            .insert(newCommitments);
+
+          if (insertError) throw insertError;
+        }
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["groupMembers", groupId] });
       toast({
-        title: "Compromisso salvo! 🎯",
-        description: "Seu compromisso de doação foi definido com sucesso.",
+        title: "Compromissos salvos! 🎯",
+        description: "Suas metas de doação foram definidas com sucesso.",
       });
     },
     onError: (error: Error) => {
       toast({
-        title: "Erro ao salvar compromisso",
+        title: "Erro ao salvar compromissos",
         description: error.message,
         variant: "destructive",
       });

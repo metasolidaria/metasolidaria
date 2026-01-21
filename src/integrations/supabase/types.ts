@@ -263,6 +263,41 @@ export type Database = {
           },
         ]
       }
+      member_commitments: {
+        Row: {
+          created_at: string
+          donation_amount: number
+          id: string
+          member_id: string
+          metric: string
+          ratio: number
+        }
+        Insert: {
+          created_at?: string
+          donation_amount?: number
+          id?: string
+          member_id: string
+          metric: string
+          ratio?: number
+        }
+        Update: {
+          created_at?: string
+          donation_amount?: number
+          id?: string
+          member_id?: string
+          metric?: string
+          ratio?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "member_commitments_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "group_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       partners: {
         Row: {
           city: string

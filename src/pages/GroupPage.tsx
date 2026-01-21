@@ -376,10 +376,14 @@ export default function GroupPage() {
                           <p className="text-sm text-muted-foreground">
                             {member.total_contributed || 0} / {member.personal_goal || 0} {donationType.unit}
                           </p>
-                          {member.commitment_metric && (
-                            <p className="text-xs text-primary mt-1">
-                              📌 {member.commitment_ratio || 1} {member.commitment_metric} = {member.commitment_donation || 1} {donationType.unit}
-                            </p>
+                          {member.commitments && member.commitments.length > 0 && (
+                            <div className="mt-1 space-y-0.5">
+                              {member.commitments.map((c, idx) => (
+                                <p key={c.id || idx} className="text-xs text-primary">
+                                  📌 {c.ratio} {c.metric} = {c.donation_amount} {donationType.unit}
+                                </p>
+                              ))}
+                            </div>
                           )}
                           {member.penalty_donation && (
                             <p className="text-xs text-amber-600 dark:text-amber-400">
@@ -490,21 +494,15 @@ export default function GroupPage() {
           onOpenChange={setEditGoalOpen}
           memberName={userMember.name}
           currentGoal={userMember.personal_goal || 0}
-          currentCommitmentType={userMember.commitment_type}
-          currentCommitmentMetric={userMember.commitment_metric}
-          currentCommitmentRatio={userMember.commitment_ratio}
-          currentCommitmentDonation={userMember.commitment_donation}
+          currentCommitments={userMember.commitments || []}
           currentPenaltyDonation={userMember.penalty_donation}
           onSave={(data) => {
             updateMemberGoal.mutate(
               { 
                 memberId: userMember.id, 
                 personal_goal: data.personal_goal,
-                commitment_type: data.commitment_type,
-                commitment_metric: data.commitment_metric,
-                commitment_ratio: data.commitment_ratio,
-                commitment_donation: data.commitment_donation,
                 penalty_donation: data.penalty_donation,
+                commitments: data.commitments,
               },
               { onSuccess: () => setEditGoalOpen(false) }
             );
