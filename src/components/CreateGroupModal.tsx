@@ -100,9 +100,9 @@ export const CreateGroupModal = ({ open, onOpenChange, onRequireAuth }: CreateGr
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             transition={{ type: "spring", duration: 0.5 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto"
+            className="fixed inset-0 z-50 flex items-start justify-center p-4 pt-8 overflow-y-auto"
           >
-            <div className="bg-card rounded-2xl shadow-xl w-full max-w-md my-8">
+            <div className="bg-card rounded-2xl shadow-xl w-full max-w-md my-auto max-h-[calc(100vh-4rem)] overflow-y-auto flex flex-col">
               <div className="bg-gradient-stats p-6 relative rounded-t-2xl">
                 <button
                   onClick={() => onOpenChange(false)}
