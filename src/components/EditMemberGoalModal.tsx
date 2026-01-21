@@ -51,7 +51,7 @@ export const EditMemberGoalModal = ({
   useEffect(() => {
     if (open) {
       setGoal(currentGoal.toString());
-      setCommitments(currentCommitments.length > 0 ? currentCommitments : []);
+      setCommitments(currentCommitments && currentCommitments.length > 0 ? currentCommitments : []);
       setPenaltyEnabled(!!currentPenaltyDonation);
       setPenaltyDonation((currentPenaltyDonation || (currentGoal * 2)).toString());
     }
