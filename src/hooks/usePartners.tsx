@@ -2,6 +2,8 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
+export type PartnerTier = 'diamante' | 'ouro' | 'apoiador';
+
 export interface Partner {
   id: string;
   name: string;
@@ -14,6 +16,7 @@ export interface Partner {
   created_at: string;
   latitude: number | null;
   longitude: number | null;
+  tier: PartnerTier;
 }
 
 export const usePartners = () => {

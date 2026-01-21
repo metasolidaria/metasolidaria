@@ -219,6 +219,7 @@ export type Database = {
           name: string
           specialty: string | null
           submitted_by: string | null
+          tier: string | null
           updated_at: string
           whatsapp: string | null
         }
@@ -233,6 +234,7 @@ export type Database = {
           name: string
           specialty?: string | null
           submitted_by?: string | null
+          tier?: string | null
           updated_at?: string
           whatsapp?: string | null
         }
@@ -247,6 +249,7 @@ export type Database = {
           name?: string
           specialty?: string | null
           submitted_by?: string | null
+          tier?: string | null
           updated_at?: string
           whatsapp?: string | null
         }
