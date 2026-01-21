@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Users, MapPin, Target, Gift, Lock, Globe, User, Phone, FileText } from "lucide-react";
+import { X, Users, Target, Gift, Lock, Globe, User, Phone, FileText } from "lucide-react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Switch } from "./ui/switch";
 import { Textarea } from "./ui/textarea";
+import { CityAutocomplete } from "./CityAutocomplete";
 import { useAuth } from "@/hooks/useAuth";
 import { useGroups } from "@/hooks/useGroups";
 
@@ -201,19 +202,12 @@ export const CreateGroupModal = ({ open, onOpenChange, onRequireAuth }: CreateGr
                     <Label htmlFor="city" className="text-foreground font-medium">
                       Cidade
                     </Label>
-                    <div className="relative">
-                      <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                      <Input
-                        id="city"
-                        placeholder="Ex: São Paulo, SP"
-                        value={formData.city}
-                        onChange={(e) =>
-                          setFormData({ ...formData, city: e.target.value })
-                        }
-                        className="pl-11"
-                        required
-                      />
-                    </div>
+                    <CityAutocomplete
+                      value={formData.city}
+                      onChange={(value) => setFormData({ ...formData, city: value })}
+                      placeholder="Digite o nome da cidade"
+                      required
+                    />
                   </div>
 
                   <div className="space-y-2">
