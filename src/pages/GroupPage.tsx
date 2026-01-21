@@ -1,11 +1,13 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, Users, Target, MapPin, Lock, Globe, Plus, Trash2, Loader2, LogOut, TrendingUp, Sparkles } from "lucide-react";
+import { ArrowLeft, Users, Target, MapPin, Lock, Globe, Plus, Trash2, Loader2, LogOut, TrendingUp, Sparkles, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { useGroupDetails } from "@/hooks/useGroupDetails";
 import { useAuth } from "@/hooks/useAuth";
 import { AddProgressModal } from "@/components/AddProgressModal";
+import { EditGroupModal } from "@/components/EditGroupModal";
+import { EditMemberGoalModal } from "@/components/EditMemberGoalModal";
 import { ProgressCharts } from "@/components/ProgressCharts";
 import { ProgressAnalysisModal } from "@/components/ProgressAnalysisModal";
 import { useProgressAnalysis } from "@/hooks/useProgressAnalysis";
@@ -39,6 +41,8 @@ export default function GroupPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [addProgressOpen, setAddProgressOpen] = useState(false);
+  const [editGroupOpen, setEditGroupOpen] = useState(false);
+  const [editGoalOpen, setEditGoalOpen] = useState(false);
   const [leaveDialogOpen, setLeaveDialogOpen] = useState(false);
   const [analysisModalOpen, setAnalysisModalOpen] = useState(false);
   const [memberToRemove, setMemberToRemove] = useState<{ id: string; name: string } | null>(null);
@@ -50,11 +54,14 @@ export default function GroupPage() {
     members, 
     progressEntries, 
     totalProgress,
+    totalGroupGoal,
     userMember,
     isLoading, 
     deleteProgress,
     removeMember,
     leaveGroup,
+    updateGroup,
+    updateMemberGoal,
   } = useGroupDetails(id);
 
   const handleLeaveGroup = () => {
@@ -96,7 +103,8 @@ export default function GroupPage() {
   }
 
   const donationType = donationTypeLabels[group.donation_type] || donationTypeLabels.outro;
-  const progressPercentage = Math.min((totalProgress / group.goal_2026) * 100, 100);
+  const effectiveGoal = totalGroupGoal > 0 ? totalGroupGoal : group.goal_2026;
+  const progressPercentage = effectiveGoal > 0 ? Math.min((totalProgress / effectiveGoal) * 100, 100) : 0;
   const isLeader = user?.id === group.leader_id;
 
   return (
@@ -145,6 +153,15 @@ export default function GroupPage() {
             </div>
 
             <div className="flex flex-wrap gap-2">
+              {isLeader && (
+                <Button 
+                  variant="outline"
+                  onClick={() => setEditGroupOpen(true)}
+                >
+                  <Pencil className="w-4 h-4 mr-2" />
+                  Editar Grupo
+                </Button>
+              )}
               {userMember && (
                 <Button 
                   variant="outline"
@@ -207,13 +224,16 @@ export default function GroupPage() {
                 <div className="flex justify-between text-sm mb-2">
                   <span className="text-muted-foreground">Progresso</span>
                   <span className="font-medium text-foreground">
-                    {totalProgress} / {group.goal_2026} {donationType.unit}
+                    {totalProgress} / {effectiveGoal} {donationType.unit}
                   </span>
                 </div>
                 <Progress value={progressPercentage} className="h-3" />
-                <p className="text-right text-sm text-muted-foreground mt-1">
-                  {progressPercentage.toFixed(1)}% concluído
-                </p>
+                <div className="flex justify-between text-sm text-muted-foreground mt-1">
+                  <span>
+                    {members?.filter(m => m.personal_goal > 0).length || 0} membro(s) com meta definida
+                  </span>
+                  <span>{progressPercentage.toFixed(1)}% concluído</span>
+                </div>
               </div>
             </motion.div>
 
@@ -233,7 +253,7 @@ export default function GroupPage() {
                 <ProgressCharts
                   progressEntries={progressEntries}
                   members={members || []}
-                  goal={group.goal_2026}
+                  goal={effectiveGoal}
                   donationType={donationType}
                 />
               </motion.div>
@@ -335,22 +355,35 @@ export default function GroupPage() {
                             )}
                           </p>
                           <p className="text-sm text-muted-foreground">
-                            {member.total_contributed || 0} {donationType.unit} doados
+                            {member.total_contributed || 0} / {member.personal_goal || 0} {donationType.unit}
                           </p>
                         </div>
                       </div>
                       
-                      {isLeader && member.user_id !== group.leader_id && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setMemberToRemove({ id: member.id, name: member.name })}
-                          disabled={removeMember.isPending}
-                          className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      )}
+                      <div className="flex items-center gap-1">
+                        {member.user_id === user?.id && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setEditGoalOpen(true)}
+                            className="text-primary hover:text-primary hover:bg-primary/10"
+                          >
+                            <Target className="w-4 h-4" />
+                          </Button>
+                        )}
+                        
+                        {isLeader && member.user_id !== group.leader_id && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setMemberToRemove({ id: member.id, name: member.name })}
+                            disabled={removeMember.isPending}
+                            className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -375,8 +408,8 @@ export default function GroupPage() {
                   <span className="font-bold">{totalProgress} {donationType.unit}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="opacity-80">Meta</span>
-                  <span className="font-bold">{group.goal_2026} {donationType.unit}</span>
+                  <span className="opacity-80">Meta do grupo</span>
+                  <span className="font-bold">{effectiveGoal} {donationType.unit}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="opacity-80">Membros</span>
@@ -399,6 +432,39 @@ export default function GroupPage() {
           groupId={id!}
           memberId={userMember.id}
           donationType={donationType}
+        />
+      )}
+
+      {/* Edit Group Modal (for leaders) */}
+      {isLeader && group && (
+        <EditGroupModal
+          open={editGroupOpen}
+          onOpenChange={setEditGroupOpen}
+          group={group}
+          onSave={(data) => {
+            updateGroup.mutate(data, {
+              onSuccess: () => setEditGroupOpen(false),
+            });
+          }}
+          isPending={updateGroup.isPending}
+        />
+      )}
+
+      {/* Edit Member Goal Modal */}
+      {userMember && (
+        <EditMemberGoalModal
+          open={editGoalOpen}
+          onOpenChange={setEditGoalOpen}
+          memberName={userMember.name}
+          currentGoal={userMember.personal_goal || 0}
+          onSave={(goal) => {
+            updateMemberGoal.mutate(
+              { memberId: userMember.id, personal_goal: goal },
+              { onSuccess: () => setEditGoalOpen(false) }
+            );
+          }}
+          isPending={updateMemberGoal.isPending}
+          unit={donationType.unit}
         />
       )}
 
