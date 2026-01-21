@@ -4,6 +4,7 @@ import { Hero } from "@/components/Hero";
 import { HowItWorks } from "@/components/HowItWorks";
 import { ImpactCounter } from "@/components/ImpactCounter";
 import { GroupsSection } from "@/components/GroupsSection";
+import { EntitiesSection } from "@/components/EntitiesSection";
 import { PartnersSection } from "@/components/PartnersSection";
 import { Footer } from "@/components/Footer";
 import { AuthModal } from "@/components/AuthModal";
@@ -27,6 +28,9 @@ const Index = () => {
           <ImpactCounter />
         </div>
         <GroupsSection onRequireAuth={handleRequireAuth} />
+        <div id="entidades">
+          <EntitiesSection onRequireAuth={handleRequireAuth} />
+        </div>
         <PartnersSection />
       </main>
       <Footer />
