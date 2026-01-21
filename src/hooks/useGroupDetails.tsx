@@ -160,6 +160,7 @@ export const useGroupDetails = (groupId: string | undefined) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["groupProgress", groupId] });
       queryClient.invalidateQueries({ queryKey: ["groupMembers", groupId] });
+      queryClient.invalidateQueries({ queryKey: ["impactStats"] });
       toast({
         title: "Doação registrada! 🎉",
         description: "Sua contribuição foi adicionada ao progresso do grupo.",
@@ -187,6 +188,7 @@ export const useGroupDetails = (groupId: string | undefined) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["groupProgress", groupId] });
       queryClient.invalidateQueries({ queryKey: ["groupMembers", groupId] });
+      queryClient.invalidateQueries({ queryKey: ["impactStats"] });
       toast({
         title: "Registro removido",
         description: "A doação foi removida do histórico.",
@@ -214,6 +216,7 @@ export const useGroupDetails = (groupId: string | undefined) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["groupMembers", groupId] });
       queryClient.invalidateQueries({ queryKey: ["groupProgress", groupId] });
+      queryClient.invalidateQueries({ queryKey: ["impactStats"] });
       toast({
         title: "Membro removido",
         description: "O membro foi removido do grupo.",
@@ -243,6 +246,7 @@ export const useGroupDetails = (groupId: string | undefined) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["groupMembers", groupId] });
       queryClient.invalidateQueries({ queryKey: ["userGroups"] });
+      queryClient.invalidateQueries({ queryKey: ["impactStats"] });
       toast({
         title: "Você saiu do grupo",
         description: "Você não é mais membro deste grupo.",

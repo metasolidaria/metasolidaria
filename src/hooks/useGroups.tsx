@@ -144,6 +144,7 @@ export const useGroups = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["groups"] });
       queryClient.invalidateQueries({ queryKey: ["userMemberships"] });
+      queryClient.invalidateQueries({ queryKey: ["impactStats"] });
       toast({
         title: "Grupo criado com sucesso! 🎉",
         description: "Seu grupo está pronto para receber participantes.",
@@ -191,6 +192,7 @@ export const useGroups = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["groups"] });
       queryClient.invalidateQueries({ queryKey: ["userMemberships"] });
+      queryClient.invalidateQueries({ queryKey: ["impactStats"] });
       toast({
         title: "Você entrou no grupo! 🎉",
         description: "Agora você faz parte desta jornada solidária.",
@@ -273,6 +275,7 @@ export const useGroups = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["groups"] });
+      queryClient.invalidateQueries({ queryKey: ["impactStats"] });
       toast({
         title: "Você entrou no grupo! 🎉",
         description: "Bem-vindo ao grupo privado!",
