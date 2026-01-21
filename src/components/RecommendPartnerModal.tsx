@@ -30,6 +30,9 @@ const specialties = [
   { id: "Fisioterapeuta", label: "Fisioterapeuta" },
   { id: "Academia", label: "Academia" },
   { id: "Supermercado", label: "Supermercado" },
+  { id: "Comércio", label: "Comércio" },
+  { id: "Clínica", label: "Clínica" },
+  { id: "Outros", label: "Outros" },
 ];
 
 export const RecommendPartnerModal = ({
