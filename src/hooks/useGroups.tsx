@@ -240,37 +240,26 @@ export const useGroups = () => {
         throw new Error("Você precisa estar logado para aceitar o convite");
       }
 
-      // First get the invitation
-      const { data: invitation, error: inviteError } = await supabase
-        .from("group_invitations")
-        .select("*")
-        .eq("invite_code", inviteCode)
-        .eq("status", "pending")
-        .single();
-
-      if (inviteError || !invitation) {
-        throw new Error("Convite inválido ou expirado");
-      }
-
-      // Update invitation status
-      await supabase
-        .from("group_invitations")
-        .update({ status: "accepted" })
-        .eq("id", invitation.id);
-
-      // Add user to group
+      // Use secure database function to accept invitation
+      // This prevents email enumeration and handles all validation server-side
       const { data, error } = await supabase
-        .from("group_members")
-        .insert([{ 
-          group_id: invitation.group_id, 
-          user_id: user.id,
-          name: user.user_metadata?.full_name || user.email || "Membro"
-        }])
-        .select()
-        .single();
+        .rpc('accept_group_invitation', { _invite_code: inviteCode });
 
-      if (error) throw error;
-      return data;
+      if (error) {
+        // Map database errors to user-friendly messages
+        if (error.message.includes('not found or expired')) {
+          throw new Error("Convite inválido ou expirado");
+        }
+        if (error.message.includes('different email')) {
+          throw new Error("Este convite foi enviado para outro email");
+        }
+        if (error.message.includes('already a member')) {
+          throw new Error("Você já é membro deste grupo");
+        }
+        throw error;
+      }
+      
+      return { id: data };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["groups"] });

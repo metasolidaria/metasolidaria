@@ -322,6 +322,10 @@ export type Database = {
       }
     }
     Functions: {
+      accept_group_invitation: {
+        Args: { _invite_code: string }
+        Returns: string
+      }
       is_current_user_email: { Args: { _email: string }; Returns: boolean }
       is_group_member: {
         Args: { _group_id: string; _user_id: string }
