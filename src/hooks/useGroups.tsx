@@ -130,10 +130,24 @@ export const useGroups = () => {
         .single();
 
       if (error) throw error;
+
+      // Adicionar o líder como membro do grupo automaticamente
+      const { error: memberError } = await supabase
+        .from("group_members")
+        .insert([{
+          group_id: data.id,
+          user_id: newGroup.leader_id,
+          name: newGroup.leader_name || "Líder",
+          personal_goal: 0,
+        }]);
+
+      if (memberError) throw memberError;
+
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["groups"] });
+      queryClient.invalidateQueries({ queryKey: ["userMemberships"] });
       toast({
         title: "Grupo criado com sucesso! 🎉",
         description: "Seu grupo está pronto para receber participantes.",
