@@ -240,7 +240,7 @@ export default function GroupPage() {
             >
               <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
                 <Target className="w-5 h-5 text-primary" />
-                Meta 2026
+                Meta do grupo
               </h2>
               
               <div className="mb-4">
