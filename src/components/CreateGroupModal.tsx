@@ -35,7 +35,7 @@ export const CreateGroupModal = ({ open, onOpenChange, onRequireAuth }: CreateGr
     city: "",
     goal: "",
     donationType: "",
-    isPrivate: false,
+    isPrivate: true,
     leaderName: "",
     leaderWhatsapp: "",
     description: "",
