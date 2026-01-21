@@ -1,12 +1,27 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowDown, Heart, Users } from "lucide-react";
 import { Button } from "./ui/button";
 import heroImage from "@/assets/hero-donation.jpg";
+import { useAuth } from "@/hooks/useAuth";
+import { AuthModal } from "./AuthModal";
+import { CreateGroupModal } from "./CreateGroupModal";
 
 export const Hero = () => {
+  const { user } = useAuth();
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [createGroupOpen, setCreateGroupOpen] = useState(false);
 
   const scrollToGroups = () => {
     document.getElementById("grupos")?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  const handleCreateGroupClick = () => {
+    if (user) {
+      setCreateGroupOpen(true);
+    } else {
+      setAuthModalOpen(true);
+    }
   };
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
@@ -52,7 +67,7 @@ export const Hero = () => {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
-            <Button size="xl" variant="hero" onClick={scrollToGroups}>
+            <Button size="xl" variant="hero" onClick={handleCreateGroupClick}>
               <Users className="w-5 h-5" />
               Criar Grupo
             </Button>
@@ -78,6 +93,26 @@ export const Hero = () => {
           </motion.div>
         </motion.div>
       </div>
+
+      {/* Modals */}
+      <AuthModal 
+        open={authModalOpen} 
+        onOpenChange={(open) => {
+          setAuthModalOpen(open);
+          // Se fechou o modal de auth e agora está logado, abrir criação de grupo
+          if (!open && user) {
+            setCreateGroupOpen(true);
+          }
+        }}
+      />
+      <CreateGroupModal 
+        open={createGroupOpen} 
+        onOpenChange={setCreateGroupOpen}
+        onRequireAuth={() => {
+          setCreateGroupOpen(false);
+          setAuthModalOpen(true);
+        }}
+      />
     </section>
   );
 };
