@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { ArrowDown, Heart, Scale, Users } from "lucide-react";
 import { Button } from "./ui/button";
-import heroImage from "@/assets/hero-community.jpg";
+import heroImage from "@/assets/hero-donation.jpg";
 import { useImpactStats } from "@/hooks/useImpactStats";
 
 const formatNumber = (num: number): string => {
