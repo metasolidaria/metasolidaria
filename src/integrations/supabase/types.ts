@@ -416,6 +416,21 @@ export type Database = {
             }
             Returns: string
           }
+        | {
+            Args: {
+              _city: string
+              _description: string
+              _donation_type: string
+              _end_date?: string
+              _entity_id?: string
+              _goal_2026: number
+              _is_private: boolean
+              _leader_name: string
+              _leader_whatsapp: string
+              _name: string
+            }
+            Returns: string
+          }
       is_current_user_email: { Args: { _email: string }; Returns: boolean }
       is_group_member: {
         Args: { _group_id: string; _user_id: string }

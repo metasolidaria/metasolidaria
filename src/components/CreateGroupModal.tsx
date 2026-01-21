@@ -7,6 +7,7 @@ import { Label } from "./ui/label";
 import { Switch } from "./ui/switch";
 import { Textarea } from "./ui/textarea";
 import { CityAutocomplete } from "./CityAutocomplete";
+import { EntitySelect } from "./EntitySelect";
 import { useAuth } from "@/hooks/useAuth";
 import { useGroups } from "@/hooks/useGroups";
 import { supabase } from "@/integrations/supabase/client";
@@ -45,6 +46,7 @@ export const CreateGroupModal = ({ open, onOpenChange, onRequireAuth }: CreateGr
     leaderWhatsapp: "",
     description: "",
     endDate: new Date("2026-12-31"),
+    entityId: null as string | null,
   });
 
   // Buscar perfil do usuário para preencher nome e WhatsApp automaticamente
@@ -97,6 +99,7 @@ export const CreateGroupModal = ({ open, onOpenChange, onRequireAuth }: CreateGr
       leader_whatsapp: formData.leaderWhatsapp,
       description: formData.description,
       end_date: format(formData.endDate, "yyyy-MM-dd"),
+      entity_id: formData.entityId,
     });
 
     setFormData({ 
@@ -108,6 +111,7 @@ export const CreateGroupModal = ({ open, onOpenChange, onRequireAuth }: CreateGr
       leaderWhatsapp: "",
       description: "",
       endDate: new Date("2026-12-31"),
+      entityId: null,
     });
     onOpenChange(false);
   };
@@ -304,6 +308,11 @@ export const CreateGroupModal = ({ open, onOpenChange, onRequireAuth }: CreateGr
                       ))}
                     </div>
                   </div>
+
+                  <EntitySelect
+                    value={formData.entityId}
+                    onChange={(entityId) => setFormData({ ...formData, entityId })}
+                  />
 
                   <div className="flex items-center justify-between p-4 rounded-xl border border-border bg-muted/30">
                     <div className="flex items-center gap-3">

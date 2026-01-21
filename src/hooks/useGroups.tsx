@@ -123,6 +123,7 @@ export const useGroups = () => {
       leader_whatsapp?: string;
       description?: string;
       end_date?: string;
+      entity_id?: string | null;
     }) => {
       // Usar função SECURITY DEFINER que cria grupo E adiciona líder como membro
       const { data, error } = await supabase.rpc('create_group_with_leader', {
@@ -135,6 +136,7 @@ export const useGroups = () => {
         _leader_whatsapp: newGroup.leader_whatsapp || '',
         _description: newGroup.description || '',
         _end_date: newGroup.end_date || '2026-12-31',
+        _entity_id: newGroup.entity_id || null,
       });
 
       if (error) throw error;
