@@ -359,7 +359,7 @@ export default function GroupPage() {
                           </p>
                           {member.commitment_metric && (
                             <p className="text-xs text-primary mt-1">
-                              📌 {member.commitment_ratio || 1} {member.commitment_metric} = 1 {donationType.unit}
+                              📌 {member.commitment_ratio || 1} {member.commitment_metric} = {member.commitment_donation || 1} {donationType.unit}
                             </p>
                           )}
                         </div>
@@ -465,6 +465,7 @@ export default function GroupPage() {
           currentCommitmentType={userMember.commitment_type}
           currentCommitmentMetric={userMember.commitment_metric}
           currentCommitmentRatio={userMember.commitment_ratio}
+          currentCommitmentDonation={userMember.commitment_donation}
           onSave={(data) => {
             updateMemberGoal.mutate(
               { 
@@ -473,6 +474,7 @@ export default function GroupPage() {
                 commitment_type: data.commitment_type,
                 commitment_metric: data.commitment_metric,
                 commitment_ratio: data.commitment_ratio,
+                commitment_donation: data.commitment_donation,
               },
               { onSuccess: () => setEditGoalOpen(false) }
             );
