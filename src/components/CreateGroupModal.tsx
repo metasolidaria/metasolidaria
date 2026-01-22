@@ -16,6 +16,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
+import { createGroupSchema, validateForm } from "@/lib/validations";
+import { useToast } from "@/hooks/use-toast";
 
 interface CreateGroupModalProps {
   open: boolean;
@@ -37,6 +39,7 @@ const donationTypes = [
 export const CreateGroupModal = ({ open, onOpenChange, onRequireAuth }: CreateGroupModalProps) => {
   const { user } = useAuth();
   const { createGroup } = useGroups();
+  const { toast } = useToast();
   const [formData, setFormData] = useState({
     groupName: "",
     city: "",
@@ -88,16 +91,36 @@ export const CreateGroupModal = ({ open, onOpenChange, onRequireAuth }: CreateGr
       return;
     }
 
-    createGroup.mutate({
-      name: formData.groupName,
+    // Validate form data
+    const validation = validateForm(createGroupSchema, {
+      groupName: formData.groupName,
       city: formData.city,
+      leaderName: formData.leaderName,
+      leaderWhatsapp: formData.leaderWhatsapp,
+      description: formData.description,
+      donationType: formData.donationType,
+    });
+
+    if (!validation.success) {
+      const firstError = Object.values(validation.errors || {})[0];
+      toast({
+        title: "Dados inválidos",
+        description: firstError || "Verifique os campos do formulário",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    createGroup.mutate({
+      name: formData.groupName.trim(),
+      city: formData.city.trim(),
       donation_type: formData.donationType,
       goal_2026: 0,
       leader_id: user.id,
       is_private: formData.isPrivate,
-      leader_name: formData.leaderName,
-      leader_whatsapp: formData.leaderWhatsapp,
-      description: formData.description,
+      leader_name: formData.leaderName.trim(),
+      leader_whatsapp: formData.leaderWhatsapp.trim(),
+      description: formData.description.trim(),
       end_date: format(formData.endDate, "yyyy-MM-dd"),
       entity_id: formData.entityId,
     });

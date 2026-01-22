@@ -16,6 +16,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { PartnerTier } from "@/hooks/usePartners";
+import { partnerSchema, validateForm } from "@/lib/validations";
 
 const tierOptions: { value: PartnerTier; label: string; icon: typeof Diamond; description: string }[] = [
   { value: "diamante", label: "Diamante", icon: Diamond, description: "Parceiro premium com destaque máximo" },
@@ -69,10 +70,22 @@ export const RecommendPartnerModal = ({
       return;
     }
 
-    if (!formData.name || !formData.city) {
+    // Validate form data
+    const validation = validateForm(partnerSchema, {
+      name: formData.name,
+      city: formData.city,
+      specialty: formData.specialty || undefined,
+      whatsapp: formData.whatsapp || undefined,
+      description: formData.description || undefined,
+      instagram: formData.instagram || undefined,
+      responsible: formData.responsible || undefined,
+    });
+
+    if (!validation.success) {
+      const firstError = Object.values(validation.errors || {})[0];
       toast({
-        title: "Preencha os campos obrigatórios",
-        description: "Nome e cidade são obrigatórios.",
+        title: "Dados inválidos",
+        description: firstError || "Verifique os campos do formulário",
         variant: "destructive",
       });
       return;
@@ -82,14 +95,14 @@ export const RecommendPartnerModal = ({
 
     try {
       const description = formData.responsible 
-        ? `Responsável: ${formData.responsible}${formData.description ? `. ${formData.description}` : ""}`
-        : formData.description;
+        ? `Responsável: ${formData.responsible.trim()}${formData.description ? `. ${formData.description.trim()}` : ""}`
+        : formData.description.trim();
 
       const { error } = await supabase.from("partners").insert([
         {
           name: formData.name.trim(),
           specialty: formData.specialty || null,
-          city: formData.city,
+          city: formData.city.trim(),
           whatsapp: formData.whatsapp ? formData.whatsapp.replace(/\D/g, "") : null,
           description: description || null,
           submitted_by: user.id,

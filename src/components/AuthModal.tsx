@@ -8,6 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { PasswordStrengthIndicator, validatePasswordStrength } from "./PasswordStrengthIndicator";
 import { PasswordInput } from "./PasswordInput";
+import { signupSchema, emailSchema, nameSchema, validateForm } from "@/lib/validations";
 
 interface AuthModalProps {
   open: boolean;
@@ -50,6 +51,25 @@ export const AuthModal = ({ open, onOpenChange, defaultMode = "login" }: AuthMod
         });
         onOpenChange(false);
       } else {
+        // Validate signup data
+        const validation = validateForm(signupSchema, {
+          fullName: formData.fullName,
+          email: formData.email,
+          whatsapp: formData.whatsapp,
+          password: formData.password,
+        });
+
+        if (!validation.success) {
+          const firstError = Object.values(validation.errors || {})[0];
+          toast({
+            title: "Dados inválidos",
+            description: firstError || "Verifique os campos do formulário",
+            variant: "destructive",
+          });
+          setLoading(false);
+          return;
+        }
+
         const passwordError = validatePasswordStrength(formData.password);
         if (passwordError) {
           toast({
@@ -61,10 +81,10 @@ export const AuthModal = ({ open, onOpenChange, defaultMode = "login" }: AuthMod
           return;
         }
         const { error } = await signUp(
-          formData.email,
+          formData.email.trim(),
           formData.password,
-          formData.fullName,
-          formData.whatsapp
+          formData.fullName.trim(),
+          formData.whatsapp.trim()
         );
         if (error) throw error;
         toast({
