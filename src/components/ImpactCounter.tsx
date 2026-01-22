@@ -44,6 +44,7 @@ const donationTypeConfig = [
   { key: "livros" as keyof DonationsByType, label: "Livros", icon: BookOpen, unit: "un" },
   { key: "roupas" as keyof DonationsByType, label: "Roupas", icon: Shirt, unit: "peças" },
   { key: "cobertores" as keyof DonationsByType, label: "Cobertores", icon: BedDouble, unit: "un" },
+  { key: "sopas" as keyof DonationsByType, label: "Sopas", icon: Soup, unit: "porções" },
   { key: "higiene" as keyof DonationsByType, label: "Kits de Higiene", icon: Package, unit: "kits" },
   { key: "brinquedos" as keyof DonationsByType, label: "Brinquedos", icon: Gift, unit: "un" },
 ];
