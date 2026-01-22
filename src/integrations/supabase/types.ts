@@ -447,6 +447,14 @@ export type Database = {
         }
         Relationships: []
       }
+      impact_stats_public: {
+        Row: {
+          donation_type: string | null
+          total_amount: number | null
+          total_entries: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       accept_group_invitation: {
