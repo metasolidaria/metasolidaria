@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { PasswordStrengthIndicator, validatePasswordStrength } from "./PasswordStrengthIndicator";
 import { PasswordInput } from "./PasswordInput";
 import { signupSchema, emailSchema, nameSchema, validateForm } from "@/lib/validations";
+import { supabase } from "@/integrations/supabase/client";
 
 interface AuthModalProps {
   open: boolean;
@@ -43,7 +44,29 @@ export const AuthModal = ({ open, onOpenChange, defaultMode = "login" }: AuthMod
         setMode("login");
       } else if (mode === "login") {
         const { error } = await signIn(formData.email, formData.password);
-        if (error) throw error;
+        
+        if (error) {
+          // Wait a moment to check if onAuthStateChange updated the session
+          await new Promise(resolve => setTimeout(resolve, 500));
+          
+          // Verify if login actually succeeded despite the error
+          const { data: { session } } = await supabase.auth.getSession();
+          
+          if (session) {
+            // Login worked, ignore the error
+            toast({
+              title: "Bem-vindo de volta! 🎉",
+              description: "Login realizado com sucesso.",
+            });
+            onOpenChange(false);
+            setLoading(false);
+            return;
+          }
+          
+          // Really failed
+          throw error;
+        }
+        
         toast({
           title: "Bem-vindo de volta! 🎉",
           description: "Login realizado com sucesso.",
