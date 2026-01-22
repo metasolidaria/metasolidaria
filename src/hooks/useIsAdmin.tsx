@@ -27,7 +27,7 @@ export const useIsAdmin = () => {
   });
 
   return {
-    isAdmin: isAdmin ?? false,
+    isAdmin: isLoading ? undefined : (isAdmin ?? false),
     isLoading,
   };
 };
