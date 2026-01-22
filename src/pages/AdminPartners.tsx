@@ -82,14 +82,16 @@ const AdminPartners = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [partnerToDelete, setPartnerToDelete] = useState<Partner | null>(null);
 
-  // Redirect non-admins
+  // Redirect non-admins - only after loading is complete
   useEffect(() => {
-    if (!authLoading && !adminLoading) {
-      if (!user) {
-        navigate("/");
-      } else if (!isAdmin) {
-        navigate("/");
-      }
+    // Wait for both auth and admin status to be fully loaded
+    if (authLoading || adminLoading) {
+      return;
+    }
+    
+    // Only redirect if user is not logged in or confirmed not admin
+    if (!user || isAdmin === false) {
+      navigate("/");
     }
   }, [user, isAdmin, authLoading, adminLoading, navigate]);
 
@@ -101,7 +103,7 @@ const AdminPartners = () => {
     );
   }
 
-  if (!user || !isAdmin) {
+  if (!user || isAdmin === false) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-4">
         <ShieldAlert className="h-16 w-16 text-destructive" />
