@@ -14,6 +14,24 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_emails: {
+        Row: {
+          created_at: string | null
+          email: string
+          id: string
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          id?: string
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          id?: string
+        }
+        Relationships: []
+      }
       entities: {
         Row: {
           city: string
@@ -478,6 +496,7 @@ export type Database = {
             }
             Returns: string
           }
+      is_admin: { Args: { _user_id: string }; Returns: boolean }
       is_current_user_email: { Args: { _email: string }; Returns: boolean }
       is_group_member: {
         Args: { _group_id: string; _user_id: string }
