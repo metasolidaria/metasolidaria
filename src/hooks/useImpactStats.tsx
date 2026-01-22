@@ -12,24 +12,25 @@ export interface DonationsByType {
   outro: number;
 }
 
+interface ImpactStatsRow {
+  donation_type: string;
+  total_amount: number;
+  total_entries: number;
+}
+
 export const useImpactStats = () => {
   return useQuery({
     queryKey: ["impactStats"],
     queryFn: async () => {
-      // Buscar dados de progresso
-      const { data: progressData } = await supabase
-        .from("goal_progress")
-        .select("amount, group_id");
+      // Buscar dados agregados da view pública (sem restrição de RLS)
+      const { data, error } = await supabase
+        .from("impact_stats_public")
+        .select("*");
 
-      // Buscar grupos públicos para mapear donation_type (sem RLS restritivo)
-      const { data: groupsData } = await supabase
-        .from("groups_public")
-        .select("id, donation_type");
-
-      // Criar mapa de group_id -> donation_type
-      const groupTypeMap = new Map(
-        groupsData?.map(g => [g.id, g.donation_type]) || []
-      );
+      if (error) {
+        console.error("Error fetching impact stats:", error);
+        throw error;
+      }
 
       // Inicializar contadores por tipo
       const donationsByType: DonationsByType = {
@@ -45,12 +46,14 @@ export const useImpactStats = () => {
 
       let totalDonations = 0;
 
-      // Agrupar valores por tipo de doação
-      progressData?.forEach((item) => {
-        totalDonations += item.amount || 0;
-        const type = groupTypeMap.get(item.group_id) as keyof DonationsByType;
+      // Processar dados da view
+      (data as ImpactStatsRow[] | null)?.forEach((row) => {
+        const amount = Number(row.total_amount) || 0;
+        totalDonations += amount;
+        
+        const type = row.donation_type as keyof DonationsByType;
         if (type && donationsByType.hasOwnProperty(type)) {
-          donationsByType[type] += item.amount || 0;
+          donationsByType[type] = amount;
         }
       });
 
