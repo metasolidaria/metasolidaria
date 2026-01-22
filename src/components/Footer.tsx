@@ -1,7 +1,11 @@
-import { Heart } from "lucide-react";
+import { Heart, Settings } from "lucide-react";
+import { Link } from "react-router-dom";
 import logo from "@/assets/logo.jpg";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
 
 export const Footer = () => {
+  const { isAdmin } = useIsAdmin();
+
   return (
     <footer className="bg-foreground py-12">
       <div className="container mx-auto px-4">
@@ -19,8 +23,20 @@ export const Footer = () => {
             <span>para transformar vidas</span>
           </div>
 
-          <div className="text-primary-foreground/60 text-sm">
-            © 2026 Meta Solidária. Todos os direitos reservados.
+          <div className="flex items-center gap-4">
+            <span className="text-primary-foreground/60 text-sm">
+              © 2026 Meta Solidária. Todos os direitos reservados.
+            </span>
+            
+            {isAdmin && (
+              <Link 
+                to="/admin/parceiros"
+                className="flex items-center gap-1 text-primary-foreground/40 hover:text-primary-foreground/60 text-xs transition-colors"
+              >
+                <Settings className="w-3 h-3" />
+                Admin
+              </Link>
+            )}
           </div>
         </div>
       </div>
