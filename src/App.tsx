@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import GroupPage from "./pages/GroupPage";
 import ResetPassword from "./pages/ResetPassword";
+import AdminPartners from "./pages/AdminPartners";
 import NotFound from "./pages/NotFound";
 import { InstallPWAPrompt } from "./components/InstallPWAPrompt";
 
@@ -21,6 +22,7 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/grupo/:id" element={<GroupPage />} />
           <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/admin/parceiros" element={<AdminPartners />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
