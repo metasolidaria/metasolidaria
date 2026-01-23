@@ -10,6 +10,7 @@ interface HeroStatsRow {
 export const useHeroStats = () => {
   return useQuery({
     queryKey: ["heroStats"],
+    staleTime: 0, // Always fetch fresh data
     queryFn: async () => {
       const { data, error } = await supabase
         .from("hero_stats_public")
