@@ -92,6 +92,13 @@ export type Database = {
             foreignKeyName: "goal_progress_group_id_fkey"
             columns: ["group_id"]
             isOneToOne: false
+            referencedRelation: "group_stats"
+            referencedColumns: ["group_id"]
+          },
+          {
+            foreignKeyName: "goal_progress_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
             referencedRelation: "groups"
             referencedColumns: ["id"]
           },
@@ -143,6 +150,13 @@ export type Database = {
           status?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "group_invitations_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "group_stats"
+            referencedColumns: ["group_id"]
+          },
           {
             foreignKeyName: "group_invitations_group_id_fkey"
             columns: ["group_id"]
@@ -206,6 +220,13 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "group_members_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "group_stats"
+            referencedColumns: ["group_id"]
+          },
           {
             foreignKeyName: "group_members_group_id_fkey"
             columns: ["group_id"]
@@ -405,6 +426,15 @@ export type Database = {
       }
     }
     Views: {
+      group_stats: {
+        Row: {
+          group_id: string | null
+          member_count: number | null
+          total_donations: number | null
+          total_goals: number | null
+        }
+        Relationships: []
+      }
       groups_public: {
         Row: {
           city: string | null
@@ -423,42 +453,6 @@ export type Database = {
           total_donations: number | null
           total_goals: number | null
           updated_at: string | null
-        }
-        Insert: {
-          city?: string | null
-          created_at?: string | null
-          description?: string | null
-          donation_type?: string | null
-          end_date?: string | null
-          entity_id?: string | null
-          goal_2026?: number | null
-          id?: string | null
-          is_private?: boolean | null
-          leader_id?: string | null
-          leader_name?: string | null
-          member_count?: never
-          name?: string | null
-          total_donations?: never
-          total_goals?: never
-          updated_at?: string | null
-        }
-        Update: {
-          city?: string | null
-          created_at?: string | null
-          description?: string | null
-          donation_type?: string | null
-          end_date?: string | null
-          entity_id?: string | null
-          goal_2026?: number | null
-          id?: string | null
-          is_private?: boolean | null
-          leader_id?: string | null
-          leader_name?: string | null
-          member_count?: never
-          name?: string | null
-          total_donations?: never
-          total_goals?: never
-          updated_at?: string | null
         }
         Relationships: [
           {
