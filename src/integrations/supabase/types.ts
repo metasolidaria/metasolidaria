@@ -449,6 +449,7 @@ export type Database = {
       }
       hero_stats_public: {
         Row: {
+          total_goals: number | null
           total_groups: number | null
           total_users: number | null
         }
