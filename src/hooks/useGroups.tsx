@@ -69,67 +69,33 @@ export const useGroups = () => {
 
   const { data: groups, isLoading } = useQuery({
     queryKey: ["groups"],
+    staleTime: 0,
     queryFn: async () => {
-      // Use the public view that excludes sensitive leader contact info
+      // Use the public view that includes member counts, goals and donations
       const { data: groupsData, error: groupsError } = await supabase
         .from("groups_public" as any)
         .select("*")
-        .order("created_at", { ascending: false }) as { data: GroupPublic[] | null, error: any };
+        .order("created_at", { ascending: false }) as { data: any[] | null, error: any };
 
       if (groupsError) throw groupsError;
 
-      // Get member counts and goals reached for each group
-      const groupsWithStats = await Promise.all(
-        (groupsData || []).map(async (group: GroupPublic) => {
-          const { count: memberCount } = await supabase
-            .from("group_members")
-            .select("*", { count: "exact", head: true })
-            .eq("group_id", group.id);
-
-          // Buscar IDs dos membros do grupo
-          const { data: members } = await supabase
-            .from("group_members")
-            .select("id")
-            .eq("group_id", group.id);
-
-          // Buscar metas de todos os compromissos dos membros
-          const memberIds = members?.map(m => m.id) || [];
-          let totalGoals = 0;
-
-          if (memberIds.length > 0) {
-            const { data: commitments } = await supabase
-              .from("member_commitments")
-              .select("personal_goal")
-              .in("member_id", memberIds);
-
-            totalGoals = commitments?.reduce((sum, c) => sum + (c.personal_goal || 0), 0) || 0;
-          }
-
-          // Buscar total de doações do progresso
-          const { data: progressData } = await supabase
-            .from("goal_progress")
-            .select("amount")
-            .eq("group_id", group.id);
-
-          const totalDonations = progressData?.reduce((sum, p) => sum + (p.amount || 0), 0) || 0;
-
-          const { data: profile } = await supabase
-            .from("profiles")
-            .select("full_name")
-            .eq("user_id", group.leader_id)
-            .maybeSingle();
-
-          return {
-            ...group,
-            member_count: memberCount || 0,
-            total_goals: totalGoals,
-            total_donations: totalDonations,
-            leader_name: profile?.full_name || group.leader_name || "Líder",
-          } as Group;
-        })
-      );
-
-      return groupsWithStats;
+      // Map view data to Group interface
+      return (groupsData || []).map((group: any) => ({
+        id: group.id,
+        name: group.name,
+        city: group.city,
+        donation_type: group.donation_type,
+        goal_2026: group.goal_2026,
+        leader_id: group.leader_id,
+        created_at: group.created_at,
+        updated_at: group.updated_at,
+        is_private: group.is_private,
+        leader_name: group.leader_name || "Líder",
+        description: group.description,
+        member_count: group.member_count || 0,
+        total_goals: group.total_goals || 0,
+        total_donations: group.total_donations || 0,
+      } as Group));
     },
   });
 

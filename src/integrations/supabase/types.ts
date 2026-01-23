@@ -411,12 +411,17 @@ export type Database = {
           created_at: string | null
           description: string | null
           donation_type: string | null
+          end_date: string | null
+          entity_id: string | null
           goal_2026: number | null
           id: string | null
           is_private: boolean | null
           leader_id: string | null
           leader_name: string | null
+          member_count: number | null
           name: string | null
+          total_donations: number | null
+          total_goals: number | null
           updated_at: string | null
         }
         Insert: {
@@ -424,12 +429,17 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           donation_type?: string | null
+          end_date?: string | null
+          entity_id?: string | null
           goal_2026?: number | null
           id?: string | null
           is_private?: boolean | null
           leader_id?: string | null
           leader_name?: string | null
+          member_count?: never
           name?: string | null
+          total_donations?: never
+          total_goals?: never
           updated_at?: string | null
         }
         Update: {
@@ -437,15 +447,28 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           donation_type?: string | null
+          end_date?: string | null
+          entity_id?: string | null
           goal_2026?: number | null
           id?: string | null
           is_private?: boolean | null
           leader_id?: string | null
           leader_name?: string | null
+          member_count?: never
           name?: string | null
+          total_donations?: never
+          total_goals?: never
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "groups_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: false
+            referencedRelation: "entities"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       hero_stats_public: {
         Row: {
