@@ -447,6 +447,13 @@ export type Database = {
         }
         Relationships: []
       }
+      hero_stats_public: {
+        Row: {
+          total_groups: number | null
+          total_users: number | null
+        }
+        Relationships: []
+      }
       impact_stats_public: {
         Row: {
           donation_type: string | null

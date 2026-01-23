@@ -1,14 +1,44 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { ArrowDown, Heart, Users } from "lucide-react";
+import { ArrowDown, Heart, Users, UserCheck } from "lucide-react";
 import { Button } from "./ui/button";
 import heroImage from "@/assets/hero-donation.jpg";
 import { useAuth } from "@/hooks/useAuth";
 import { AuthModal } from "./AuthModal";
 import { CreateGroupModal } from "./CreateGroupModal";
+import { useHeroStats } from "@/hooks/useHeroStats";
+
+// Animated counter component
+const AnimatedCounter = ({ value, duration = 2000 }: { value: number; duration?: number }) => {
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    if (value === 0) return;
+    
+    const steps = 60;
+    const increment = value / steps;
+    const stepDuration = duration / steps;
+    let current = 0;
+
+    const timer = setInterval(() => {
+      current += increment;
+      if (current >= value) {
+        setCount(value);
+        clearInterval(timer);
+      } else {
+        setCount(Math.floor(current));
+      }
+    }, stepDuration);
+
+    return () => clearInterval(timer);
+  }, [value, duration]);
+
+  return <span>{count.toLocaleString('pt-BR')}</span>;
+};
 
 export const Hero = () => {
   const { user } = useAuth();
+  const { data: heroStats } = useHeroStats();
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [createGroupOpen, setCreateGroupOpen] = useState(false);
 
@@ -66,7 +96,7 @@ export const Hero = () => {
             Sua atitude, mudará vidas.
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
             <Button size="xl" variant="hero" onClick={handleCreateGroupClick}>
               <Users className="w-5 h-5" />
               Criar Grupo
@@ -75,6 +105,33 @@ export const Hero = () => {
               Ver Grupos Ativos
             </Button>
           </div>
+
+          {/* Stats Counters */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6, duration: 0.5 }}
+            className="flex justify-center gap-8 sm:gap-16"
+          >
+            <div className="text-center">
+              <div className="flex items-center justify-center gap-2 mb-1">
+                <Users className="w-5 h-5 text-secondary" />
+                <span className="text-3xl sm:text-4xl font-bold text-secondary">
+                  +<AnimatedCounter value={heroStats?.totalGroups || 0} />
+                </span>
+              </div>
+              <p className="text-primary-foreground/70 text-sm">Grupos Ativos</p>
+            </div>
+            <div className="text-center">
+              <div className="flex items-center justify-center gap-2 mb-1">
+                <UserCheck className="w-5 h-5 text-secondary" />
+                <span className="text-3xl sm:text-4xl font-bold text-secondary">
+                  +<AnimatedCounter value={heroStats?.totalUsers || 0} />
+                </span>
+              </div>
+              <p className="text-primary-foreground/70 text-sm">Voluntários Engajados</p>
+            </div>
+          </motion.div>
 
         </motion.div>
 
