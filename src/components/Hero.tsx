@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { ArrowDown, Heart, Users, UserCheck } from "lucide-react";
+import { ArrowDown, Heart, Users, UserCheck, Target } from "lucide-react";
 import { Button } from "./ui/button";
 import heroImage from "@/assets/hero-donation.jpg";
 import { useAuth } from "@/hooks/useAuth";
@@ -111,25 +111,34 @@ export const Hero = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.6, duration: 0.5 }}
-            className="flex justify-center gap-8 sm:gap-16"
+            className="flex flex-wrap justify-center gap-6 sm:gap-12"
           >
             <div className="text-center">
               <div className="flex items-center justify-center gap-2 mb-1">
                 <Users className="w-5 h-5 text-secondary" />
-                <span className="text-3xl sm:text-4xl font-bold text-secondary">
+                <span className="text-2xl sm:text-3xl font-bold text-secondary">
                   +<AnimatedCounter value={heroStats?.totalGroups || 0} />
                 </span>
               </div>
-              <p className="text-primary-foreground/70 text-sm">Grupos Ativos</p>
+              <p className="text-primary-foreground/70 text-xs sm:text-sm">Grupos Ativos</p>
             </div>
             <div className="text-center">
               <div className="flex items-center justify-center gap-2 mb-1">
                 <UserCheck className="w-5 h-5 text-secondary" />
-                <span className="text-3xl sm:text-4xl font-bold text-secondary">
+                <span className="text-2xl sm:text-3xl font-bold text-secondary">
                   +<AnimatedCounter value={heroStats?.totalUsers || 0} />
                 </span>
               </div>
-              <p className="text-primary-foreground/70 text-sm">Voluntários Engajados</p>
+              <p className="text-primary-foreground/70 text-xs sm:text-sm">Voluntários</p>
+            </div>
+            <div className="text-center">
+              <div className="flex items-center justify-center gap-2 mb-1">
+                <Target className="w-5 h-5 text-secondary" />
+                <span className="text-2xl sm:text-3xl font-bold text-secondary">
+                  +<AnimatedCounter value={heroStats?.totalGoals || 0} />
+                </span>
+              </div>
+              <p className="text-primary-foreground/70 text-xs sm:text-sm">Metas Definidas</p>
             </div>
           </motion.div>
 

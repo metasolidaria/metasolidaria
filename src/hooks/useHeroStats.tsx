@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 interface HeroStatsRow {
   total_groups: number;
   total_users: number;
+  total_goals: number;
 }
 
 export const useHeroStats = () => {
@@ -23,6 +24,7 @@ export const useHeroStats = () => {
       return {
         totalGroups: Number((data as HeroStatsRow)?.total_groups) || 0,
         totalUsers: Number((data as HeroStatsRow)?.total_users) || 0,
+        totalGoals: Number((data as HeroStatsRow)?.total_goals) || 0,
       };
     },
   });
