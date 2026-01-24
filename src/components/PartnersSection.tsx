@@ -21,7 +21,9 @@ import {
   MoreHorizontal,
   Diamond,
   Crown,
-  Medal
+  Medal,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
@@ -60,12 +62,15 @@ const categories = [
 
 import logoImage from "@/assets/logo.jpg";
 
+const ITEMS_PER_PAGE = 10;
+
 export const PartnersSection = () => {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [searchCity, setSearchCity] = useState("");
   const [radiusKm, setRadiusKm] = useState(50);
   const [useProximity, setUseProximity] = useState(false);
   const [isRecommendModalOpen, setIsRecommendModalOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
   
   const { partners, isLoading } = usePartners();
   const { latitude, longitude, loading: geoLoading, error: geoError, requestLocation, hasLocation } = useGeolocation();
@@ -129,6 +134,18 @@ export const PartnersSection = () => {
 
     return result;
   }, [partners, selectedCategory, searchCity, useProximity, hasLocation, latitude, longitude, radiusKm]);
+
+  // Paginação
+  const totalPages = Math.ceil(filteredAndSortedPartners.length / ITEMS_PER_PAGE);
+  const paginatedPartners = useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    return filteredAndSortedPartners.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  }, [filteredAndSortedPartners, currentPage]);
+
+  // Reset page when filters change
+  useMemo(() => {
+    setCurrentPage(1);
+  }, [selectedCategory, searchCity, useProximity, radiusKm]);
 
   const handleWhatsAppClick = (phone: string, name: string) => {
     const cleanPhone = phone.replace(/\D/g, "");
@@ -264,91 +281,120 @@ export const PartnersSection = () => {
           <div className="flex items-center justify-center py-12">
             <Loader2 className="w-8 h-8 animate-spin text-primary" />
           </div>
-        ) : filteredAndSortedPartners.length > 0 ? (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredAndSortedPartners.map((partner, index) => (
-              <motion.div
-                key={partner.id}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-                className={`bg-card rounded-2xl overflow-hidden shadow-soft hover:shadow-glow transition-all duration-300 hover:-translate-y-1 ${
-                  partner.tier === 'diamante' ? 'ring-2 ring-cyan-500/50' : 
-                  partner.tier === 'ouro' ? 'ring-2 ring-yellow-500/50' : ''
-                }`}
-              >
-                {/* Badge de Tier */}
-                {partner.tier && (
-                  <div className="px-5 pt-4">
-                    {(() => {
-                      const config = tierConfig[partner.tier];
-                      const TierIcon = config.icon;
-                      return (
-                        <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full ${config.colorClass}`}>
-                          <TierIcon className="w-3 h-3" />
-                          {config.label}
-                        </span>
-                      );
-                    })()}
-                  </div>
-                )}
-                
-                <div className="flex gap-4 p-5 pt-3">
-                  <img
-                    src={logoImage}
-                    alt={partner.name}
-                    className="w-20 h-20 rounded-xl object-contain bg-white p-2"
-                  />
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-bold text-foreground truncate">
-                      {partner.name}
-                    </h3>
-                    <p className="text-sm text-primary font-medium">
-                      {partner.specialty}
-                    </p>
-                    <div className="flex items-center gap-1 text-sm text-muted-foreground mt-1">
-                      <MapPin className="w-3 h-3" />
-                      {partner.city}
-                      {"distance" in partner && typeof (partner as { distance: number | null }).distance === "number" && (
-                        <span className="ml-2 text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">
-                          {(partner as { distance: number }).distance < 1 
-                            ? `${Math.round((partner as { distance: number }).distance * 1000)}m` 
-                            : `${(partner as { distance: number }).distance.toFixed(1)}km`}
-                        </span>
+        ) : paginatedPartners.length > 0 ? (
+          <>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {paginatedPartners.map((partner, index) => (
+                <motion.div
+                  key={partner.id}
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: index * 0.1 }}
+                  className={`bg-card rounded-2xl overflow-hidden shadow-soft hover:shadow-glow transition-all duration-300 hover:-translate-y-1 ${
+                    partner.tier === 'diamante' ? 'ring-2 ring-cyan-500/50' : 
+                    partner.tier === 'ouro' ? 'ring-2 ring-yellow-500/50' : ''
+                  }`}
+                >
+                  {/* Badge de Tier */}
+                  {partner.tier && (
+                    <div className="px-5 pt-4">
+                      {(() => {
+                        const config = tierConfig[partner.tier];
+                        const TierIcon = config.icon;
+                        return (
+                          <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full ${config.colorClass}`}>
+                            <TierIcon className="w-3 h-3" />
+                            {config.label}
+                          </span>
+                        );
+                      })()}
+                    </div>
+                  )}
+                  
+                  <div className="flex gap-4 p-5 pt-3">
+                    <img
+                      src={logoImage}
+                      alt={partner.name}
+                      className="w-20 h-20 rounded-xl object-contain bg-white p-2"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-bold text-foreground truncate">
+                        {partner.name}
+                      </h3>
+                      <p className="text-sm text-primary font-medium">
+                        {partner.specialty}
+                      </p>
+                      <div className="flex items-center gap-1 text-sm text-muted-foreground mt-1">
+                        <MapPin className="w-3 h-3" />
+                        {partner.city}
+                        {"distance" in partner && typeof (partner as { distance: number | null }).distance === "number" && (
+                          <span className="ml-2 text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">
+                            {(partner as { distance: number }).distance < 1 
+                              ? `${Math.round((partner as { distance: number }).distance * 1000)}m` 
+                              : `${(partner as { distance: number }).distance.toFixed(1)}km`}
+                          </span>
+                        )}
+                      </div>
+                      {partner.description && (
+                        <p className="text-xs text-muted-foreground mt-2 line-clamp-2">
+                          {partner.description}
+                        </p>
                       )}
                     </div>
-                    {partner.description && (
-                      <p className="text-xs text-muted-foreground mt-2 line-clamp-2">
-                        {partner.description}
-                      </p>
+                  </div>
+
+                  <div className="px-5 pb-5 flex gap-2">
+                    <Button
+                      className="flex-1 gap-2"
+                      variant="hero"
+                      onClick={() => handleWhatsAppClick(partner.whatsapp, partner.name)}
+                    >
+                      <Phone className="w-4 h-4" />
+                      Entrar em Contato
+                    </Button>
+                    {partner.instagram && (
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => window.open(`https://instagram.com/${partner.instagram}`, "_blank")}
+                        title="Ver Instagram"
+                      >
+                        <Instagram className="w-4 h-4" />
+                      </Button>
                     )}
                   </div>
-                </div>
+                </motion.div>
+              ))}
+            </div>
 
-                <div className="px-5 pb-5 flex gap-2">
-                  <Button
-                    className="flex-1 gap-2"
-                    variant="hero"
-                    onClick={() => handleWhatsAppClick(partner.whatsapp, partner.name)}
-                  >
-                    <Phone className="w-4 h-4" />
-                    Entrar em Contato
-                  </Button>
-                  {partner.instagram && (
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => window.open(`https://instagram.com/${partner.instagram}`, "_blank")}
-                      title="Ver Instagram"
-                    >
-                      <Instagram className="w-4 h-4" />
-                    </Button>
-                  )}
-                </div>
-              </motion.div>
-            ))}
-          </div>
+            {/* Paginação */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-center gap-4 mt-8">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                  disabled={currentPage === 1}
+                >
+                  <ChevronLeft className="w-4 h-4 mr-1" />
+                  Anterior
+                </Button>
+                <span className="text-sm text-muted-foreground">
+                  Página {currentPage} de {totalPages} ({filteredAndSortedPartners.length} parceiros)
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                  disabled={currentPage === totalPages}
+                >
+                  Próxima
+                  <ChevronRight className="w-4 h-4 ml-1" />
+                </Button>
+              </div>
+            )}
+          </>
         ) : (
           <motion.div
             initial={{ opacity: 0 }}

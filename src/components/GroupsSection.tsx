@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Users, Target, MapPin, Plus, Heart, Loader2, Lock, Globe, Mail } from "lucide-react";
+import { Users, Target, MapPin, Plus, Heart, Loader2, Lock, Globe, Mail, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "./ui/button";
 import { CreateGroupModal } from "./CreateGroupModal";
 import { InviteMemberModal } from "./InviteMemberModal";
@@ -9,6 +9,8 @@ import { CitySearchAutocomplete } from "./CitySearchAutocomplete";
 import { useGroups } from "@/hooks/useGroups";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+
+const ITEMS_PER_PAGE = 10;
 
 const donationTypeLabels: Record<string, { label: string; icon: string }> = {
   alimentos: { label: "Alimentos", icon: "🍎" },
@@ -40,6 +42,7 @@ export const GroupsSection = ({ onRequireAuth }: GroupsSectionProps) => {
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
   const [filter, setFilter] = useState<"all" | "mine">("all");
   const [searchCity, setSearchCity] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
   const { groups, isLoading, joinGroup, userMemberships } = useGroups();
   const { user } = useAuth();
   const { toast } = useToast();
@@ -49,6 +52,7 @@ export const GroupsSection = ({ onRequireAuth }: GroupsSectionProps) => {
 
   // Filtra os grupos baseado na seleção e cidade
   const filteredGroups = useMemo(() => {
+    // Reset page when filters change
     return groups?.filter((group) => {
       // Filtro de membro
       if (filter === "mine" && !isUserMember(group.id)) {
@@ -63,6 +67,18 @@ export const GroupsSection = ({ onRequireAuth }: GroupsSectionProps) => {
       return true;
     });
   }, [groups, filter, searchCity, userMemberships]);
+
+  // Paginação
+  const totalPages = Math.ceil((filteredGroups?.length || 0) / ITEMS_PER_PAGE);
+  const paginatedGroups = useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    return filteredGroups?.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  }, [filteredGroups, currentPage]);
+
+  // Reset page when filters change
+  useMemo(() => {
+    setCurrentPage(1);
+  }, [filter, searchCity]);
 
 
   const handleGroupAction = (groupId: string, isPrivate: boolean) => {
@@ -189,122 +205,151 @@ export const GroupsSection = ({ onRequireAuth }: GroupsSectionProps) => {
           <div className="flex items-center justify-center py-12">
             <Loader2 className="w-8 h-8 animate-spin text-primary" />
           </div>
-        ) : filteredGroups && filteredGroups.length > 0 ? (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredGroups.map((group, index) => (
-              <motion.div
-                key={group.id}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-                className="bg-card rounded-2xl overflow-hidden shadow-soft hover:shadow-glow transition-all duration-300 hover:-translate-y-1 group"
-              >
-                <div className="relative h-40 overflow-hidden">
-                  <img
-                    src={placeholderImages[index % placeholderImages.length]}
-                    alt={group.name}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-foreground/60 to-transparent" />
-                  <div className="absolute top-3 left-3 flex gap-2">
-                    {group.is_private ? (
-                      <span className="bg-secondary/80 backdrop-blur-sm px-2 py-1 rounded-full text-xs text-secondary-foreground flex items-center gap-1">
-                        <Lock className="w-3 h-3" />
-                        Privado
-                      </span>
-                    ) : (
-                      <span className="bg-primary/80 backdrop-blur-sm px-2 py-1 rounded-full text-xs text-primary-foreground flex items-center gap-1">
-                        <Globe className="w-3 h-3" />
-                        Público
-                      </span>
-                    )}
-                  </div>
-                  <div className="absolute top-3 right-3">
-                    <span className="bg-primary-foreground/20 backdrop-blur-sm px-2 py-1 rounded-full text-xs text-primary-foreground flex items-center gap-1">
-                      <span>{donationTypeLabels[group.donation_type]?.icon || "📦"}</span>
-                      {donationTypeLabels[group.donation_type]?.label || "Doações"}
-                    </span>
-                  </div>
-                  <div className="absolute bottom-4 left-4 right-4">
-                    <h3 className="text-xl font-bold text-primary-foreground">
-                      {group.name}
-                    </h3>
-                    <div className="flex items-center gap-1 text-primary-foreground/80 text-sm">
-                      <MapPin className="w-3 h-3" />
-                      {group.city}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="p-5">
-                  <div className="grid grid-cols-3 gap-4 mb-5">
-                    <div className="text-center">
-                      <div className="flex items-center justify-center gap-1 text-muted-foreground mb-1">
-                        <Users className="w-4 h-4" />
-                      </div>
-                      <div className="text-lg font-bold text-foreground">
-                        {group.member_count || 0}
-                      </div>
-                      <div className="text-xs text-muted-foreground">Membros</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="flex items-center justify-center gap-1 text-muted-foreground mb-1">
-                        <Target className="w-4 h-4" />
-                      </div>
-                      <div className="text-lg font-bold text-primary">
-                        {group.total_goals || 0}
-                      </div>
-                      <div className="text-xs text-muted-foreground">Metas</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="flex items-center justify-center gap-1 text-muted-foreground mb-1">
-                        <Heart className="w-4 h-4" />
-                      </div>
-                      <div className="text-lg font-bold text-secondary">
-                        {group.total_donations || 0}
-                      </div>
-                      <div className="text-xs text-muted-foreground">Doações</div>
-                    </div>
-                  </div>
-
-                  <div className="flex gap-2">
-                    {isGroupLeader(group.leader_id) && group.is_private && (
-                      <Button 
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleInviteMembers(group.id)}
-                        className="flex-1"
-                      >
-                        <Mail className="w-4 h-4 mr-1" />
-                        Convidar
-                      </Button>
-                    )}
-                    <Button 
-                      className={isGroupLeader(group.leader_id) && group.is_private ? "flex-1" : "w-full"}
-                      variant={isUserMember(group.id) ? "default" : "outline"}
-                      onClick={() => handleGroupAction(group.id, group.is_private)}
-                      disabled={joinGroup.isPending || (group.is_private && !isUserMember(group.id))}
-                    >
-                      {isUserMember(group.id) ? (
-                        <>
-                          <Users className="w-4 h-4 mr-1" />
-                          Acessar Grupo
-                        </>
-                      ) : group.is_private ? (
-                        <>
-                          <Lock className="w-4 h-4 mr-1" />
-                          Apenas Convite
-                        </>
+        ) : paginatedGroups && paginatedGroups.length > 0 ? (
+          <>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {paginatedGroups.map((group, index) => (
+                <motion.div
+                  key={group.id}
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: index * 0.1 }}
+                  className="bg-card rounded-2xl overflow-hidden shadow-soft hover:shadow-glow transition-all duration-300 hover:-translate-y-1 group"
+                >
+                  <div className="relative h-40 overflow-hidden">
+                    <img
+                      src={placeholderImages[index % placeholderImages.length]}
+                      alt={group.name}
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-foreground/60 to-transparent" />
+                    <div className="absolute top-3 left-3 flex gap-2">
+                      {group.is_private ? (
+                        <span className="bg-secondary/80 backdrop-blur-sm px-2 py-1 rounded-full text-xs text-secondary-foreground flex items-center gap-1">
+                          <Lock className="w-3 h-3" />
+                          Privado
+                        </span>
                       ) : (
-                        joinGroup.isPending ? "Entrando..." : "Participar do Grupo"
+                        <span className="bg-primary/80 backdrop-blur-sm px-2 py-1 rounded-full text-xs text-primary-foreground flex items-center gap-1">
+                          <Globe className="w-3 h-3" />
+                          Público
+                        </span>
                       )}
-                    </Button>
+                    </div>
+                    <div className="absolute top-3 right-3">
+                      <span className="bg-primary-foreground/20 backdrop-blur-sm px-2 py-1 rounded-full text-xs text-primary-foreground flex items-center gap-1">
+                        <span>{donationTypeLabels[group.donation_type]?.icon || "📦"}</span>
+                        {donationTypeLabels[group.donation_type]?.label || "Doações"}
+                      </span>
+                    </div>
+                    <div className="absolute bottom-4 left-4 right-4">
+                      <h3 className="text-xl font-bold text-primary-foreground">
+                        {group.name}
+                      </h3>
+                      <div className="flex items-center gap-1 text-primary-foreground/80 text-sm">
+                        <MapPin className="w-3 h-3" />
+                        {group.city}
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
+
+                  <div className="p-5">
+                    <div className="grid grid-cols-3 gap-4 mb-5">
+                      <div className="text-center">
+                        <div className="flex items-center justify-center gap-1 text-muted-foreground mb-1">
+                          <Users className="w-4 h-4" />
+                        </div>
+                        <div className="text-lg font-bold text-foreground">
+                          {group.member_count || 0}
+                        </div>
+                        <div className="text-xs text-muted-foreground">Membros</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="flex items-center justify-center gap-1 text-muted-foreground mb-1">
+                          <Target className="w-4 h-4" />
+                        </div>
+                        <div className="text-lg font-bold text-primary">
+                          {group.total_goals || 0}
+                        </div>
+                        <div className="text-xs text-muted-foreground">Metas</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="flex items-center justify-center gap-1 text-muted-foreground mb-1">
+                          <Heart className="w-4 h-4" />
+                        </div>
+                        <div className="text-lg font-bold text-secondary">
+                          {group.total_donations || 0}
+                        </div>
+                        <div className="text-xs text-muted-foreground">Doações</div>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-2">
+                      {isGroupLeader(group.leader_id) && group.is_private && (
+                        <Button 
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleInviteMembers(group.id)}
+                          className="flex-1"
+                        >
+                          <Mail className="w-4 h-4 mr-1" />
+                          Convidar
+                        </Button>
+                      )}
+                      <Button 
+                        className={isGroupLeader(group.leader_id) && group.is_private ? "flex-1" : "w-full"}
+                        variant={isUserMember(group.id) ? "default" : "outline"}
+                        onClick={() => handleGroupAction(group.id, group.is_private)}
+                        disabled={joinGroup.isPending || (group.is_private && !isUserMember(group.id))}
+                      >
+                        {isUserMember(group.id) ? (
+                          <>
+                            <Users className="w-4 h-4 mr-1" />
+                            Acessar Grupo
+                          </>
+                        ) : group.is_private ? (
+                          <>
+                            <Lock className="w-4 h-4 mr-1" />
+                            Apenas Convite
+                          </>
+                        ) : (
+                          joinGroup.isPending ? "Entrando..." : "Participar do Grupo"
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+
+            {/* Paginação */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-center gap-4 mt-8">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                  disabled={currentPage === 1}
+                >
+                  <ChevronLeft className="w-4 h-4 mr-1" />
+                  Anterior
+                </Button>
+                <span className="text-sm text-muted-foreground">
+                  Página {currentPage} de {totalPages} ({filteredGroups?.length} grupos)
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                  disabled={currentPage === totalPages}
+                >
+                  Próxima
+                  <ChevronRight className="w-4 h-4 ml-1" />
+                </Button>
+              </div>
+            )}
+          </>
         ) : searchCity.trim() ? (
           <motion.div
             initial={{ opacity: 0 }}
