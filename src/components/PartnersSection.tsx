@@ -58,14 +58,7 @@ const categories = [
   { id: "Outros", label: "Outros", icon: MoreHorizontal },
 ];
 
-const placeholderImages = [
-  "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=400",
-  "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=400",
-  "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=400",
-  "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400",
-  "https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=400",
-  "https://images.unsplash.com/photo-1594824476967-48c8b964273f?w=400",
-];
+import logoImage from "@/assets/logo.jpg";
 
 export const PartnersSection = () => {
   const [selectedCategory, setSelectedCategory] = useState("all");
@@ -303,9 +296,9 @@ export const PartnersSection = () => {
                 
                 <div className="flex gap-4 p-5 pt-3">
                   <img
-                    src={placeholderImages[index % placeholderImages.length]}
+                    src={logoImage}
                     alt={partner.name}
-                    className="w-20 h-20 rounded-xl object-cover"
+                    className="w-20 h-20 rounded-xl object-contain bg-white p-2"
                   />
                   <div className="flex-1 min-w-0">
                     <h3 className="font-bold text-foreground truncate">
