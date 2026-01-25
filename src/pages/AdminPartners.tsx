@@ -149,18 +149,6 @@ const AdminPartners = () => {
     });
   };
 
-  const formatPhone = (phone: string | null) => {
-    if (!phone) return "-";
-    const cleaned = phone.replace(/\D/g, "");
-    if (cleaned.length === 11) {
-      return `(${cleaned.slice(0, 2)}) ${cleaned.slice(2, 7)}-${cleaned.slice(7)}`;
-    }
-    if (cleaned.length === 10) {
-      return `(${cleaned.slice(0, 2)}) ${cleaned.slice(2, 6)}-${cleaned.slice(6)}`;
-    }
-    return phone;
-  };
-
   const renderPartnerRow = (partner: Partner) => {
     const tier = tierConfig[partner.tier] || tierConfig.apoiador;
 
@@ -184,17 +172,7 @@ const AdminPartners = () => {
             <Badge variant="secondary">Pendente</Badge>
           )}
         </TableCell>
-        <TableCell>
-          <div className="text-sm">
-            {partner.referrer_name || "-"}
-            {partner.referrer_phone && (
-              <div className="text-xs text-muted-foreground">
-                {formatPhone(partner.referrer_phone)}
-              </div>
-            )}
-          </div>
-        </TableCell>
-        <TableCell className="text-muted-foreground text-sm">
+        <TableCell className="text-muted-foreground">
           {format(new Date(partner.created_at), "dd/MM/yyyy", { locale: ptBR })}
         </TableCell>
         <TableCell>
@@ -233,7 +211,7 @@ const AdminPartners = () => {
   };
 
   const renderTable = (partners: Partner[]) => (
-    <div className="rounded-md border overflow-x-auto">
+    <div className="rounded-md border">
       <Table>
         <TableHeader>
           <TableRow>
@@ -242,7 +220,6 @@ const AdminPartners = () => {
             <TableHead>Especialidade</TableHead>
             <TableHead>Nível</TableHead>
             <TableHead>Status</TableHead>
-            <TableHead>Indicado por</TableHead>
             <TableHead>Data</TableHead>
             <TableHead className="w-[120px]">Ações</TableHead>
           </TableRow>

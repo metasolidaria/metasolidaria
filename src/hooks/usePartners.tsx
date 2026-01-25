@@ -18,8 +18,6 @@ export interface Partner {
   longitude: number | null;
   tier: PartnerTier;
   instagram: string | null;
-  referrer_name: string | null;
-  referrer_phone: string | null;
 }
 
 export const usePartners = () => {
