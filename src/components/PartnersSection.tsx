@@ -107,8 +107,8 @@ export const PartnersSection = () => {
           return { ...partner, distance };
         })
         .filter((partner) => {
-          // Filtrar por raio apenas se o parceiro tem coordenadas
-          if (partner.distance === null) return true; // Mostrar parceiros sem coordenadas
+          // Quando proximidade está ativa, mostrar APENAS parceiros com coordenadas dentro do raio
+          if (partner.distance === null) return false;
           return partner.distance <= radiusKm;
         })
         .sort((a, b) => {
@@ -405,9 +405,14 @@ export const PartnersSection = () => {
               {partners && partners.length === 0
                 ? "Ainda não há parceiros cadastrados."
                 : useProximity && hasLocation
-                ? `Nenhum parceiro encontrado em um raio de ${radiusKm}km.`
+                ? `Nenhum parceiro com localização cadastrada encontrado em um raio de ${radiusKm}km.`
                 : "Nenhum parceiro encontrado com os filtros selecionados."}
             </p>
+            {useProximity && hasLocation && (
+              <p className="text-muted-foreground text-sm mt-2">
+                Tente aumentar o raio ou desative o filtro de proximidade para ver todos os parceiros.
+              </p>
+            )}
           </motion.div>
         )}
 
