@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Building2, MapPin, Phone, User, FileText, Loader2, Instagram } from "lucide-react";
+import { X, Building2, MapPin, Phone, User, FileText, Loader2, Instagram, UserCheck } from "lucide-react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea";
@@ -51,6 +51,8 @@ export const RecommendPartnerModal = ({
     responsible: "",
     description: "",
     instagram: "",
+    referrerName: "",
+    referrerPhone: "",
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -101,6 +103,8 @@ export const RecommendPartnerModal = ({
           is_approved: false,
           tier: "apoiador",
           instagram: formData.instagram ? formData.instagram.replace("@", "").trim() : null,
+          referrer_name: formData.referrerName.trim() || null,
+          referrer_phone: formData.referrerPhone ? formData.referrerPhone.replace(/\D/g, "") : null,
         },
       ]);
 
@@ -119,6 +123,8 @@ export const RecommendPartnerModal = ({
         responsible: "",
         description: "",
         instagram: "",
+        referrerName: "",
+        referrerPhone: "",
       });
       onOpenChange(false);
     } catch (error: any) {
@@ -278,6 +284,39 @@ export const RecommendPartnerModal = ({
                 />
               </div>
 
+              {/* Indicado por */}
+              <div className="border-t border-border pt-4 mt-4">
+                <Label className="flex items-center gap-2 mb-3 text-muted-foreground">
+                  <UserCheck className="w-4 h-4" />
+                  Indicado por (opcional)
+                </Label>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <Label htmlFor="referrerName" className="text-sm">Nome</Label>
+                    <Input
+                      id="referrerName"
+                      placeholder="Seu nome"
+                      value={formData.referrerName}
+                      onChange={(e) =>
+                        setFormData((prev) => ({ ...prev, referrerName: e.target.value }))
+                      }
+                      maxLength={100}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="referrerPhone" className="text-sm">Telefone</Label>
+                    <Input
+                      id="referrerPhone"
+                      placeholder="(11) 99999-9999"
+                      value={formData.referrerPhone}
+                      onChange={(e) =>
+                        setFormData((prev) => ({ ...prev, referrerPhone: e.target.value }))
+                      }
+                      maxLength={20}
+                    />
+                  </div>
+                </div>
+              </div>
 
               <div className="flex gap-3 pt-4">
                 <Button
