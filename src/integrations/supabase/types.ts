@@ -357,6 +357,8 @@ export type Database = {
           latitude: number | null
           longitude: number | null
           name: string
+          referrer_name: string | null
+          referrer_phone: string | null
           specialty: string | null
           submitted_by: string | null
           tier: string | null
@@ -373,6 +375,8 @@ export type Database = {
           latitude?: number | null
           longitude?: number | null
           name: string
+          referrer_name?: string | null
+          referrer_phone?: string | null
           specialty?: string | null
           submitted_by?: string | null
           tier?: string | null
@@ -389,6 +393,8 @@ export type Database = {
           latitude?: number | null
           longitude?: number | null
           name?: string
+          referrer_name?: string | null
+          referrer_phone?: string | null
           specialty?: string | null
           submitted_by?: string | null
           tier?: string | null
