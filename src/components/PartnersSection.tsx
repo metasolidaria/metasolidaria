@@ -23,7 +23,8 @@ import {
   Crown,
   Medal,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Info
 } from "lucide-react";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
@@ -32,6 +33,7 @@ import { useGeolocation, calculateDistance } from "@/hooks/useGeolocation";
 import { Slider } from "./ui/slider";
 import { RecommendPartnerModal } from "./RecommendPartnerModal";
 import { CitySearchAutocomplete } from "./CitySearchAutocomplete";
+import { useUserProfile } from "@/hooks/useUserProfile";
 
 // Configuração de tiers
 const tierConfig: Record<PartnerTier, { label: string; colorClass: string; icon: typeof Diamond }> = {
@@ -74,6 +76,7 @@ export const PartnersSection = () => {
   
   const { partners, isLoading } = usePartners();
   const { latitude, longitude, loading: geoLoading, error: geoError, requestLocation, hasLocation } = useGeolocation();
+  const { profile } = useUserProfile();
 
   const handleEnableProximity = () => {
     if (!hasLocation) {
@@ -86,6 +89,19 @@ export const PartnersSection = () => {
     setUseProximity(false);
   };
 
+  // Função para normalizar texto (remover acentos)
+  const normalizeText = (text: string) => {
+    return text
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "");
+  };
+
+  // Extrair apenas o nome da cidade (sem o estado)
+  const extractCityName = (cityWithState: string) => {
+    return cityWithState.split(",")[0].trim();
+  };
+
   const filteredAndSortedPartners = useMemo(() => {
     let result = (partners || []).filter((partner) => {
       const matchesCategory =
@@ -96,7 +112,7 @@ export const PartnersSection = () => {
       return matchesCategory && matchesCity;
     });
 
-    // Se proximidade está ativa e temos localização
+    // Caso 1: Proximidade ativa COM localização permitida
     if (useProximity && hasLocation && latitude && longitude) {
       result = result
         .map((partner) => {
@@ -117,14 +133,28 @@ export const PartnersSection = () => {
           const tierB = tierOrder[b.tier] || 3;
           if (tierA !== tierB) return tierA - tierB;
           
-          // Ordenar por distância (parceiros sem coordenadas vão para o final)
+          // Ordenar por distância
           if (a.distance === null && b.distance === null) return 0;
           if (a.distance === null) return 1;
           if (b.distance === null) return -1;
           return a.distance - b.distance;
         });
-    } else {
-      // Ordenar por tier quando não está usando proximidade
+    }
+    // Caso 2: Proximidade ativa MAS localização negada - usar cidade do perfil
+    else if (useProximity && geoError && profile?.city) {
+      const userCityNormalized = normalizeText(extractCityName(profile.city));
+      result = result
+        .filter((partner) => 
+          normalizeText(partner.city).includes(userCityNormalized)
+        )
+        .sort((a, b) => {
+          const tierA = tierOrder[a.tier] || 3;
+          const tierB = tierOrder[b.tier] || 3;
+          return tierA - tierB;
+        });
+    }
+    // Caso 3: Sem filtro de proximidade ou sem dados disponíveis
+    else if (!useProximity) {
       result = result.sort((a, b) => {
         const tierA = tierOrder[a.tier] || 3;
         const tierB = tierOrder[b.tier] || 3;
@@ -133,7 +163,7 @@ export const PartnersSection = () => {
     }
 
     return result;
-  }, [partners, selectedCategory, searchCity, useProximity, hasLocation, latitude, longitude, radiusKm]);
+  }, [partners, selectedCategory, searchCity, useProximity, hasLocation, latitude, longitude, radiusKm, geoError, profile?.city]);
 
   // Paginação
   const totalPages = Math.ceil(filteredAndSortedPartners.length / ITEMS_PER_PAGE);
@@ -253,10 +283,26 @@ export const PartnersSection = () => {
             </motion.div>
           )}
 
-          {/* Erro de geolocalização */}
-          {geoError && useProximity && (
+          {/* Feedback de filtragem por cidade */}
+          {useProximity && geoError && profile?.city && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              className="mb-4 p-4 bg-amber-50 dark:bg-amber-950/20 rounded-lg border border-amber-200 dark:border-amber-800"
+            >
+              <div className="flex items-center gap-2 text-amber-700 dark:text-amber-400">
+                <Info className="w-4 h-4 flex-shrink-0" />
+                <span className="text-sm">
+                  Mostrando parceiros de <strong>{extractCityName(profile.city)}</strong> (cidade do seu cadastro)
+                </span>
+              </div>
+            </motion.div>
+          )}
+
+          {/* Erro de geolocalização sem cidade de fallback */}
+          {geoError && useProximity && !profile?.city && (
             <div className="mb-4 p-3 bg-destructive/10 text-destructive rounded-lg text-sm">
-              {geoError}. Você ainda pode buscar por cidade.
+              {geoError}. Você pode buscar por cidade ou fazer login para usar a cidade do seu perfil.
             </div>
           )}
 
@@ -406,11 +452,15 @@ export const PartnersSection = () => {
                 ? "Ainda não há parceiros cadastrados."
                 : useProximity && hasLocation
                 ? `Nenhum parceiro com localização cadastrada encontrado em um raio de ${radiusKm}km.`
+                : useProximity && geoError && profile?.city
+                ? `Nenhum parceiro encontrado em ${extractCityName(profile.city)}.`
+                : useProximity && geoError && !profile?.city
+                ? "Não foi possível determinar sua localização. Faça login e cadastre sua cidade."
                 : "Nenhum parceiro encontrado com os filtros selecionados."}
             </p>
-            {useProximity && hasLocation && (
+            {useProximity && (hasLocation || (geoError && profile?.city)) && (
               <p className="text-muted-foreground text-sm mt-2">
-                Tente aumentar o raio ou desative o filtro de proximidade para ver todos os parceiros.
+                Tente {hasLocation ? "aumentar o raio ou " : ""}desativar o filtro de proximidade para ver todos os parceiros.
               </p>
             )}
           </motion.div>

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Mail, User, Phone, Loader2, ArrowLeft } from "lucide-react";
+import { X, Mail, User, Phone, Loader2, ArrowLeft, MapPin } from "lucide-react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
@@ -10,6 +10,7 @@ import { PasswordStrengthIndicator, validatePasswordStrength } from "./PasswordS
 import { PasswordInput } from "./PasswordInput";
 import { signupSchema, emailSchema, nameSchema, validateForm } from "@/lib/validations";
 import { supabase } from "@/integrations/supabase/client";
+import { CityAutocomplete } from "./CityAutocomplete";
 
 interface AuthModalProps {
   open: boolean;
@@ -27,6 +28,7 @@ export const AuthModal = ({ open, onOpenChange, defaultMode = "login" }: AuthMod
     password: "",
     fullName: "",
     whatsapp: "",
+    city: "",
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -106,7 +108,8 @@ export const AuthModal = ({ open, onOpenChange, defaultMode = "login" }: AuthMod
           formData.email.trim(),
           formData.password,
           formData.fullName.trim(),
-          formData.whatsapp.trim()
+          formData.whatsapp.trim(),
+          formData.city.trim() || undefined
         );
         if (error) throw error;
         toast({
@@ -216,6 +219,15 @@ export const AuthModal = ({ open, onOpenChange, defaultMode = "login" }: AuthMod
                           required
                         />
                       </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="city">Cidade</Label>
+                      <CityAutocomplete
+                        value={formData.city}
+                        onChange={(value) => setFormData({ ...formData, city: value })}
+                        placeholder="Digite sua cidade"
+                      />
                     </div>
                   </>
                 )}

@@ -36,7 +36,7 @@ export const useAuth = () => {
     };
   }, []);
 
-  const signUp = async (email: string, password: string, fullName: string, whatsapp: string) => {
+  const signUp = async (email: string, password: string, fullName: string, whatsapp: string, city?: string) => {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -45,6 +45,7 @@ export const useAuth = () => {
         data: {
           full_name: fullName,
           whatsapp: whatsapp,
+          city: city || null,
         },
       },
     });
