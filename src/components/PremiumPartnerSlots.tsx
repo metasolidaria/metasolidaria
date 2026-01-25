@@ -33,7 +33,7 @@ export const PremiumPartnerSlots = () => {
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
             transition={{ duration: 0.3, delay: index * 0.1 }}
-            className="relative rounded-xl p-4 border-2 bg-primary-foreground/15 border-solid border-yellow-400/50 min-w-[180px]"
+            className="relative rounded-xl p-4 bg-primary-foreground/15 min-w-[180px]"
           >
             <div className="flex flex-col items-center text-center gap-2">
               <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-yellow-400/50 bg-white flex items-center justify-center">
@@ -57,11 +57,6 @@ export const PremiumPartnerSlots = () => {
                   Contato
                 </a>
               )}
-            </div>
-            
-            {/* Badge de posição */}
-            <div className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-yellow-400 text-primary font-bold text-xs flex items-center justify-center">
-              {slot.id}
             </div>
           </motion.div>
         ))}
