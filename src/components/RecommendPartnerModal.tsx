@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Building2, MapPin, Phone, User, FileText, Loader2, Diamond, Crown, Medal, Instagram } from "lucide-react";
+import { X, Building2, MapPin, Phone, User, FileText, Loader2, Instagram } from "lucide-react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea";
@@ -15,14 +15,7 @@ import {
 } from "./ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { PartnerTier } from "@/hooks/usePartners";
 import { partnerSchema, validateForm } from "@/lib/validations";
-
-const tierOptions: { value: PartnerTier; label: string; icon: typeof Diamond; description: string }[] = [
-  { value: "diamante", label: "Diamante", icon: Diamond, description: "Parceiro premium com destaque máximo" },
-  { value: "ouro", label: "Ouro", icon: Crown, description: "Parceiro com destaque especial" },
-  { value: "apoiador", label: "Apoiador", icon: Medal, description: "Parceiro da comunidade" },
-];
 
 interface RecommendPartnerModalProps {
   open: boolean;
@@ -57,7 +50,6 @@ export const RecommendPartnerModal = ({
     whatsapp: "",
     responsible: "",
     description: "",
-    tier: "apoiador" as PartnerTier,
     instagram: "",
   });
 
@@ -107,7 +99,7 @@ export const RecommendPartnerModal = ({
           description: description || null,
           submitted_by: user.id,
           is_approved: false,
-          tier: formData.tier,
+          tier: "apoiador",
           instagram: formData.instagram ? formData.instagram.replace("@", "").trim() : null,
         },
       ]);
@@ -126,7 +118,6 @@ export const RecommendPartnerModal = ({
         whatsapp: "",
         responsible: "",
         description: "",
-        tier: "apoiador",
         instagram: "",
       });
       onOpenChange(false);
@@ -287,40 +278,6 @@ export const RecommendPartnerModal = ({
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label className="flex items-center gap-2">
-                  <Crown className="w-4 h-4" />
-                  Nível do Parceiro
-                </Label>
-                <div className="grid grid-cols-3 gap-2">
-                  {tierOptions.map((option) => {
-                    const TierIcon = option.icon;
-                    const isSelected = formData.tier === option.value;
-                    return (
-                      <button
-                        key={option.value}
-                        type="button"
-                        onClick={() => setFormData((prev) => ({ ...prev, tier: option.value }))}
-                        className={`flex flex-col items-center gap-1 p-3 rounded-lg border-2 transition-all ${
-                          isSelected
-                            ? option.value === 'diamante'
-                              ? 'border-cyan-500 bg-cyan-500/10'
-                              : option.value === 'ouro'
-                              ? 'border-yellow-500 bg-yellow-500/10'
-                              : 'border-primary bg-primary/10'
-                            : 'border-border hover:border-muted-foreground/50'
-                        }`}
-                      >
-                        <TierIcon className={`w-5 h-5 ${
-                          option.value === 'diamante' ? 'text-cyan-500' :
-                          option.value === 'ouro' ? 'text-yellow-500' : 'text-muted-foreground'
-                        }`} />
-                        <span className="text-xs font-medium">{option.label}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
 
               <div className="flex gap-3 pt-4">
                 <Button
