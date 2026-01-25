@@ -67,9 +67,6 @@ export const PremiumPartnerSlots = () => {
         ))}
       </div>
       
-      <p className="text-xs text-primary-foreground/50 text-center mt-3">
-        Entre em contato para anunciar aqui
-      </p>
     </div>
   );
 };
