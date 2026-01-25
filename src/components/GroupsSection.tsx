@@ -37,16 +37,17 @@ interface GroupsSectionProps {
 }
 
 export const GroupsSection = ({ onRequireAuth }: GroupsSectionProps) => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [inviteModalOpen, setInviteModalOpen] = useState(false);
-  const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
-  const [filter, setFilter] = useState<"all" | "mine">("all");
-  const [searchCity, setSearchCity] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
   const { groups, isLoading, joinGroup, userMemberships } = useGroups();
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [inviteModalOpen, setInviteModalOpen] = useState(false);
+  const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
+  const [filter, setFilter] = useState<"all" | "mine">(user ? "mine" : "all");
+  const [searchCity, setSearchCity] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
 
   const isUserMember = (groupId: string) => userMemberships.includes(groupId);
 
