@@ -16,6 +16,12 @@ const premiumSlots: PremiumSlot[] = [
   { id: 2, name: null, whatsapp: null, isAvailable: true },
   { id: 3, name: null, whatsapp: null, isAvailable: true },
   { id: 4, name: null, whatsapp: null, isAvailable: true },
+  { id: 5, name: null, whatsapp: null, isAvailable: true },
+  { id: 6, name: null, whatsapp: null, isAvailable: true },
+  { id: 7, name: null, whatsapp: null, isAvailable: true },
+  { id: 8, name: null, whatsapp: null, isAvailable: true },
+  { id: 9, name: null, whatsapp: null, isAvailable: true },
+  { id: 10, name: null, whatsapp: null, isAvailable: true },
 ];
 
 export const PremiumPartnerSlots = () => {
