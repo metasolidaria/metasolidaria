@@ -10,18 +10,18 @@ export const useIsAdmin = () => {
     queryFn: async () => {
       if (!user?.email) return false;
 
-      const { data, error } = await supabase
-        .from("admin_emails")
-        .select("id")
-        .eq("email", user.email.toLowerCase())
-        .maybeSingle();
+      // Use the is_admin database function directly via RPC
+      // This avoids issues with RLS on admin_emails table (only admins can read it)
+      const { data, error } = await supabase.rpc("is_admin", {
+        _user_id: user.id,
+      });
 
       if (error) {
         console.error("Error checking admin status:", error);
         return false;
       }
 
-      return !!data;
+      return data === true;
     },
     enabled: !!user?.id,
   });

@@ -27,12 +27,14 @@ export const usePartners = () => {
   const { data: partners, isLoading } = useQuery({
     queryKey: ["partners"],
     queryFn: async () => {
+      // Use the public view that excludes sensitive data (whatsapp, referrer info)
       const { data, error } = await supabase
-        .from("partners")
+        .from("partners_public")
         .select("*")
         .order("created_at", { ascending: false });
 
       if (error) throw error;
+      // Cast to Partner type - public view excludes sensitive fields
       return data as Partner[];
     },
   });
