@@ -24,31 +24,39 @@ interface RecommendPartnerModalProps {
 }
 
 const specialties = [
-  { id: "Nutricionista", label: "Nutricionista" },
+  // Saúde
   { id: "Médico", label: "Médico" },
-  { id: "Psicólogo", label: "Psicólogo" },
-  { id: "Personal Trainer", label: "Personal Trainer" },
-  { id: "Fisioterapeuta", label: "Fisioterapeuta" },
   { id: "Dentista", label: "Dentista" },
+  { id: "Nutricionista", label: "Nutricionista" },
+  { id: "Psicólogo", label: "Psicólogo" },
+  { id: "Fisioterapeuta", label: "Fisioterapeuta" },
+  { id: "Clínica", label: "Clínica" },
+  { id: "Farmácia", label: "Farmácia" },
+  // Esporte e Bem-estar
+  { id: "Personal Trainer", label: "Personal Trainer" },
   { id: "Academia", label: "Academia" },
+  { id: "Clube", label: "Clube" },
+  // Alimentação
   { id: "Supermercado", label: "Supermercado" },
   { id: "Padaria", label: "Padaria" },
   { id: "Açougue", label: "Açougue" },
   { id: "Restaurante", label: "Restaurante" },
   { id: "Lanchonete", label: "Lanchonete" },
-  { id: "Farmácia", label: "Farmácia" },
-  { id: "Agropecuária", label: "Agropecuária" },
+  // Comércio e Varejo
   { id: "Loja de Roupa", label: "Loja de Roupa" },
   { id: "Loja de Calçado", label: "Loja de Calçado" },
-  { id: "Material de Construção", label: "Material de Construção" },
-  { id: "Clube", label: "Clube" },
   { id: "Comércio", label: "Comércio" },
-  { id: "Clínica", label: "Clínica" },
+  // Construção e Imóveis
+  { id: "Material de Construção", label: "Material de Construção" },
   { id: "Imobiliária", label: "Imobiliária" },
   { id: "Corretor", label: "Corretor" },
+  // Serviços e Empresas
   { id: "Consultor", label: "Consultor" },
   { id: "Empresa", label: "Empresa" },
   { id: "Indústria", label: "Indústria" },
+  // Rural
+  { id: "Agropecuária", label: "Agropecuária" },
+  // Outros
   { id: "Outros", label: "Outros" },
 ];
 
