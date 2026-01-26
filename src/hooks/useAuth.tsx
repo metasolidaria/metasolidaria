@@ -36,6 +36,27 @@ export const useAuth = () => {
     };
   }, []);
 
+  // Link member by WhatsApp when user logs in or signs up
+  const linkMemberByWhatsApp = async (whatsapp: string) => {
+    if (!whatsapp) return [];
+    
+    try {
+      const { data, error } = await supabase.rpc('link_member_by_whatsapp', {
+        _whatsapp: whatsapp
+      });
+      
+      if (error) {
+        console.error("Error linking member by WhatsApp:", error);
+        return [];
+      }
+      
+      return data || [];
+    } catch (err) {
+      console.error("Error linking member by WhatsApp:", err);
+      return [];
+    }
+  };
+
   const signUp = async (email: string, password: string, fullName: string, whatsapp: string, city?: string) => {
     const { data, error } = await supabase.auth.signUp({
       email,
@@ -49,6 +70,15 @@ export const useAuth = () => {
         },
       },
     });
+    
+    // If signup was successful and user is confirmed, try to link member
+    if (!error && data?.user && whatsapp) {
+      const linkedGroups = await linkMemberByWhatsApp(whatsapp);
+      if (linkedGroups.length > 0) {
+        console.log("User linked to groups:", linkedGroups);
+      }
+    }
+    
     return { data, error };
   };
 
@@ -57,6 +87,23 @@ export const useAuth = () => {
       email,
       password,
     });
+    
+    // If sign in was successful, try to link member by WhatsApp from profile
+    if (!error && data?.user) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("whatsapp")
+        .eq("user_id", data.user.id)
+        .maybeSingle();
+      
+      if (profile?.whatsapp) {
+        const linkedGroups = await linkMemberByWhatsApp(profile.whatsapp);
+        if (linkedGroups.length > 0) {
+          console.log("User linked to groups:", linkedGroups);
+        }
+      }
+    }
+    
     return { data, error };
   };
 
