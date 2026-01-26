@@ -1,11 +1,12 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, Users, Target, MapPin, Lock, Globe, Plus, Trash2, Loader2, LogOut, TrendingUp, Sparkles, Pencil, CalendarDays, Building2 } from "lucide-react";
+import { ArrowLeft, Users, Target, MapPin, Lock, Globe, Plus, Trash2, Loader2, LogOut, TrendingUp, Sparkles, Pencil, CalendarDays, Building2, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { useGroupDetails } from "@/hooks/useGroupDetails";
 import { useAuth } from "@/hooks/useAuth";
 import { AddProgressModal } from "@/components/AddProgressModal";
+import { AddMemberModal } from "@/components/AddMemberModal";
 import { EditGroupModal } from "@/components/EditGroupModal";
 import { EditMemberGoalModal } from "@/components/EditMemberGoalModal";
 import { ProgressCharts } from "@/components/ProgressCharts";
@@ -53,6 +54,7 @@ export default function GroupPage() {
   const [editGoalOpen, setEditGoalOpen] = useState(false);
   const [leaveDialogOpen, setLeaveDialogOpen] = useState(false);
   const [analysisModalOpen, setAnalysisModalOpen] = useState(false);
+  const [addMemberOpen, setAddMemberOpen] = useState(false);
   const [memberToRemove, setMemberToRemove] = useState<{ id: string; name: string } | null>(null);
   
   const { analyzeProgress, analysis, isLoading: analysisLoading, clearAnalysis } = useProgressAnalysis();
@@ -181,13 +183,22 @@ export default function GroupPage() {
 
             <div className="flex flex-wrap gap-2">
               {isLeader && (
-                <Button 
-                  variant="outline"
-                  onClick={() => setEditGroupOpen(true)}
-                >
-                  <Pencil className="w-4 h-4 mr-2" />
-                  Editar Grupo
-                </Button>
+                <>
+                  <Button 
+                    variant="outline"
+                    onClick={() => setAddMemberOpen(true)}
+                  >
+                    <UserPlus className="w-4 h-4 mr-2" />
+                    Incluir Membro
+                  </Button>
+                  <Button 
+                    variant="outline"
+                    onClick={() => setEditGroupOpen(true)}
+                  >
+                    <Pencil className="w-4 h-4 mr-2" />
+                    Editar Grupo
+                  </Button>
+                </>
               )}
               {/* Temporariamente desabilitado para economizar recursos
               {userMember && (
@@ -506,6 +517,16 @@ export default function GroupPage() {
           memberId={userMember.id}
           donationType={donationType}
           commitment={selectedCommitment || undefined}
+        />
+      )}
+
+      {/* Add Member Modal (for leaders) */}
+      {isLeader && group && (
+        <AddMemberModal
+          open={addMemberOpen}
+          onOpenChange={setAddMemberOpen}
+          groupId={group.id}
+          groupName={group.name}
         />
       )}
 

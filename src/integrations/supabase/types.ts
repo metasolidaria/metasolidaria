@@ -188,6 +188,7 @@ export type Database = {
           personal_goal: number | null
           updated_at: string
           user_id: string | null
+          whatsapp: string | null
         }
         Insert: {
           commitment_donation?: number | null
@@ -203,6 +204,7 @@ export type Database = {
           personal_goal?: number | null
           updated_at?: string
           user_id?: string | null
+          whatsapp?: string | null
         }
         Update: {
           commitment_donation?: number | null
@@ -218,6 +220,7 @@ export type Database = {
           personal_goal?: number | null
           updated_at?: string
           user_id?: string | null
+          whatsapp?: string | null
         }
         Relationships: [
           {
@@ -588,6 +591,14 @@ export type Database = {
       is_group_member: {
         Args: { _group_id: string; _user_id: string }
         Returns: boolean
+      }
+      link_member_by_whatsapp: {
+        Args: { _whatsapp: string }
+        Returns: {
+          group_id: string
+          group_name: string
+          member_id: string
+        }[]
       }
     }
     Enums: {
