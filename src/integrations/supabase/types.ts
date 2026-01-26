@@ -489,6 +489,48 @@ export type Database = {
         }
         Relationships: []
       }
+      partners_public: {
+        Row: {
+          city: string | null
+          created_at: string | null
+          description: string | null
+          id: string | null
+          instagram: string | null
+          is_approved: boolean | null
+          latitude: number | null
+          longitude: number | null
+          name: string | null
+          specialty: string | null
+          tier: string | null
+        }
+        Insert: {
+          city?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string | null
+          instagram?: string | null
+          is_approved?: boolean | null
+          latitude?: number | null
+          longitude?: number | null
+          name?: string | null
+          specialty?: string | null
+          tier?: string | null
+        }
+        Update: {
+          city?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string | null
+          instagram?: string | null
+          is_approved?: boolean | null
+          latitude?: number | null
+          longitude?: number | null
+          name?: string | null
+          specialty?: string | null
+          tier?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       accept_group_invitation: {
