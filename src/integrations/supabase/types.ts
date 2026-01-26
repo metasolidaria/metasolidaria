@@ -502,6 +502,7 @@ export type Database = {
           name: string | null
           specialty: string | null
           tier: string | null
+          whatsapp: string | null
         }
         Insert: {
           city?: string | null
@@ -515,6 +516,7 @@ export type Database = {
           name?: string | null
           specialty?: string | null
           tier?: string | null
+          whatsapp?: string | null
         }
         Update: {
           city?: string | null
@@ -528,6 +530,7 @@ export type Database = {
           name?: string | null
           specialty?: string | null
           tier?: string | null
+          whatsapp?: string | null
         }
         Relationships: []
       }
