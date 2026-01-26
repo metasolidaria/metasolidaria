@@ -44,31 +44,39 @@ const tierOrder: Record<PartnerTier, number> = {
 
 const categories = [
   { id: "all", label: "Todos", icon: Star },
-  { id: "Nutricionista", label: "Nutricionista", icon: Apple },
+  // Saúde
   { id: "Médico", label: "Médico", icon: Stethoscope },
-  { id: "Psicólogo", label: "Psicólogo", icon: Brain },
-  { id: "Personal Trainer", label: "Personal Trainer", icon: Dumbbell },
-  { id: "Fisioterapeuta", label: "Fisioterapeuta", icon: HeartPulse },
   { id: "Dentista", label: "Dentista", icon: Stethoscope },
+  { id: "Nutricionista", label: "Nutricionista", icon: Apple },
+  { id: "Psicólogo", label: "Psicólogo", icon: Brain },
+  { id: "Fisioterapeuta", label: "Fisioterapeuta", icon: HeartPulse },
+  { id: "Clínica", label: "Clínica", icon: Building2 },
+  { id: "Farmácia", label: "Farmácia", icon: HeartPulse },
+  // Esporte e Bem-estar
+  { id: "Personal Trainer", label: "Personal Trainer", icon: Dumbbell },
   { id: "Academia", label: "Academia", icon: Dumbbell },
+  { id: "Clube", label: "Clube", icon: Dumbbell },
+  // Alimentação
   { id: "Supermercado", label: "Supermercado", icon: ShoppingCart },
   { id: "Padaria", label: "Padaria", icon: Store },
   { id: "Açougue", label: "Açougue", icon: Store },
   { id: "Restaurante", label: "Restaurante", icon: Store },
   { id: "Lanchonete", label: "Lanchonete", icon: Store },
-  { id: "Farmácia", label: "Farmácia", icon: HeartPulse },
-  { id: "Agropecuária", label: "Agropecuária", icon: Store },
+  // Comércio e Varejo
   { id: "Loja de Roupa", label: "Loja de Roupa", icon: Store },
   { id: "Loja de Calçado", label: "Loja de Calçado", icon: Store },
-  { id: "Material de Construção", label: "Material de Construção", icon: Building2 },
-  { id: "Clube", label: "Clube", icon: Dumbbell },
   { id: "Comércio", label: "Comércio", icon: Store },
-  { id: "Clínica", label: "Clínica", icon: Building2 },
+  // Construção e Imóveis
+  { id: "Material de Construção", label: "Material de Construção", icon: Building2 },
   { id: "Imobiliária", label: "Imobiliária", icon: Building2 },
   { id: "Corretor", label: "Corretor", icon: UserPlus },
+  // Serviços e Empresas
   { id: "Consultor", label: "Consultor", icon: Brain },
   { id: "Empresa", label: "Empresa", icon: Building2 },
   { id: "Indústria", label: "Indústria", icon: Building2 },
+  // Rural
+  { id: "Agropecuária", label: "Agropecuária", icon: Store },
+  // Outros
   { id: "Outros", label: "Outros", icon: MoreHorizontal },
 ];
 
