@@ -42,21 +42,38 @@ const specialties = [
   { id: "Açougue", label: "Açougue" },
   { id: "Restaurante", label: "Restaurante" },
   { id: "Lanchonete", label: "Lanchonete" },
+  { id: "Hamburgueria", label: "Hamburgueria" },
+  { id: "Cafeteria", label: "Cafeteria" },
+  { id: "Sorveteria", label: "Sorveteria" },
   // Comércio e Varejo
   { id: "Loja de roupas", label: "Loja de roupas" },
-  { id: "Loja de Calçado", label: "Loja de Calçado" },
+  { id: "Loja de calçados", label: "Loja de calçados" },
+  { id: "Loja de móveis", label: "Loja de móveis" },
+  { id: "Loja de eletro", label: "Loja de eletro" },
+  { id: "Loja de brinquedos", label: "Loja de brinquedos" },
+  { id: "Loja de cama, mesa e banho", label: "Loja de cama, mesa e banho" },
   { id: "Comércio", label: "Comércio" },
   // Construção e Imóveis
   { id: "Material de Construção", label: "Material de Construção" },
   { id: "Imobiliária", label: "Imobiliária" },
   { id: "Corretor", label: "Corretor" },
+  // Automotivo
+  { id: "Mecânico", label: "Mecânico" },
+  { id: "Auto peças", label: "Auto peças" },
+  { id: "Despachante", label: "Despachante" },
   // Serviços e Empresas
+  { id: "Advogado", label: "Advogado" },
+  { id: "Contador", label: "Contador" },
   { id: "Consultor", label: "Consultor" },
   { id: "Empresa", label: "Empresa" },
   { id: "Indústria", label: "Indústria" },
   // Rural
   { id: "Agropecuária", label: "Agropecuária" },
-  // Pessoas e Política
+  // Mídia e Influência
+  { id: "Jornal", label: "Jornal" },
+  { id: "Emissora", label: "Emissora" },
+  { id: "Influencer", label: "Influencer" },
+  { id: "Jogador", label: "Jogador" },
   { id: "Político", label: "Político" },
   { id: "Personalidade", label: "Personalidade" },
   // Outros
