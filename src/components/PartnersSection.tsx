@@ -63,7 +63,7 @@ const allCategories = [
   { id: "Restaurante", label: "Restaurante", icon: Store },
   { id: "Lanchonete", label: "Lanchonete", icon: Store },
   // Comércio e Varejo
-  { id: "Loja de Roupa", label: "Loja de Roupa", icon: Store },
+  { id: "Loja de roupas", label: "Loja de roupas", icon: Store },
   { id: "Loja de Calçado", label: "Loja de Calçado", icon: Store },
   { id: "Comércio", label: "Comércio", icon: Store },
   // Construção e Imóveis

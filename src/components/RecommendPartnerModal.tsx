@@ -43,7 +43,7 @@ const specialties = [
   { id: "Restaurante", label: "Restaurante" },
   { id: "Lanchonete", label: "Lanchonete" },
   // Comércio e Varejo
-  { id: "Loja de Roupa", label: "Loja de Roupa" },
+  { id: "Loja de roupas", label: "Loja de roupas" },
   { id: "Loja de Calçado", label: "Loja de Calçado" },
   { id: "Comércio", label: "Comércio" },
   // Construção e Imóveis
