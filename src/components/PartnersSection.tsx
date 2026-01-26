@@ -76,6 +76,9 @@ const allCategories = [
   { id: "Indústria", label: "Indústria", icon: Building2 },
   // Rural
   { id: "Agropecuária", label: "Agropecuária", icon: Store },
+  // Pet
+  { id: "Veterinário", label: "Veterinário", icon: HeartPulse },
+  { id: "Pet Shop", label: "Pet Shop", icon: Store },
   // Pessoas e Política
   { id: "Político", label: "Político", icon: UserPlus },
   { id: "Personalidade", label: "Personalidade", icon: Star },
