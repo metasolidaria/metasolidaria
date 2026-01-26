@@ -226,7 +226,7 @@ export const PartnersSection = () => {
   const handleWhatsAppClick = (phone: string, name: string) => {
     const cleanPhone = phone.replace(/\D/g, "");
     const message = encodeURIComponent(
-      `Olá ${name}! Encontrei seu contato através do Meta Solidária e gostaria de agendar uma consulta.`
+      `Olá ${name}! Encontrei seu contato no Meta Solidária.`
     );
     window.open(`https://wa.me/55${cleanPhone}?text=${message}`, "_blank");
   };
