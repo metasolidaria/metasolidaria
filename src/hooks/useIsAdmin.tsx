@@ -3,15 +3,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 
 export const useIsAdmin = () => {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
 
-  const { data: isAdmin, isLoading } = useQuery({
+  const { data: isAdmin, isLoading: queryLoading } = useQuery({
     queryKey: ["isAdmin", user?.id],
     queryFn: async () => {
-      if (!user?.email) return false;
+      if (!user?.id) return false;
 
-      // Use the is_admin database function directly via RPC
-      // This avoids issues with RLS on admin_emails table (only admins can read it)
       const { data, error } = await supabase.rpc("is_admin", {
         _user_id: user.id,
       });
@@ -26,7 +24,12 @@ export const useIsAdmin = () => {
     enabled: !!user?.id,
   });
 
+  // Consider loading if auth is loading OR if we have a user but query is still loading
+  const isLoading = authLoading || (!!user?.id && queryLoading);
+
   return {
+    // Only return false if we're done loading AND confirmed not admin
+    // Return undefined while still loading to prevent premature redirects
     isAdmin: isLoading ? undefined : (isAdmin ?? false),
     isLoading,
   };
