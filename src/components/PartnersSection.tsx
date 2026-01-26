@@ -84,6 +84,7 @@ const allCategories = [
 ];
 
 import logoImage from "@/assets/logo.jpg";
+import naturuaiLogo from "@/assets/naturuai-logo.jpg";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -398,7 +399,7 @@ export const PartnersSection = () => {
                   
                   <div className="flex gap-4 p-5 pt-3">
                     <img
-                      src={logoImage}
+                      src={partner.name === 'NaturUai' ? naturuaiLogo : logoImage}
                       alt={partner.name}
                       className="w-20 h-20 rounded-xl object-contain bg-white p-2"
                     />
