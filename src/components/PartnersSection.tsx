@@ -42,7 +42,7 @@ const tierOrder: Record<PartnerTier, number> = {
   apoiador: 2,
 };
 
-const categories = [
+const allCategories = [
   { id: "all", label: "Todos", icon: Star },
   // Saúde
   { id: "Médico", label: "Médico", icon: Stethoscope },
@@ -76,6 +76,9 @@ const categories = [
   { id: "Indústria", label: "Indústria", icon: Building2 },
   // Rural
   { id: "Agropecuária", label: "Agropecuária", icon: Store },
+  // Pessoas e Política
+  { id: "Político", label: "Político", icon: UserPlus },
+  { id: "Personalidade", label: "Personalidade", icon: Star },
   // Outros
   { id: "Outros", label: "Outros", icon: MoreHorizontal },
 ];
@@ -119,6 +122,30 @@ export const PartnersSection = () => {
   const extractCityName = (cityWithState: string) => {
     return cityWithState.split(",")[0].trim();
   };
+
+  // Filtrar categorias disponíveis baseado na cidade selecionada
+  const availableCategories = useMemo(() => {
+    if (!searchCity) {
+      return allCategories;
+    }
+    
+    const partnersInCity = (partners || []).filter((partner) =>
+      partner.city.toLowerCase().includes(searchCity.toLowerCase())
+    );
+    
+    const specialtiesInCity = new Set(partnersInCity.map((p) => p.specialty));
+    
+    return allCategories.filter(
+      (cat) => cat.id === "all" || specialtiesInCity.has(cat.id)
+    );
+  }, [partners, searchCity]);
+
+  // Reset categoria se ela não estiver mais disponível
+  useMemo(() => {
+    if (selectedCategory !== "all" && !availableCategories.find(c => c.id === selectedCategory)) {
+      setSelectedCategory("all");
+    }
+  }, [availableCategories, selectedCategory]);
 
   const filteredAndSortedPartners = useMemo(() => {
     let result = (partners || []).filter((partner) => {
@@ -325,7 +352,7 @@ export const PartnersSection = () => {
           )}
 
           <div className="flex flex-wrap gap-2">
-            {categories.map((category) => (
+            {availableCategories.map((category) => (
               <Button
                 key={category.id}
                 variant={selectedCategory === category.id ? "default" : "outline"}
