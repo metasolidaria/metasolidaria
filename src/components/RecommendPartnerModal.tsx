@@ -33,6 +33,11 @@ const specialties = [
   { id: "Supermercado", label: "Supermercado" },
   { id: "Comércio", label: "Comércio" },
   { id: "Clínica", label: "Clínica" },
+  { id: "Imobiliária", label: "Imobiliária" },
+  { id: "Corretor", label: "Corretor" },
+  { id: "Consultor", label: "Consultor" },
+  { id: "Empresa", label: "Empresa" },
+  { id: "Indústria", label: "Indústria" },
   { id: "Outros", label: "Outros" },
 ];
 
