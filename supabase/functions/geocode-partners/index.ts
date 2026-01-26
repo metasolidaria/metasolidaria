@@ -169,6 +169,20 @@ const cityCoordinates: Record<string, { lat: number; lng: number }> = {
   "macaé": { lat: -22.3768, lng: -41.7869 },
   "resende": { lat: -22.4686, lng: -44.4467 },
   "valparaíso de goiás": { lat: -16.0681, lng: -47.9750 },
+  // Sul de Minas e região
+  "monte sião": { lat: -22.4333, lng: -46.5667 },
+  "jacutinga": { lat: -22.2869, lng: -46.6167 },
+  "inconfidentes": { lat: -22.3167, lng: -46.3333 },
+  "bueno brandão": { lat: -22.4394, lng: -46.3489 },
+  "ouro fino": { lat: -22.2844, lng: -46.3694 },
+  "águas de lindóia": { lat: -22.4761, lng: -46.6314 },
+  "lindóia": { lat: -22.5228, lng: -46.6500 },
+  "serra negra": { lat: -22.6119, lng: -46.7008 },
+  "socorro": { lat: -22.5906, lng: -46.5289 },
+  "borda da mata": { lat: -22.2700, lng: -46.1656 },
+  "pouso alegre": { lat: -22.2300, lng: -45.9361 },
+  "itajubá": { lat: -22.4256, lng: -45.4528 },
+  "santa rita do sapucaí": { lat: -22.2514, lng: -45.7033 },
 };
 
 // Normalizar texto removendo acentos
