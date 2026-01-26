@@ -35,17 +35,11 @@ import { RecommendPartnerModal } from "./RecommendPartnerModal";
 import { CitySearchAutocomplete } from "./CitySearchAutocomplete";
 import { useUserProfile } from "@/hooks/useUserProfile";
 
-// Configuração de tiers
-const tierConfig: Record<PartnerTier, { label: string; colorClass: string; icon: typeof Diamond }> = {
-  diamante: { label: "Diamante", colorClass: "bg-cyan-500 text-white", icon: Diamond },
-  ouro: { label: "Ouro", colorClass: "bg-yellow-500 text-yellow-900", icon: Crown },
-  apoiador: { label: "Apoiador", colorClass: "bg-muted text-muted-foreground", icon: Medal },
-};
-
+// Configuração de tiers - apenas Ouro tem selo visível
 const tierOrder: Record<PartnerTier, number> = {
-  diamante: 1,
-  ouro: 2,
-  apoiador: 3,
+  diamante: 1, // tratado como Ouro
+  ouro: 1,
+  apoiador: 2,
 };
 
 const categories = [
@@ -344,23 +338,16 @@ export const PartnersSection = () => {
                   viewport={{ once: true }}
                   transition={{ duration: 0.5, delay: index * 0.1 }}
                   className={`bg-card rounded-2xl overflow-hidden shadow-soft hover:shadow-glow transition-all duration-300 hover:-translate-y-1 ${
-                    partner.tier === 'diamante' ? 'ring-2 ring-cyan-500/50' : 
-                    partner.tier === 'ouro' ? 'ring-2 ring-yellow-500/50' : ''
+                    (partner.tier === 'ouro' || partner.tier === 'diamante') ? 'ring-2 ring-yellow-500/50' : ''
                   }`}
                 >
-                  {/* Badge de Tier */}
-                  {partner.tier && (
+                  {/* Badge de Tier - apenas Ouro (inclui diamante) */}
+                  {(partner.tier === 'ouro' || partner.tier === 'diamante') && (
                     <div className="px-5 pt-4">
-                      {(() => {
-                        const config = tierConfig[partner.tier];
-                        const TierIcon = config.icon;
-                        return (
-                          <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full ${config.colorClass}`}>
-                            <TierIcon className="w-3 h-3" />
-                            {config.label}
-                          </span>
-                        );
-                      })()}
+                      <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-yellow-500 text-yellow-900">
+                        <Crown className="w-3 h-3" />
+                        Ouro
+                      </span>
                     </div>
                   )}
                   
