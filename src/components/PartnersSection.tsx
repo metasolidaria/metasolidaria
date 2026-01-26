@@ -55,6 +55,7 @@ const categories = [
   { id: "Psicólogo", label: "Psicólogo", icon: Brain },
   { id: "Personal Trainer", label: "Personal Trainer", icon: Dumbbell },
   { id: "Fisioterapeuta", label: "Fisioterapeuta", icon: HeartPulse },
+  { id: "Dentista", label: "Dentista", icon: Stethoscope },
   { id: "Academia", label: "Academia", icon: Dumbbell },
   { id: "Supermercado", label: "Supermercado", icon: ShoppingCart },
   { id: "Comércio", label: "Comércio", icon: Store },

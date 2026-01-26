@@ -29,6 +29,7 @@ const specialties = [
   { id: "Psicólogo", label: "Psicólogo" },
   { id: "Personal Trainer", label: "Personal Trainer" },
   { id: "Fisioterapeuta", label: "Fisioterapeuta" },
+  { id: "Dentista", label: "Dentista" },
   { id: "Academia", label: "Academia" },
   { id: "Supermercado", label: "Supermercado" },
   { id: "Comércio", label: "Comércio" },
