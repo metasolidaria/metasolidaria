@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Menu, X, User, LogOut } from "lucide-react";
+import { Menu, X, User, LogOut, Settings } from "lucide-react";
 import { Button } from "./ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import logo from "@/assets/logo.jpg";
@@ -13,6 +14,7 @@ export const Header = ({ onAuthClick }: HeaderProps) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { user, signOut } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -77,9 +79,15 @@ export const Header = ({ onAuthClick }: HeaderProps) => {
           <div className="hidden md:flex items-center gap-3">
             {user ? (
               <>
-                <span className={`text-sm ${isScrolled ? "text-foreground" : "text-primary-foreground"}`}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => navigate("/perfil")}
+                  className={isScrolled ? "text-foreground" : "text-primary-foreground hover:text-primary-foreground/80"}
+                >
+                  <Settings className="w-4 h-4 mr-1" />
                   {user.user_metadata?.full_name || user.email?.split("@")[0]}
-                </span>
+                </Button>
                 <Button
                   variant={isScrolled ? "outline" : "hero-outline"}
                   size="sm"
@@ -145,9 +153,17 @@ export const Header = ({ onAuthClick }: HeaderProps) => {
               {user ? (
                 <>
                   <div className="border-t border-border mt-2 pt-2">
-                    <span className="text-sm text-muted-foreground px-3">
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-start"
+                      onClick={() => {
+                        navigate("/perfil");
+                        setIsMobileMenuOpen(false);
+                      }}
+                    >
+                      <Settings className="w-4 h-4 mr-2" />
                       {user.user_metadata?.full_name || user.email}
-                    </span>
+                    </Button>
                   </div>
                   <Button
                     variant="outline"
