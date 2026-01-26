@@ -62,15 +62,28 @@ const allCategories = [
   { id: "Açougue", label: "Açougue", icon: Store },
   { id: "Restaurante", label: "Restaurante", icon: Store },
   { id: "Lanchonete", label: "Lanchonete", icon: Store },
+  { id: "Hamburgueria", label: "Hamburgueria", icon: Store },
+  { id: "Cafeteria", label: "Cafeteria", icon: Store },
+  { id: "Sorveteria", label: "Sorveteria", icon: Store },
   // Comércio e Varejo
   { id: "Loja de roupas", label: "Loja de roupas", icon: Store },
-  { id: "Loja de Calçado", label: "Loja de Calçado", icon: Store },
+  { id: "Loja de calçados", label: "Loja de calçados", icon: Store },
+  { id: "Loja de móveis", label: "Loja de móveis", icon: Store },
+  { id: "Loja de eletro", label: "Loja de eletro", icon: Store },
+  { id: "Loja de brinquedos", label: "Loja de brinquedos", icon: Store },
+  { id: "Loja de cama, mesa e banho", label: "Loja de cama, mesa e banho", icon: Store },
   { id: "Comércio", label: "Comércio", icon: Store },
   // Construção e Imóveis
   { id: "Material de Construção", label: "Material de Construção", icon: Building2 },
   { id: "Imobiliária", label: "Imobiliária", icon: Building2 },
   { id: "Corretor", label: "Corretor", icon: UserPlus },
+  // Automotivo
+  { id: "Mecânico", label: "Mecânico", icon: Store },
+  { id: "Auto peças", label: "Auto peças", icon: Store },
+  { id: "Despachante", label: "Despachante", icon: Store },
   // Serviços e Empresas
+  { id: "Advogado", label: "Advogado", icon: Brain },
+  { id: "Contador", label: "Contador", icon: Brain },
   { id: "Consultor", label: "Consultor", icon: Brain },
   { id: "Empresa", label: "Empresa", icon: Building2 },
   { id: "Indústria", label: "Indústria", icon: Building2 },
@@ -79,7 +92,11 @@ const allCategories = [
   // Pet
   { id: "Veterinário", label: "Veterinário", icon: HeartPulse },
   { id: "Pet Shop", label: "Pet Shop", icon: Store },
-  // Pessoas e Política
+  // Mídia e Influência
+  { id: "Jornal", label: "Jornal", icon: Building2 },
+  { id: "Emissora", label: "Emissora", icon: Building2 },
+  { id: "Influencer", label: "Influencer", icon: Star },
+  { id: "Jogador", label: "Jogador", icon: Star },
   { id: "Político", label: "Político", icon: UserPlus },
   { id: "Personalidade", label: "Personalidade", icon: Star },
   // Outros
