@@ -48,24 +48,11 @@ const tierOrder: Record<PartnerTier, number> = {
   apoiador: 3,
 };
 
+// Categorias de filtro baseadas em tier
 const categories = [
   { id: "all", label: "Todos", icon: Star },
-  { id: "Nutricionista", label: "Nutricionista", icon: Apple },
-  { id: "Médico", label: "Médico", icon: Stethoscope },
-  { id: "Psicólogo", label: "Psicólogo", icon: Brain },
-  { id: "Personal Trainer", label: "Personal Trainer", icon: Dumbbell },
-  { id: "Fisioterapeuta", label: "Fisioterapeuta", icon: HeartPulse },
-  { id: "Dentista", label: "Dentista", icon: Stethoscope },
-  { id: "Academia", label: "Academia", icon: Dumbbell },
-  { id: "Supermercado", label: "Supermercado", icon: ShoppingCart },
-  { id: "Comércio", label: "Comércio", icon: Store },
-  { id: "Clínica", label: "Clínica", icon: Building2 },
-  { id: "Imobiliária", label: "Imobiliária", icon: Building2 },
-  { id: "Corretor", label: "Corretor", icon: UserPlus },
-  { id: "Consultor", label: "Consultor", icon: Brain },
-  { id: "Empresa", label: "Empresa", icon: Building2 },
-  { id: "Indústria", label: "Indústria", icon: Building2 },
-  { id: "Outros", label: "Outros", icon: MoreHorizontal },
+  { id: "ouro", label: "Ouro", icon: Crown },
+  { id: "normal", label: "Normal", icon: Medal },
 ];
 
 import logoImage from "@/assets/logo.jpg";
@@ -110,8 +97,11 @@ export const PartnersSection = () => {
 
   const filteredAndSortedPartners = useMemo(() => {
     let result = (partners || []).filter((partner) => {
+      // Filtro por tier (ouro ou normal/apoiador)
       const matchesCategory =
-        selectedCategory === "all" || partner.specialty === selectedCategory;
+        selectedCategory === "all" || 
+        (selectedCategory === "ouro" && (partner.tier === "ouro" || partner.tier === "diamante")) ||
+        (selectedCategory === "normal" && (partner.tier === "apoiador" || !partner.tier));
       const matchesCity =
         !searchCity ||
         partner.city.toLowerCase().includes(searchCity.toLowerCase());
