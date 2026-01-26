@@ -59,6 +59,11 @@ const categories = [
   { id: "Supermercado", label: "Supermercado", icon: ShoppingCart },
   { id: "Comércio", label: "Comércio", icon: Store },
   { id: "Clínica", label: "Clínica", icon: Building2 },
+  { id: "Imobiliária", label: "Imobiliária", icon: Building2 },
+  { id: "Corretor", label: "Corretor", icon: UserPlus },
+  { id: "Consultor", label: "Consultor", icon: Brain },
+  { id: "Empresa", label: "Empresa", icon: Building2 },
+  { id: "Indústria", label: "Indústria", icon: Building2 },
   { id: "Outros", label: "Outros", icon: MoreHorizontal },
 ];
 
