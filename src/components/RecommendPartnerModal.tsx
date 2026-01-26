@@ -56,6 +56,9 @@ const specialties = [
   { id: "Indústria", label: "Indústria" },
   // Rural
   { id: "Agropecuária", label: "Agropecuária" },
+  // Pessoas e Política
+  { id: "Político", label: "Político" },
+  { id: "Personalidade", label: "Personalidade" },
   // Outros
   { id: "Outros", label: "Outros" },
 ];
