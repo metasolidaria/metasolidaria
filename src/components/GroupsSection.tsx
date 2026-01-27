@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Users, Target, MapPin, Plus, Heart, Loader2, Lock, Globe, Mail, ChevronLeft, ChevronRight, Crown } from "lucide-react";
 import { Badge } from "./ui/badge";
@@ -71,9 +71,16 @@ export const GroupsSection = ({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [inviteModalOpen, setInviteModalOpen] = useState(false);
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
-  const [filter, setFilter] = useState<"all" | "mine">(user ? "mine" : "all");
+  const [filter, setFilter] = useState<"all" | "mine">("all");
   const [currentPage, setCurrentPage] = useState(1);
   const isUserMember = (groupId: string) => userMemberships.includes(groupId);
+
+  // Ativar filtro "Meus Grupos" quando usuário logar
+  useEffect(() => {
+    if (user) {
+      setFilter("mine");
+    }
+  }, [user]);
 
   // Filtra os grupos baseado na seleção e cidade
   const filteredGroups = useMemo(() => {
