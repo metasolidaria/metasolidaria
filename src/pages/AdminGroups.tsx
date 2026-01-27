@@ -27,6 +27,7 @@ import {
 import { EditGroupAdminModal } from "@/components/admin/EditGroupAdminModal";
 import { GroupMembersModal } from "@/components/admin/GroupMembersModal";
 import { AddMemberToGroupModal } from "@/components/admin/AddMemberToGroupModal";
+import { CreateGroupAdminModal } from "@/components/admin/CreateGroupAdminModal";
 import {
   ArrowLeft,
   Pencil,
@@ -39,6 +40,7 @@ import {
   Globe,
   ExternalLink,
   UserPlus,
+  Plus,
 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -62,6 +64,7 @@ const AdminGroups = () => {
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [membersModalOpen, setMembersModalOpen] = useState(false);
   const [addMemberModalOpen, setAddMemberModalOpen] = useState(false);
+  const [createModalOpen, setCreateModalOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [groupToDelete, setGroupToDelete] = useState<AdminGroup | null>(null);
 
@@ -174,6 +177,10 @@ const AdminGroups = () => {
                 Gerencie os grupos cadastrados na plataforma
               </p>
             </div>
+            <Button onClick={() => setCreateModalOpen(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              Criar Grupo
+            </Button>
           </div>
         </div>
 
@@ -327,6 +334,11 @@ const AdminGroups = () => {
         onAdd={handleAddMemberSubmit}
         isLoading={addMemberToGroup.isPending}
         fetchAllUsers={fetchAllUsers}
+      />
+
+      <CreateGroupAdminModal
+        open={createModalOpen}
+        onOpenChange={setCreateModalOpen}
       />
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
