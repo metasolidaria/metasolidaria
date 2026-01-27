@@ -56,13 +56,9 @@ export const GroupSearch = ({ onRequireAuth, userMemberships }: GroupSearchProps
 
       if (error) throw error;
 
-      // Cast para o tipo correto e filtrar grupos dos quais o usuário já é membro
+      // Cast para o tipo correto - mostrar todos os grupos encontrados
       const results = (data || []) as unknown as SearchGroup[];
-      const filteredResults = results.filter(
-        (group) => !userMemberships.includes(group.id)
-      );
-
-      setSearchResults(filteredResults);
+      setSearchResults(results);
     } catch (error) {
       console.error("Erro ao buscar grupos:", error);
       toast({
@@ -244,7 +240,16 @@ export const GroupSearch = ({ onRequireAuth, userMemberships }: GroupSearchProps
                     </p>
                   </div>
                   
-                  {group.is_private ? (
+                  {userMemberships.includes(group.id) ? (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      disabled
+                      className="shrink-0 text-muted-foreground"
+                    >
+                      Já participa
+                    </Button>
+                  ) : group.is_private ? (
                     <Button
                       size="sm"
                       variant="outline"
