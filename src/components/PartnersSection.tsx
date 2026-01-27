@@ -120,6 +120,17 @@ export const PartnersSection = () => {
     setUseProximity(false);
   };
 
+  // Lista de estados brasileiros para detectar parceiros estaduais
+  const brazilianStates: Record<string, string> = {
+    "Acre": "AC", "Alagoas": "AL", "Amapá": "AP", "Amazonas": "AM",
+    "Bahia": "BA", "Ceará": "CE", "Distrito Federal": "DF", "Espírito Santo": "ES",
+    "Goiás": "GO", "Maranhão": "MA", "Mato Grosso": "MT", "Mato Grosso do Sul": "MS",
+    "Minas Gerais": "MG", "Pará": "PA", "Paraíba": "PB", "Paraná": "PR",
+    "Pernambuco": "PE", "Piauí": "PI", "Rio de Janeiro": "RJ", "Rio Grande do Norte": "RN",
+    "Rio Grande do Sul": "RS", "Rondônia": "RO", "Roraima": "RR", "Santa Catarina": "SC",
+    "São Paulo": "SP", "Sergipe": "SE", "Tocantins": "TO"
+  };
+
   // Função para normalizar texto (remover acentos)
   const normalizeText = (text: string) => {
     return text
@@ -133,15 +144,42 @@ export const PartnersSection = () => {
     return cityWithState.split(",")[0].trim();
   };
 
+  // Extrair sigla do estado de uma cidade (ex: "Belo Horizonte, MG" -> "MG")
+  const extractStateFromCity = (cityWithState: string) => {
+    const parts = cityWithState.split(",");
+    return parts.length > 1 ? parts[1].trim().toUpperCase() : null;
+  };
+
+  // Verificar se o parceiro é estadual (cidade = nome do estado)
+  const isStatewidePartner = (partnerCity: string) => {
+    const normalized = normalizeText(partnerCity.trim());
+    return Object.keys(brazilianStates).some(state => normalizeText(state) === normalized);
+  };
+
+  // Obter sigla do estado de um parceiro estadual
+  const getStatewidePartnerState = (partnerCity: string) => {
+    const normalized = normalizeText(partnerCity.trim());
+    const state = Object.entries(brazilianStates).find(([name]) => normalizeText(name) === normalized);
+    return state ? state[1] : null;
+  };
+
   // Filtrar categorias disponíveis baseado na cidade selecionada
   const availableCategories = useMemo(() => {
     if (!searchCity) {
       return allCategories;
     }
     
-    const partnersInCity = (partners || []).filter((partner) =>
-      partner.city.toLowerCase().includes(searchCity.toLowerCase())
-    );
+    const searchStateAbbr = extractStateFromCity(searchCity);
+    
+    const partnersInCity = (partners || []).filter((partner) => {
+      // Parceiro estadual
+      if (isStatewidePartner(partner.city)) {
+        const partnerStateAbbr = getStatewidePartnerState(partner.city);
+        return partnerStateAbbr === searchStateAbbr;
+      }
+      // Parceiro normal
+      return partner.city.toLowerCase().includes(searchCity.toLowerCase());
+    });
     
     const specialtiesInCity = new Set(partnersInCity.map((p) => p.specialty));
     
@@ -161,9 +199,24 @@ export const PartnersSection = () => {
     let result = (partners || []).filter((partner) => {
       const matchesCategory =
         selectedCategory === "all" || partner.specialty === selectedCategory;
-      const matchesCity =
-        !searchCity ||
-        partner.city.toLowerCase().includes(searchCity.toLowerCase());
+      
+      // Lógica de filtragem por cidade/estado
+      let matchesCity = true;
+      if (searchCity) {
+        const searchCityLower = searchCity.toLowerCase();
+        const searchStateAbbr = extractStateFromCity(searchCity);
+        
+        // Verifica se o parceiro é estadual
+        if (isStatewidePartner(partner.city)) {
+          const partnerStateAbbr = getStatewidePartnerState(partner.city);
+          // Parceiro estadual aparece se a busca é por uma cidade do mesmo estado
+          matchesCity = partnerStateAbbr === searchStateAbbr;
+        } else {
+          // Parceiro normal: busca padrão por cidade
+          matchesCity = partner.city.toLowerCase().includes(searchCityLower);
+        }
+      }
+      
       return matchesCategory && matchesCity;
     });
 
