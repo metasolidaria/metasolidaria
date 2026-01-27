@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search, Lock, Globe, Loader2, UserPlus, Users } from "lucide-react";
+import { Search, Lock, Globe, Loader2, UserPlus, Users, CheckCircle2 } from "lucide-react";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 import { Card, CardContent } from "./ui/card";
@@ -221,8 +221,14 @@ export const GroupSearch = ({ onRequireAuth, userMemberships }: GroupSearchProps
                   className="flex items-center justify-between p-3 bg-card rounded-lg border gap-3"
                 >
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <p className="font-medium text-foreground truncate">{group.name}</p>
+                      {userMemberships.includes(group.id) && (
+                        <span className="shrink-0 bg-emerald-500/90 px-1.5 py-0.5 rounded text-[10px] text-white flex items-center gap-0.5">
+                          <CheckCircle2 className="w-2.5 h-2.5" />
+                          Membro
+                        </span>
+                      )}
                       {group.is_private ? (
                         <span className="shrink-0 bg-secondary/80 px-1.5 py-0.5 rounded text-[10px] text-secondary-foreground flex items-center gap-0.5">
                           <Lock className="w-2.5 h-2.5" />
