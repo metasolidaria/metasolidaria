@@ -41,7 +41,9 @@ import {
   ExternalLink,
   UserPlus,
   Plus,
+  Link,
 } from "lucide-react";
+import { InviteMemberModal } from "@/components/InviteMemberModal";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -67,6 +69,8 @@ const AdminGroups = () => {
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [groupToDelete, setGroupToDelete] = useState<AdminGroup | null>(null);
+  const [inviteModalOpen, setInviteModalOpen] = useState(false);
+  const [groupToInvite, setGroupToInvite] = useState<AdminGroup | null>(null);
 
   // Redirect non-admins
   useEffect(() => {
@@ -118,6 +122,11 @@ const AdminGroups = () => {
   const handleAddMember = (group: AdminGroup) => {
     setSelectedGroup(group);
     setAddMemberModalOpen(true);
+  };
+
+  const handleInvite = (group: AdminGroup) => {
+    setGroupToInvite(group);
+    setInviteModalOpen(true);
   };
 
   const handleDelete = (group: AdminGroup) => {
@@ -279,6 +288,15 @@ const AdminGroups = () => {
                           <Button
                             size="icon"
                             variant="ghost"
+                            className="h-8 w-8 text-blue-600 hover:text-blue-700"
+                            onClick={() => handleInvite(g)}
+                            title="Gerar link de convite"
+                          >
+                            <Link className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="icon"
+                            variant="ghost"
                             className="h-8 w-8"
                             onClick={() => handleEdit(g)}
                             title="Editar"
@@ -361,6 +379,14 @@ const AdminGroups = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <InviteMemberModal
+        open={inviteModalOpen}
+        onOpenChange={setInviteModalOpen}
+        groupId={groupToInvite?.id ?? null}
+        groupName={groupToInvite?.name ?? undefined}
+        groupDescription={groupToInvite?.description ?? undefined}
+      />
     </div>
   );
 };
