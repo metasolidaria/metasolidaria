@@ -1,13 +1,15 @@
-import { useState } from "react";
-import { Search, Lock, Globe, Loader2, UserPlus, Users, CheckCircle2 } from "lucide-react";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { Search, Lock, Globe, Loader2, UserPlus, Users, CheckCircle2, MapPin, X } from "lucide-react";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 import { Card, CardContent } from "./ui/card";
+import { ToggleGroup, ToggleGroupItem } from "./ui/toggle-group";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useGroups } from "@/hooks/useGroups";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
+import { cn } from "@/lib/utils";
 
 interface SearchGroup {
   id: string;
@@ -17,24 +19,121 @@ interface SearchGroup {
   is_private: boolean;
 }
 
+interface City {
+  id: number;
+  nome: string;
+  microrregiao: {
+    mesorregiao: {
+      UF: {
+        sigla: string;
+      };
+    };
+  };
+}
+
 interface GroupSearchProps {
   onRequireAuth: () => void;
   userMemberships: string[];
 }
+
+type SearchType = "name" | "city";
 
 export const GroupSearch = ({ onRequireAuth, userMemberships }: GroupSearchProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   const { joinGroup } = useGroups();
+  
+  const [searchType, setSearchType] = useState<SearchType>("name");
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const [searchResults, setSearchResults] = useState<SearchGroup[]>([]);
   const [hasSearched, setHasSearched] = useState(false);
   const [actionGroupId, setActionGroupId] = useState<string | null>(null);
+  
+  // City autocomplete state
+  const [cities, setCities] = useState<City[]>([]);
+  const [filteredCities, setFilteredCities] = useState<{ nome: string; uf: string }[]>([]);
+  const [isCitiesLoading, setIsCitiesLoading] = useState(false);
+  const [isCityDropdownOpen, setIsCityDropdownOpen] = useState(false);
+  const [selectedCityIndex, setSelectedCityIndex] = useState(-1);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
-  const handleSearch = async () => {
-    if (!searchQuery.trim() || searchQuery.trim().length < 3) {
+  // Fetch cities on mount for city search
+  useEffect(() => {
+    const fetchCities = async () => {
+      setIsCitiesLoading(true);
+      try {
+        const response = await fetch(
+          "https://servicodados.ibge.gov.br/api/v1/localidades/municipios?orderBy=nome"
+        );
+        if (response.ok) {
+          const data: City[] = await response.json();
+          setCities(data);
+        }
+      } catch (error) {
+        console.error("Error fetching cities:", error);
+      } finally {
+        setIsCitiesLoading(false);
+      }
+    };
+    fetchCities();
+  }, []);
+
+  // Filter cities for autocomplete
+  useEffect(() => {
+    if (searchType !== "city" || !searchQuery || searchQuery.length < 2) {
+      setFilteredCities([]);
+      return;
+    }
+
+    const normalizedQuery = searchQuery
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "");
+
+    const filtered = cities
+      .filter((city) => {
+        const normalizedName = city.nome
+          .toLowerCase()
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "");
+        return normalizedName.includes(normalizedQuery);
+      })
+      .slice(0, 8)
+      .map((city) => ({
+        nome: city.nome,
+        uf: city.microrregiao.mesorregiao.UF.sigla,
+      }));
+
+    setFilteredCities(filtered);
+    setSelectedCityIndex(-1);
+  }, [searchQuery, cities, searchType]);
+
+  // Handle click outside for city dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setIsCityDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Reset search when type changes
+  useEffect(() => {
+    setSearchQuery("");
+    setSearchResults([]);
+    setHasSearched(false);
+    setIsCityDropdownOpen(false);
+  }, [searchType]);
+
+  const handleSearch = async (cityOverride?: string) => {
+    const query = cityOverride || searchQuery.trim();
+    
+    if (!query || query.length < 3) {
       toast({
         title: "Busca inválida",
         description: "Digite pelo menos 3 caracteres para buscar.",
@@ -45,14 +144,16 @@ export const GroupSearch = ({ onRequireAuth, userMemberships }: GroupSearchProps
 
     setIsSearching(true);
     setHasSearched(true);
+    setIsCityDropdownOpen(false);
 
     try {
-      // Buscar todos os grupos pelo nome usando view pública que ignora RLS
+      // Buscar grupos usando view pública que ignora RLS
+      const columnToSearch = searchType === "name" ? "name" : "city";
       const { data, error } = await supabase
         .from("groups_search" as any)
         .select("id, name, city, leader_name, is_private")
-        .ilike("name", `%${searchQuery.trim()}%`)
-        .limit(10);
+        .ilike(columnToSearch, `%${query}%`)
+        .limit(15);
 
       if (error) throw error;
 
@@ -69,6 +170,20 @@ export const GroupSearch = ({ onRequireAuth, userMemberships }: GroupSearchProps
     } finally {
       setIsSearching(false);
     }
+  };
+
+  const handleCitySelect = (cityName: string) => {
+    setSearchQuery(cityName);
+    setIsCityDropdownOpen(false);
+    handleSearch(cityName);
+  };
+
+  const handleClear = () => {
+    setSearchQuery("");
+    setSearchResults([]);
+    setHasSearched(false);
+    setIsCityDropdownOpen(false);
+    inputRef.current?.focus();
   };
 
   const handleJoinPublicGroup = async (groupId: string, groupName: string) => {
@@ -174,6 +289,30 @@ export const GroupSearch = ({ onRequireAuth, userMemberships }: GroupSearchProps
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (searchType === "city" && isCityDropdownOpen && filteredCities.length > 0) {
+      switch (e.key) {
+        case "ArrowDown":
+          e.preventDefault();
+          setSelectedCityIndex((prev) =>
+            prev < filteredCities.length - 1 ? prev + 1 : prev
+          );
+          return;
+        case "ArrowUp":
+          e.preventDefault();
+          setSelectedCityIndex((prev) => (prev > 0 ? prev - 1 : 0));
+          return;
+        case "Enter":
+          e.preventDefault();
+          if (selectedCityIndex >= 0) {
+            handleCitySelect(filteredCities[selectedCityIndex].nome);
+          }
+          return;
+        case "Escape":
+          setIsCityDropdownOpen(false);
+          return;
+      }
+    }
+    
     if (e.key === "Enter") {
       handleSearch();
     }
@@ -182,26 +321,99 @@ export const GroupSearch = ({ onRequireAuth, userMemberships }: GroupSearchProps
   return (
     <Card className="bg-muted/50 border-dashed">
       <CardContent className="p-4">
-        <div className="flex items-center gap-2 mb-3">
-          <Search className="w-4 h-4 text-muted-foreground" />
-          <span className="text-sm font-medium text-foreground">
-            Buscar Grupo por Nome
-          </span>
+        <div className="flex items-center justify-between gap-2 mb-3">
+          <div className="flex items-center gap-2">
+            <Search className="w-4 h-4 text-muted-foreground" />
+            <span className="text-sm font-medium text-foreground">
+              Buscar Grupo
+            </span>
+          </div>
+          
+          <ToggleGroup 
+            type="single" 
+            value={searchType} 
+            onValueChange={(value) => value && setSearchType(value as SearchType)}
+            className="bg-background border rounded-lg p-0.5"
+          >
+            <ToggleGroupItem 
+              value="name" 
+              size="sm"
+              className="text-xs px-2 py-1 h-7 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
+            >
+              Por Nome
+            </ToggleGroupItem>
+            <ToggleGroupItem 
+              value="city" 
+              size="sm"
+              className="text-xs px-2 py-1 h-7 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
+            >
+              Por Cidade
+            </ToggleGroupItem>
+          </ToggleGroup>
         </div>
         
-        <div className="flex gap-2">
-          <Input
-            placeholder="Digite o nome do grupo..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            onKeyDown={handleKeyDown}
-            className="flex-1"
-          />
+        <div className="flex gap-2" ref={containerRef}>
+          <div className="relative flex-1">
+            {searchType === "city" && (
+              <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground z-10" />
+            )}
+            <Input
+              ref={inputRef}
+              placeholder={searchType === "name" ? "Digite o nome do grupo..." : "Digite a cidade..."}
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                if (searchType === "city") {
+                  setIsCityDropdownOpen(true);
+                }
+              }}
+              onFocus={() => {
+                if (searchType === "city" && searchQuery.length >= 2) {
+                  setIsCityDropdownOpen(true);
+                }
+              }}
+              onKeyDown={handleKeyDown}
+              className={cn("flex-1", searchType === "city" && "pl-10 pr-8")}
+            />
+            {searchType === "city" && searchQuery && (
+              <button
+                type="button"
+                onClick={handleClear}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
+            
+            {/* City autocomplete dropdown */}
+            {searchType === "city" && isCityDropdownOpen && filteredCities.length > 0 && (
+              <div className="absolute top-full left-0 right-0 mt-1 bg-popover border border-border rounded-lg shadow-lg z-50 max-h-48 overflow-y-auto">
+                {filteredCities.map((city, index) => (
+                  <button
+                    key={`${city.nome}-${city.uf}`}
+                    type="button"
+                    onClick={() => handleCitySelect(city.nome)}
+                    className={cn(
+                      "w-full flex items-center gap-2 px-4 py-2 text-left text-sm transition-colors",
+                      index === selectedCityIndex
+                        ? "bg-accent text-accent-foreground"
+                        : "hover:bg-muted"
+                    )}
+                  >
+                    <MapPin className="w-3 h-3 text-muted-foreground flex-shrink-0" />
+                    <span className="text-foreground">{city.nome}</span>
+                    <span className="text-muted-foreground text-xs">{city.uf}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+          
           <Button
             variant="secondary"
             size="sm"
-            onClick={handleSearch}
-            disabled={isSearching}
+            onClick={() => handleSearch()}
+            disabled={isSearching || isCitiesLoading}
           >
             {isSearching ? (
               <Loader2 className="w-4 h-4 animate-spin" />
