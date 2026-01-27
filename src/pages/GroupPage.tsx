@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, Users, Target, MapPin, Lock, Globe, Plus, Trash2, Loader2, LogOut, TrendingUp, Sparkles, Pencil, CalendarDays, Building2, UserPlus } from "lucide-react";
+import { ArrowLeft, Users, Target, MapPin, Lock, Globe, Plus, Trash2, Loader2, LogOut, TrendingUp, Sparkles, Pencil, CalendarDays, Building2, UserPlus, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { useGroupDetails } from "@/hooks/useGroupDetails";
@@ -11,6 +11,7 @@ import { EditGroupModal } from "@/components/EditGroupModal";
 import { EditMemberGoalModal } from "@/components/EditMemberGoalModal";
 import { ProgressCharts } from "@/components/ProgressCharts";
 import { ProgressAnalysisModal } from "@/components/ProgressAnalysisModal";
+import { InviteMemberModal } from "@/components/InviteMemberModal";
 import { useProgressAnalysis } from "@/hooks/useProgressAnalysis";
 import { useState } from "react";
 import { format } from "date-fns";
@@ -55,6 +56,7 @@ export default function GroupPage() {
   const [leaveDialogOpen, setLeaveDialogOpen] = useState(false);
   const [analysisModalOpen, setAnalysisModalOpen] = useState(false);
   const [addMemberOpen, setAddMemberOpen] = useState(false);
+  const [inviteModalOpen, setInviteModalOpen] = useState(false);
   const [memberToRemove, setMemberToRemove] = useState<{ id: string; name: string } | null>(null);
   
   const { analyzeProgress, analysis, isLoading: analysisLoading, clearAnalysis } = useProgressAnalysis();
@@ -189,14 +191,24 @@ export default function GroupPage() {
                     onClick={() => setAddMemberOpen(true)}
                   >
                     <UserPlus className="w-4 h-4 mr-2" />
-                    Incluir Membro
+                    <span className="hidden sm:inline">Incluir Membro</span>
+                    <span className="sm:hidden">Membro</span>
+                  </Button>
+                  <Button 
+                    variant="outline"
+                    onClick={() => setInviteModalOpen(true)}
+                  >
+                    <Mail className="w-4 h-4 mr-2" />
+                    <span className="hidden sm:inline">Enviar Convite</span>
+                    <span className="sm:hidden">Convite</span>
                   </Button>
                   <Button 
                     variant="outline"
                     onClick={() => setEditGroupOpen(true)}
                   >
                     <Pencil className="w-4 h-4 mr-2" />
-                    Editar Grupo
+                    <span className="hidden sm:inline">Editar Grupo</span>
+                    <span className="sm:hidden">Editar</span>
                   </Button>
                 </>
               )}
@@ -530,6 +542,15 @@ export default function GroupPage() {
           onOpenChange={setAddMemberOpen}
           groupId={group.id}
           groupName={group.name}
+        />
+      )}
+
+      {/* Invite Member Modal (for leaders) */}
+      {isLeader && group && (
+        <InviteMemberModal
+          open={inviteModalOpen}
+          onOpenChange={setInviteModalOpen}
+          groupId={group.id}
         />
       )}
 
