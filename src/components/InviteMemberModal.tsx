@@ -30,7 +30,8 @@ export const InviteMemberModal = ({ open, onOpenChange, groupId }: InviteMemberM
   };
 
   const handleCopyLink = () => {
-    const inviteUrl = `${window.location.origin}?join=${groupId}`;
+    const baseUrl = "https://metasolidaria.com.br";
+    const inviteUrl = `${baseUrl}?join=${groupId}`;
     navigator.clipboard.writeText(inviteUrl);
     setCopied(true);
     toast({
