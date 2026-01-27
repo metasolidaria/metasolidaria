@@ -1,7 +1,8 @@
 import { motion } from "framer-motion";
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Users, Target, MapPin, Plus, Heart, Loader2, Lock, Globe, Mail, ChevronLeft, ChevronRight } from "lucide-react";
+import { Users, Target, MapPin, Plus, Heart, Loader2, Lock, Globe, Mail, ChevronLeft, ChevronRight, Crown } from "lucide-react";
+import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { CreateGroupModal } from "./CreateGroupModal";
 import { InviteMemberModal } from "./InviteMemberModal";
@@ -216,6 +217,12 @@ export const GroupsSection = ({
                     <img src={placeholderImages[index % placeholderImages.length]} alt={group.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                     <div className="absolute inset-0 bg-gradient-to-t from-foreground/60 to-transparent" />
                     <div className="absolute top-3 left-3 flex gap-2">
+                      {isGroupLeader(group.leader_id) && (
+                        <span className="bg-amber-500/90 backdrop-blur-sm px-2 py-1 rounded-full text-xs text-white flex items-center gap-1">
+                          <Crown className="w-3 h-3" />
+                          Líder
+                        </span>
+                      )}
                       {group.is_private ? <span className="bg-secondary/80 backdrop-blur-sm px-2 py-1 rounded-full text-xs text-secondary-foreground flex items-center gap-1">
                           <Lock className="w-3 h-3" />
                           Privado
