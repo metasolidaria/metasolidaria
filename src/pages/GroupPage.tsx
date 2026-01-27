@@ -309,19 +309,19 @@ export default function GroupPage() {
                   {progressEntries.map((entry) => (
                     <div 
                       key={entry.id}
-                      className="flex items-center justify-between p-3 bg-muted/50 rounded-lg"
+                      className="flex items-start gap-2 p-3 bg-muted/50 rounded-lg"
                     >
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex flex-wrap items-center gap-1">
                           <span className="font-medium text-foreground">
                             +{entry.amount} {donationType.unit}
                           </span>
-                          <span className="text-sm text-muted-foreground">
+                          <span className="text-sm text-muted-foreground truncate">
                             por {entry.member_name}
                           </span>
                         </div>
                         {entry.description && (
-                          <p className="text-sm text-muted-foreground mt-1">
+                          <p className="text-sm text-muted-foreground mt-1 break-words">
                             {entry.description}
                           </p>
                         )}
@@ -336,7 +336,7 @@ export default function GroupPage() {
                           size="sm"
                           onClick={() => deleteProgress.mutate(entry.id)}
                           disabled={deleteProgress.isPending}
-                          className="text-destructive hover:text-destructive"
+                          className="text-destructive hover:text-destructive flex-shrink-0"
                         >
                           <Trash2 className="w-4 h-4" />
                         </Button>
@@ -398,28 +398,31 @@ export default function GroupPage() {
                             variant={(member.commitments || []).length === 0 ? "default" : "ghost"}
                             size="sm"
                             onClick={() => setEditGoalOpen(true)}
-                            className={(member.commitments || []).length === 0
+                            className={`flex-shrink-0 ${(member.commitments || []).length === 0
                               ? "bg-primary text-primary-foreground hover:bg-primary/90" 
                               : "text-primary hover:text-primary hover:bg-primary/10"
-                            }
+                            }`}
                           >
                             <Target className="w-4 h-4" />
-                            <span className="ml-1">{(member.commitments || []).length === 0 ? "DEFINIR META" : "EDITAR META"}</span>
+                            <span className="ml-1 hidden sm:inline">{(member.commitments || []).length === 0 ? "DEFINIR" : "EDITAR"}</span>
                           </Button>
                         )}
                       </div>
                       
                       {/* Commitments list */}
                       {member.commitments && member.commitments.length > 0 && (
-                        <div className="mt-3 ml-13 space-y-2 pl-13">
+                        <div className="mt-3 space-y-2">
                           {member.commitments.map((c, idx) => (
-                            <div key={c.id || idx} className="flex items-center gap-2 ml-13 pl-[52px]">
-                              <div className="flex-1">
-                                <p className="text-xs text-primary">
-                                  📌 {c.name ? `${c.name}: ` : ''}{c.ratio} {c.metric} = {c.donation_amount} {donationType.unit} (meta: {c.personal_goal} {donationType.unit})
+                            <div key={c.id || idx} className="flex items-start gap-2 bg-muted/30 rounded-md p-2">
+                              <div className="flex-1 min-w-0">
+                                <p className="text-xs text-primary break-words">
+                                  📌 {c.name ? `${c.name}: ` : ''}{c.ratio} {c.metric} = {c.donation_amount} {donationType.unit}
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                  Meta: {c.personal_goal} {donationType.unit}
                                 </p>
                                 {c.penalty_donation && c.penalty_donation > 0 && (
-                                  <p className="text-xs text-amber-600 dark:text-amber-400 ml-4">
+                                  <p className="text-xs text-amber-600 dark:text-amber-400">
                                     🔥 Desafio: {c.penalty_donation} {donationType.unit}
                                   </p>
                                 )}
@@ -439,7 +442,7 @@ export default function GroupPage() {
                                     });
                                     setAddProgressOpen(true);
                                   }}
-                                  className="h-6 px-2 text-green-600 hover:text-green-700 hover:bg-green-50"
+                                  className="h-7 px-2 text-green-600 hover:text-green-700 hover:bg-green-50 flex-shrink-0"
                                 >
                                   <Plus className="w-3 h-3" />
                                   <span className="ml-1 text-xs">Doar</span>
