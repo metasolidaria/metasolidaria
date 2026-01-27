@@ -789,6 +789,22 @@ export type Database = {
             }
             Returns: string
           }
+      get_admin_users: {
+        Args: never
+        Returns: {
+          city: string
+          created_at: string
+          email: string
+          full_name: string
+          last_sign_in_at: string
+          profile_id: string
+          roles: Database["public"]["Enums"]["app_role"][]
+          updated_at: string
+          user_created_at: string
+          user_id: string
+          whatsapp: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
