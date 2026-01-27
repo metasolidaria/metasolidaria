@@ -4,6 +4,7 @@ import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 import { Card, CardContent } from "./ui/card";
 import { ToggleGroup, ToggleGroupItem } from "./ui/toggle-group";
+import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useGroups } from "@/hooks/useGroups";
@@ -17,6 +18,7 @@ interface SearchGroup {
   city: string;
   leader_name: string | null;
   is_private: boolean;
+  description: string | null;
 }
 
 interface City {
@@ -178,7 +180,7 @@ export const GroupSearch = ({ onRequireAuth, userMemberships }: GroupSearchProps
       const columnToSearch = searchType === "name" ? "name" : "city";
       const { data, error } = await supabase
         .from("groups_search" as any)
-        .select("id, name, city, leader_name, is_private")
+        .select("id, name, city, leader_name, is_private, description")
         .ilike(columnToSearch, `%${query}%`)
         .limit(15);
 
@@ -461,13 +463,30 @@ export const GroupSearch = ({ onRequireAuth, userMemberships }: GroupSearchProps
                 >
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <button
-                        type="button"
-                        onClick={() => navigate(`/grupo/${group.id}`)}
-                        className="font-medium text-foreground truncate hover:text-primary hover:underline transition-colors text-left"
-                      >
-                        {group.name}
-                      </button>
+                      {group.description ? (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button
+                              type="button"
+                              onClick={() => navigate(`/grupo/${group.id}`)}
+                              className="font-medium text-foreground truncate hover:text-primary hover:underline transition-colors text-left"
+                            >
+                              {group.name}
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent side="top" className="max-w-xs">
+                            <p className="text-sm">{group.description}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => navigate(`/grupo/${group.id}`)}
+                          className="font-medium text-foreground truncate hover:text-primary hover:underline transition-colors text-left"
+                        >
+                          {group.name}
+                        </button>
+                      )}
                       {userMemberships.includes(group.id) && (
                         <span className="shrink-0 bg-emerald-500/90 px-1.5 py-0.5 rounded text-[10px] text-white flex items-center gap-0.5">
                           <CheckCircle2 className="w-2.5 h-2.5" />
