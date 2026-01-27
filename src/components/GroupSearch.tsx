@@ -1,35 +1,37 @@
 import { useState } from "react";
-import { Search, Lock, Loader2, UserPlus } from "lucide-react";
+import { Search, Lock, Globe, Loader2, UserPlus, Users } from "lucide-react";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 import { Card, CardContent } from "./ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { useJoinRequests } from "@/hooks/useJoinRequests";
+import { useGroups } from "@/hooks/useGroups";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 
-interface PrivateGroup {
+interface SearchGroup {
   id: string;
   name: string;
   city: string;
   leader_name: string | null;
+  is_private: boolean;
 }
 
-interface PrivateGroupSearchProps {
+interface GroupSearchProps {
   onRequireAuth: () => void;
   userMemberships: string[];
 }
 
-export const PrivateGroupSearch = ({ onRequireAuth, userMemberships }: PrivateGroupSearchProps) => {
+export const GroupSearch = ({ onRequireAuth, userMemberships }: GroupSearchProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { joinGroup } = useGroups();
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearching, setIsSearching] = useState(false);
-  const [searchResults, setSearchResults] = useState<PrivateGroup[]>([]);
+  const [searchResults, setSearchResults] = useState<SearchGroup[]>([]);
   const [hasSearched, setHasSearched] = useState(false);
-  const [requestingGroupId, setRequestingGroupId] = useState<string | null>(null);
+  const [actionGroupId, setActionGroupId] = useState<string | null>(null);
 
   const handleSearch = async () => {
     if (!searchQuery.trim() || searchQuery.trim().length < 3) {
@@ -45,13 +47,12 @@ export const PrivateGroupSearch = ({ onRequireAuth, userMemberships }: PrivateGr
     setHasSearched(true);
 
     try {
-      // Buscar grupos privados pelo nome exato ou parcial
+      // Buscar todos os grupos pelo nome
       const { data, error } = await supabase
         .from("groups")
-        .select("id, name, city, leader_name")
-        .eq("is_private", true)
+        .select("id, name, city, leader_name, is_private")
         .ilike("name", `%${searchQuery.trim()}%`)
-        .limit(5);
+        .limit(10);
 
       if (error) throw error;
 
@@ -73,13 +74,38 @@ export const PrivateGroupSearch = ({ onRequireAuth, userMemberships }: PrivateGr
     }
   };
 
+  const handleJoinPublicGroup = async (groupId: string, groupName: string) => {
+    if (!user) {
+      onRequireAuth();
+      return;
+    }
+
+    setActionGroupId(groupId);
+
+    try {
+      const profile = user.user_metadata;
+      await joinGroup.mutateAsync({
+        groupId,
+        name: profile?.full_name || user.email || "Membro",
+      });
+
+      // Remover grupo da lista e navegar
+      setSearchResults((prev) => prev.filter((g) => g.id !== groupId));
+      navigate(`/grupo/${groupId}`);
+    } catch (error: any) {
+      // Error handled by mutation
+    } finally {
+      setActionGroupId(null);
+    }
+  };
+
   const handleRequestJoin = async (groupId: string, groupName: string) => {
     if (!user) {
       onRequireAuth();
       return;
     }
 
-    setRequestingGroupId(groupId);
+    setActionGroupId(groupId);
 
     try {
       // Verificar se já existe solicitação pendente
@@ -101,6 +127,11 @@ export const PrivateGroupSearch = ({ onRequireAuth, userMemberships }: PrivateGr
             title: "Solicitação rejeitada",
             description: "Sua solicitação anterior foi rejeitada pelo líder.",
             variant: "destructive",
+          });
+        } else if (existingRequest.status === "approved") {
+          toast({
+            title: "Já aprovado!",
+            description: "Sua solicitação já foi aprovada. Recarregue a página.",
           });
         }
         return;
@@ -141,7 +172,7 @@ export const PrivateGroupSearch = ({ onRequireAuth, userMemberships }: PrivateGr
         variant: "destructive",
       });
     } finally {
-      setRequestingGroupId(null);
+      setActionGroupId(null);
     }
   };
 
@@ -155,9 +186,9 @@ export const PrivateGroupSearch = ({ onRequireAuth, userMemberships }: PrivateGr
     <Card className="bg-muted/50 border-dashed">
       <CardContent className="p-4">
         <div className="flex items-center gap-2 mb-3">
-          <Lock className="w-4 h-4 text-muted-foreground" />
+          <Search className="w-4 h-4 text-muted-foreground" />
           <span className="text-sm font-medium text-foreground">
-            Buscar Grupo Privado
+            Buscar Grupo por Nome
           </span>
         </div>
         
@@ -190,29 +221,63 @@ export const PrivateGroupSearch = ({ onRequireAuth, userMemberships }: PrivateGr
               searchResults.map((group) => (
                 <div
                   key={group.id}
-                  className="flex items-center justify-between p-3 bg-card rounded-lg border"
+                  className="flex items-center justify-between p-3 bg-card rounded-lg border gap-3"
                 >
-                  <div>
-                    <p className="font-medium text-foreground">{group.name}</p>
-                    <p className="text-xs text-muted-foreground">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <p className="font-medium text-foreground truncate">{group.name}</p>
+                      {group.is_private ? (
+                        <span className="shrink-0 bg-secondary/80 px-1.5 py-0.5 rounded text-[10px] text-secondary-foreground flex items-center gap-0.5">
+                          <Lock className="w-2.5 h-2.5" />
+                          Privado
+                        </span>
+                      ) : (
+                        <span className="shrink-0 bg-primary/80 px-1.5 py-0.5 rounded text-[10px] text-primary-foreground flex items-center gap-0.5">
+                          <Globe className="w-2.5 h-2.5" />
+                          Público
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground truncate">
                       {group.city} • Líder: {group.leader_name || "Não informado"}
                     </p>
                   </div>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => handleRequestJoin(group.id, group.name)}
-                    disabled={requestingGroupId === group.id}
-                  >
-                    {requestingGroupId === group.id ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <>
-                        <UserPlus className="w-4 h-4 mr-1" />
-                        Solicitar
-                      </>
-                    )}
-                  </Button>
+                  
+                  {group.is_private ? (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleRequestJoin(group.id, group.name)}
+                      disabled={actionGroupId === group.id}
+                      className="shrink-0"
+                    >
+                      {actionGroupId === group.id ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <>
+                          <UserPlus className="w-4 h-4 mr-1" />
+                          Solicitar
+                        </>
+                      )}
+                    </Button>
+                  ) : (
+                    <Button
+                      size="sm"
+                      variant="default"
+                      onClick={() => handleJoinPublicGroup(group.id, group.name)}
+                      disabled={actionGroupId === group.id}
+                      className="shrink-0"
+                    >
+                      {actionGroupId === group.id ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <>
+                          <Users className="w-4 h-4 mr-1" />
+                          Participar
+                        </>
+                      )}
+                    </Button>
+                  )}
                 </div>
               ))
             ) : (

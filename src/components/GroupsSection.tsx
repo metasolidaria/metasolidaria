@@ -7,7 +7,7 @@ import { Button } from "./ui/button";
 import { CreateGroupModal } from "./CreateGroupModal";
 import { InviteMemberModal } from "./InviteMemberModal";
 import { CitySearchAutocomplete } from "./CitySearchAutocomplete";
-import { PrivateGroupSearch } from "./PrivateGroupSearch";
+import { GroupSearch } from "./GroupSearch";
 import { useGroups } from "@/hooks/useGroups";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -198,9 +198,9 @@ export const GroupsSection = ({
             </div>
           </div>
 
-          {/* Busca de grupos privados */}
+          {/* Busca de grupos por nome */}
           <div className="w-full sm:max-w-md">
-            <PrivateGroupSearch onRequireAuth={onRequireAuth} userMemberships={userMemberships} />
+            <GroupSearch onRequireAuth={onRequireAuth} userMemberships={userMemberships} />
           </div>
         </div>
 
