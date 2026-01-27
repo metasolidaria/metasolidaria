@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Mail, Copy, Check, Send, Loader2 } from "lucide-react";
+import { X, Mail, Copy, Check, Send, Loader2, MessageCircle } from "lucide-react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
@@ -58,6 +58,12 @@ export const InviteMemberModal = ({ open, onOpenChange, groupId, groupName, grou
     onOpenChange(false);
   };
 
+  const generateInviteText = (inviteUrl: string) => {
+    return groupDescription 
+      ? `🎉 Você foi convidado para participar do grupo "${groupName || 'Meta Solidária'}"!\n\n📝 ${groupDescription}\n\n👉 Clique no link para entrar: ${inviteUrl}`
+      : `🎉 Você foi convidado para participar do grupo "${groupName || 'Meta Solidária'}" no Meta Solidária!\n\n👉 Clique no link para entrar: ${inviteUrl}`;
+  };
+
   const handleCopyLink = async () => {
     if (!groupId) return;
 
@@ -65,11 +71,7 @@ export const InviteMemberModal = ({ open, onOpenChange, groupId, groupName, grou
       const inviteCode = await createLinkInvitation.mutateAsync(groupId);
       const baseUrl = window.location.origin;
       const inviteUrl = `${baseUrl}?invite=${inviteCode}`;
-      
-      // Criar texto do convite com descrição do grupo
-      const inviteText = groupDescription 
-        ? `🎉 Você foi convidado para participar do grupo "${groupName || 'Meta Solidária'}"!\n\n📝 ${groupDescription}\n\n👉 Clique no link para entrar: ${inviteUrl}`
-        : `🎉 Você foi convidado para participar do grupo "${groupName || 'Meta Solidária'}" no Meta Solidária!\n\n👉 Clique no link para entrar: ${inviteUrl}`;
+      const inviteText = generateInviteText(inviteUrl);
       
       await navigator.clipboard.writeText(inviteText);
       setCopied(true);
@@ -78,6 +80,26 @@ export const InviteMemberModal = ({ open, onOpenChange, groupId, groupName, grou
         description: "Compartilhe a mensagem com a pessoa que deseja convidar.",
       });
       setTimeout(() => setCopied(false), 2000);
+    } catch (error: any) {
+      toast({
+        title: "Erro ao gerar link",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleShareWhatsApp = async () => {
+    if (!groupId) return;
+
+    try {
+      const inviteCode = await createLinkInvitation.mutateAsync(groupId);
+      const baseUrl = window.location.origin;
+      const inviteUrl = `${baseUrl}?invite=${inviteCode}`;
+      const inviteText = generateInviteText(inviteUrl);
+      
+      const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(inviteText)}`;
+      window.open(whatsappUrl, '_blank');
     } catch (error: any) {
       toast({
         title: "Erro ao gerar link",
@@ -157,30 +179,49 @@ export const InviteMemberModal = ({ open, onOpenChange, groupId, groupName, grou
                     </div>
                   </div>
 
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="w-full"
-                    onClick={handleCopyLink}
-                    disabled={createLinkInvitation.isPending}
-                  >
-                    {createLinkInvitation.isPending ? (
-                      <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Gerando Link...
-                      </>
-                    ) : copied ? (
-                      <>
-                        <Check className="w-4 h-4 mr-2 text-primary" />
-                        Link Copiado!
-                      </>
-                    ) : (
-                      <>
-                        <Copy className="w-4 h-4 mr-2" />
-                        Copiar Link de Convite
-                      </>
-                    )}
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="flex-1"
+                      onClick={handleCopyLink}
+                      disabled={createLinkInvitation.isPending}
+                    >
+                      {createLinkInvitation.isPending ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Gerando...
+                        </>
+                      ) : copied ? (
+                        <>
+                          <Check className="w-4 h-4 mr-2 text-primary" />
+                          Copiado!
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-4 h-4 mr-2" />
+                          Copiar Link
+                        </>
+                      )}
+                    </Button>
+
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="flex-1 text-green-600 border-green-600 hover:bg-green-50 hover:text-green-700"
+                      onClick={handleShareWhatsApp}
+                      disabled={createLinkInvitation.isPending}
+                    >
+                      {createLinkInvitation.isPending ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <>
+                          <MessageCircle className="w-4 h-4 mr-2" />
+                          WhatsApp
+                        </>
+                      )}
+                    </Button>
+                  </div>
                 </div>
 
                 <div className="flex gap-3 pt-2">
