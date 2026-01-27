@@ -6,7 +6,6 @@ import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { CreateGroupModal } from "./CreateGroupModal";
 import { InviteMemberModal } from "./InviteMemberModal";
-import { CitySearchAutocomplete } from "./CitySearchAutocomplete";
 import { GroupSearch } from "./GroupSearch";
 import { useGroups } from "@/hooks/useGroups";
 import { useAuth } from "@/hooks/useAuth";
@@ -73,7 +72,6 @@ export const GroupsSection = ({
   const [inviteModalOpen, setInviteModalOpen] = useState(false);
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
   const [filter, setFilter] = useState<"all" | "mine">(user ? "mine" : "all");
-  const [searchCity, setSearchCity] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const isUserMember = (groupId: string) => userMemberships.includes(groupId);
 
@@ -84,15 +82,9 @@ export const GroupsSection = ({
       if (filter === "mine" && !isUserMember(group.id)) {
         return false;
       }
-      // Filtro de cidade
-      if (searchCity.trim()) {
-        const normalizedSearch = searchCity.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-        const normalizedCity = group.city.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-        return normalizedCity.includes(normalizedSearch);
-      }
       return true;
     });
-  }, [groups, filter, searchCity, userMemberships]);
+  }, [groups, filter, userMemberships]);
 
   // Paginação
   const totalPages = Math.ceil((filteredGroups?.length || 0) / ITEMS_PER_PAGE);
@@ -104,7 +96,7 @@ export const GroupsSection = ({
   // Reset page when filters change
   useMemo(() => {
     setCurrentPage(1);
-  }, [filter, searchCity]);
+  }, [filter]);
   const handleGroupAction = (groupId: string, isPrivate: boolean) => {
     if (!user) {
       onRequireAuth();
@@ -191,11 +183,6 @@ export const GroupsSection = ({
                     </span>}
                 </Button>
               </div>}
-            
-            {/* Busca por cidade */}
-            <div className="w-full sm:w-64">
-              <CitySearchAutocomplete value={searchCity} onChange={setSearchCity} placeholder="Filtrar por cidade..." />
-            </div>
           </div>
 
           {/* Busca de grupos por nome */}
@@ -323,19 +310,7 @@ export const GroupsSection = ({
                   <ChevronRight className="w-4 h-4 ml-1" />
                 </Button>
               </div>}
-          </> : searchCity.trim() ? <motion.div initial={{
-        opacity: 0
-      }} animate={{
-        opacity: 1
-      }} className="text-center py-12">
-            <MapPin className="w-12 h-12 mx-auto text-muted-foreground/50 mb-4" />
-            <p className="text-muted-foreground text-lg mb-4">
-              Nenhum grupo encontrado em "{searchCity}".
-            </p>
-            <Button variant="outline" onClick={() => setSearchCity("")}>
-              Limpar filtro
-            </Button>
-          </motion.div> : filter === "mine" ? <motion.div initial={{
+          </> : filter === "mine" ? <motion.div initial={{
         opacity: 0
       }} animate={{
         opacity: 1
