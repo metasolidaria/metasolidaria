@@ -685,6 +685,8 @@ export default function GroupPage() {
           open={inviteModalOpen}
           onOpenChange={setInviteModalOpen}
           groupId={group.id}
+          groupName={group.name}
+          groupDescription={group.description || undefined}
         />
       )}
 

@@ -13,9 +13,11 @@ interface InviteMemberModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   groupId: string | null;
+  groupName?: string;
+  groupDescription?: string;
 }
 
-export const InviteMemberModal = ({ open, onOpenChange, groupId }: InviteMemberModalProps) => {
+export const InviteMemberModal = ({ open, onOpenChange, groupId, groupName, groupDescription }: InviteMemberModalProps) => {
   const { inviteToGroup } = useGroups();
   const { toast } = useToast();
   const [email, setEmail] = useState("");
@@ -61,13 +63,19 @@ export const InviteMemberModal = ({ open, onOpenChange, groupId }: InviteMemberM
 
     try {
       const inviteCode = await createLinkInvitation.mutateAsync(groupId);
-      const baseUrl = "https://metasolidaria.com.br";
+      const baseUrl = window.location.origin;
       const inviteUrl = `${baseUrl}?invite=${inviteCode}`;
-      await navigator.clipboard.writeText(inviteUrl);
+      
+      // Criar texto do convite com descrição do grupo
+      const inviteText = groupDescription 
+        ? `🎉 Você foi convidado para participar do grupo "${groupName || 'Meta Solidária'}"!\n\n📝 ${groupDescription}\n\n👉 Clique no link para entrar: ${inviteUrl}`
+        : `🎉 Você foi convidado para participar do grupo "${groupName || 'Meta Solidária'}" no Meta Solidária!\n\n👉 Clique no link para entrar: ${inviteUrl}`;
+      
+      await navigator.clipboard.writeText(inviteText);
       setCopied(true);
       toast({
-        title: "Link copiado! 📋",
-        description: "Compartilhe o link com a pessoa que deseja convidar.",
+        title: "Convite copiado! 📋",
+        description: "Compartilhe a mensagem com a pessoa que deseja convidar.",
       });
       setTimeout(() => setCopied(false), 2000);
     } catch (error: any) {
