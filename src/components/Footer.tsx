@@ -86,13 +86,22 @@ export const Footer = () => {
             </span>
             
             {isAdmin && (
-              <Link 
-                to="/admin/parceiros"
-                className="flex items-center gap-1 text-primary-foreground/40 hover:text-primary-foreground/60 text-xs transition-colors"
-              >
-                <Settings className="w-3 h-3" />
-                Admin
-              </Link>
+              <div className="flex items-center gap-3">
+                <Link 
+                  to="/admin/parceiros"
+                  className="flex items-center gap-1 text-primary-foreground/40 hover:text-primary-foreground/60 text-xs transition-colors"
+                >
+                  <Settings className="w-3 h-3" />
+                  Parceiros
+                </Link>
+                <Link 
+                  to="/admin/usuarios"
+                  className="flex items-center gap-1 text-primary-foreground/40 hover:text-primary-foreground/60 text-xs transition-colors"
+                >
+                  <Settings className="w-3 h-3" />
+                  Usuários
+                </Link>
+              </div>
             )}
           </div>
         </div>

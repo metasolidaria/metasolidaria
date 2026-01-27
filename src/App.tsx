@@ -7,6 +7,7 @@ import Index from "./pages/Index";
 import GroupPage from "./pages/GroupPage";
 import ResetPassword from "./pages/ResetPassword";
 import AdminPartners from "./pages/AdminPartners";
+import AdminUsers from "./pages/AdminUsers";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 import { InstallPWAPrompt } from "./components/InstallPWAPrompt";
@@ -24,6 +25,7 @@ const App = () => (
           <Route path="/grupo/:id" element={<GroupPage />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/admin/parceiros" element={<AdminPartners />} />
+          <Route path="/admin/usuarios" element={<AdminUsers />} />
           <Route path="/perfil" element={<Profile />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
