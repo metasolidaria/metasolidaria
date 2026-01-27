@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Mail, Copy, Check, Send } from "lucide-react";
+import { X, Mail, Copy, Check, Send, Loader2 } from "lucide-react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { useGroups } from "@/hooks/useGroups";
 import { useToast } from "@/hooks/use-toast";
+import { useMutation } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 interface InviteMemberModalProps {
   open: boolean;
@@ -19,6 +21,31 @@ export const InviteMemberModal = ({ open, onOpenChange, groupId }: InviteMemberM
   const [email, setEmail] = useState("");
   const [copied, setCopied] = useState(false);
 
+  // Mutation to create a link-based invitation
+  const createLinkInvitation = useMutation({
+    mutationFn: async (gId: string) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        throw new Error("Você precisa estar logado");
+      }
+
+      const { data, error } = await supabase
+        .from("group_invitations")
+        .insert([{ 
+          group_id: gId, 
+          invited_by: user.id,
+          invite_type: 'link',
+          email: null
+        }])
+        .select('invite_code')
+        .single();
+
+      if (error) throw error;
+      return data.invite_code;
+    },
+  });
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -29,16 +56,27 @@ export const InviteMemberModal = ({ open, onOpenChange, groupId }: InviteMemberM
     onOpenChange(false);
   };
 
-  const handleCopyLink = () => {
-    const baseUrl = "https://metasolidaria.com.br";
-    const inviteUrl = `${baseUrl}/grupo/${groupId}`;
-    navigator.clipboard.writeText(inviteUrl);
-    setCopied(true);
-    toast({
-      title: "Link copiado! 📋",
-      description: "Compartilhe o link com a pessoa que deseja convidar.",
-    });
-    setTimeout(() => setCopied(false), 2000);
+  const handleCopyLink = async () => {
+    if (!groupId) return;
+
+    try {
+      const inviteCode = await createLinkInvitation.mutateAsync(groupId);
+      const baseUrl = "https://metasolidaria.com.br";
+      const inviteUrl = `${baseUrl}?invite=${inviteCode}`;
+      await navigator.clipboard.writeText(inviteUrl);
+      setCopied(true);
+      toast({
+        title: "Link copiado! 📋",
+        description: "Compartilhe o link com a pessoa que deseja convidar.",
+      });
+      setTimeout(() => setCopied(false), 2000);
+    } catch (error: any) {
+      toast({
+        title: "Erro ao gerar link",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -116,8 +154,14 @@ export const InviteMemberModal = ({ open, onOpenChange, groupId }: InviteMemberM
                     variant="outline"
                     className="w-full"
                     onClick={handleCopyLink}
+                    disabled={createLinkInvitation.isPending}
                   >
-                    {copied ? (
+                    {createLinkInvitation.isPending ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Gerando Link...
+                      </>
+                    ) : copied ? (
                       <>
                         <Check className="w-4 h-4 mr-2 text-primary" />
                         Link Copiado!
