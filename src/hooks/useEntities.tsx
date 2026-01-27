@@ -6,7 +6,6 @@ export interface Entity {
   id: string;
   name: string;
   city: string;
-  phone: string | null;
   created_at: string;
 }
 
@@ -17,8 +16,9 @@ export const useEntities = () => {
   const { data: entities = [], isLoading } = useQuery({
     queryKey: ["entities"],
     queryFn: async () => {
+      // Use public view that excludes phone numbers for privacy
       const { data, error } = await supabase
-        .from("entities")
+        .from("entities_public")
         .select("*")
         .order("name");
 

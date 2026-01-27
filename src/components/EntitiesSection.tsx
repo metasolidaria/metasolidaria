@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
-import { Building2, Plus, MapPin, Loader2, Search, Phone } from "lucide-react";
+import { Building2, Plus, MapPin, Loader2, Search } from "lucide-react";
 import { Button } from "./ui/button";
 import { Card, CardContent } from "./ui/card";
 import { Input } from "./ui/input";
@@ -144,12 +144,6 @@ export const EntitiesSection = ({ onRequireAuth }: EntitiesSectionProps) => {
                           <MapPin className="w-3 h-3 flex-shrink-0" />
                           <span className="truncate">{entity.city}</span>
                         </div>
-                        {entity.phone && (
-                          <div className="flex items-center gap-1 text-sm text-muted-foreground mt-1">
-                            <Phone className="w-3 h-3 flex-shrink-0" />
-                            <span className="truncate">{entity.phone}</span>
-                          </div>
-                        )}
                       </div>
                     </div>
                   </CardContent>

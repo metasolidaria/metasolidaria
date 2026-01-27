@@ -22,28 +22,23 @@ export const useInviteLink = () => {
 
   const inviteCode = searchParams.get("invite");
 
-  // Fetch invite info when code is detected
+  // Fetch invite info when code is detected using secure RPC
   const { data: fetchedInviteInfo, isLoading: inviteInfoLoading } = useQuery({
     queryKey: ["inviteInfo", inviteCode],
     queryFn: async () => {
       if (!inviteCode) return null;
 
-      // Fetch invitation with group info
+      // Use secure RPC function to validate invite code
       const { data, error } = await supabase
-        .from("group_invitations")
-        .select("group_id, invite_code, groups:group_id(name)")
-        .eq("invite_code", inviteCode)
-        .eq("status", "pending")
-        .eq("invite_type", "link")
-        .gt("expires_at", new Date().toISOString())
-        .maybeSingle() as { data: any, error: any };
+        .rpc("validate_invite_code", { _invite_code: inviteCode });
 
-      if (error || !data) return null;
+      if (error || !data || data.length === 0) return null;
 
+      const result = data[0];
       return {
-        groupId: data.group_id,
-        groupName: data.groups?.name || "Grupo",
-        inviteCode: data.invite_code,
+        groupId: result.group_id,
+        groupName: result.group_name || "Grupo",
+        inviteCode: inviteCode,
       } as InviteInfo;
     },
     enabled: !!inviteCode,

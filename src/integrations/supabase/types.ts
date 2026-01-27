@@ -395,6 +395,13 @@ export type Database = {
             referencedRelation: "entities"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "groups_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: false
+            referencedRelation: "entities_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       member_commitments: {
@@ -530,6 +537,27 @@ export type Database = {
       }
     }
     Views: {
+      entities_public: {
+        Row: {
+          city: string | null
+          created_at: string | null
+          id: string | null
+          name: string | null
+        }
+        Insert: {
+          city?: string | null
+          created_at?: string | null
+          id?: string | null
+          name?: string | null
+        }
+        Update: {
+          city?: string | null
+          created_at?: string | null
+          id?: string | null
+          name?: string | null
+        }
+        Relationships: []
+      }
       group_stats: {
         Row: {
           group_id: string | null
@@ -565,6 +593,13 @@ export type Database = {
             columns: ["entity_id"]
             isOneToOne: false
             referencedRelation: "entities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "groups_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: false
+            referencedRelation: "entities_public"
             referencedColumns: ["id"]
           },
         ]
@@ -729,6 +764,14 @@ export type Database = {
         }[]
       }
       reject_join_request: { Args: { _request_id: string }; Returns: undefined }
+      validate_invite_code: {
+        Args: { _invite_code: string }
+        Returns: {
+          group_id: string
+          group_name: string
+          is_valid: boolean
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
