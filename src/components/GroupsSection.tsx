@@ -214,7 +214,11 @@ export const GroupsSection = ({
             delay: index * 0.1
           }} className="bg-card rounded-2xl overflow-hidden shadow-soft hover:shadow-glow transition-all duration-300 hover:-translate-y-1 group">
                   <div className="relative h-40 overflow-hidden">
-                    <img src={placeholderImages[index % placeholderImages.length]} alt={group.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                    <img 
+                      src={group.image_url || placeholderImages[index % placeholderImages.length]} 
+                      alt={group.name} 
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" 
+                    />
                     <div className="absolute inset-0 bg-gradient-to-t from-foreground/60 to-transparent" />
                     <div className="absolute top-3 left-3 flex gap-2">
                       {isGroupLeader(group.leader_id) && (

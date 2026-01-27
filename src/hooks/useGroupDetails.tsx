@@ -292,6 +292,7 @@ export const useGroupDetails = (groupId: string | undefined) => {
       leader_whatsapp: string;
       end_date: string;
       entity_id: string | null;
+      image_url?: string | null;
     }) => {
       if (!groupId) throw new Error("Grupo não encontrado");
 

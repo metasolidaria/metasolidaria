@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Settings, Lock, Globe, User, Phone, FileText, CalendarIcon } from "lucide-react";
+import { X, Settings, Lock, Globe, User, Phone, FileText, CalendarIcon, Camera, Loader2, Trash2 } from "lucide-react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
@@ -12,6 +12,9 @@ import { EntitySelect } from "./EntitySelect";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
+import { compressImage, isValidImageFile, formatFileSize } from "@/lib/imageCompression";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface Group {
   id: string;
@@ -24,6 +27,7 @@ interface Group {
   leader_whatsapp: string | null;
   end_date: string | null;
   entity_id: string | null;
+  image_url?: string | null;
 }
 
 interface EditGroupModalProps {
@@ -38,6 +42,7 @@ interface EditGroupModalProps {
     leader_whatsapp: string;
     end_date: string;
     entity_id: string | null;
+    image_url?: string | null;
   }) => void;
   isPending?: boolean;
 }
@@ -60,6 +65,11 @@ export const EditGroupModal = ({
   onSave,
   isPending = false 
 }: EditGroupModalProps) => {
+  const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  
   const [formData, setFormData] = useState({
     donationType: group.donation_type,
     description: group.description || "",
@@ -68,6 +78,7 @@ export const EditGroupModal = ({
     leaderWhatsapp: group.leader_whatsapp || "",
     endDate: group.end_date ? new Date(group.end_date) : new Date("2026-12-31"),
     entityId: group.entity_id,
+    imageUrl: group.image_url || null,
   });
 
   useEffect(() => {
@@ -80,9 +91,87 @@ export const EditGroupModal = ({
         leaderWhatsapp: group.leader_whatsapp || "",
         endDate: group.end_date ? new Date(group.end_date) : new Date("2026-12-31"),
         entityId: group.entity_id,
+        imageUrl: group.image_url || null,
       });
+      setPreviewUrl(group.image_url || null);
     }
   }, [open, group]);
+
+  const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!isValidImageFile(file)) {
+      toast({
+        title: "Formato inválido",
+        description: "Por favor, selecione uma imagem JPG, PNG ou WebP.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Limite de 10MB para o arquivo original
+    if (file.size > 10 * 1024 * 1024) {
+      toast({
+        title: "Arquivo muito grande",
+        description: "A imagem deve ter no máximo 10MB.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      // Comprimir imagem
+      const compressedBlob = await compressImage(file, 800, 600, 0.8);
+      console.log(`Imagem comprimida: ${formatFileSize(file.size)} → ${formatFileSize(compressedBlob.size)}`);
+
+      // Gerar nome único
+      const fileName = `${group.id}-${Date.now()}.jpg`;
+      
+      // Upload para o storage
+      const { error: uploadError } = await supabase.storage
+        .from('group-images')
+        .upload(fileName, compressedBlob, {
+          contentType: 'image/jpeg',
+          upsert: true,
+        });
+
+      if (uploadError) throw uploadError;
+
+      // Obter URL pública
+      const { data: urlData } = supabase.storage
+        .from('group-images')
+        .getPublicUrl(fileName);
+
+      const publicUrl = urlData.publicUrl;
+      
+      setFormData(prev => ({ ...prev, imageUrl: publicUrl }));
+      setPreviewUrl(publicUrl);
+      
+      toast({
+        title: "Imagem enviada!",
+        description: `Comprimida para ${formatFileSize(compressedBlob.size)}`,
+      });
+    } catch (error) {
+      console.error('Erro no upload:', error);
+      toast({
+        title: "Erro no upload",
+        description: "Não foi possível enviar a imagem. Tente novamente.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setFormData(prev => ({ ...prev, imageUrl: null }));
+    setPreviewUrl(null);
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -95,6 +184,7 @@ export const EditGroupModal = ({
       leader_whatsapp: formData.leaderWhatsapp,
       end_date: format(formData.endDate, "yyyy-MM-dd"),
       entity_id: formData.entityId,
+      image_url: formData.imageUrl,
     });
   };
 
@@ -138,6 +228,67 @@ export const EditGroupModal = ({
 
               <form onSubmit={handleSubmit} className="p-6 space-y-5 overflow-y-auto">
                 <div className="space-y-4">
+                  {/* Upload de Imagem */}
+                  <div className="space-y-2">
+                    <Label className="text-foreground font-medium">
+                      Foto do Grupo
+                    </Label>
+                    <div className="flex items-center gap-4">
+                      <div className="relative w-24 h-16 rounded-lg overflow-hidden bg-muted border-2 border-dashed border-border flex items-center justify-center">
+                        {previewUrl ? (
+                          <img 
+                            src={previewUrl} 
+                            alt="Preview" 
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <Camera className="w-6 h-6 text-muted-foreground" />
+                        )}
+                        {isUploading && (
+                          <div className="absolute inset-0 bg-background/80 flex items-center justify-center">
+                            <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-1 space-y-2">
+                        <input
+                          ref={fileInputRef}
+                          type="file"
+                          accept="image/jpeg,image/png,image/webp"
+                          onChange={handleImageSelect}
+                          className="hidden"
+                          disabled={isUploading}
+                        />
+                        <div className="flex gap-2">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => fileInputRef.current?.click()}
+                            disabled={isUploading}
+                          >
+                            <Camera className="w-4 h-4 mr-1" />
+                            {previewUrl ? "Trocar" : "Enviar"}
+                          </Button>
+                          {previewUrl && (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={handleRemoveImage}
+                              disabled={isUploading}
+                            >
+                              <Trash2 className="w-4 h-4 text-destructive" />
+                            </Button>
+                          )}
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          JPG, PNG ou WebP. Máx 10MB (comprimida automaticamente)
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
                   <div className="space-y-2">
                     <Label htmlFor="leaderName" className="text-foreground font-medium">
                       Nome do Líder
@@ -300,7 +451,7 @@ export const EditGroupModal = ({
                     type="submit" 
                     variant="hero" 
                     className="flex-1"
-                    disabled={!formData.donationType || isPending}
+                    disabled={!formData.donationType || isPending || isUploading}
                   >
                     {isPending ? "Salvando..." : "Salvar Alterações"}
                   </Button>
