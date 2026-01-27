@@ -78,18 +78,27 @@ export const GroupsSection = ({
 
   // Filtra os grupos baseado na seleção e cidade
   const filteredGroups = useMemo(() => {
-    // Reset page when filters change
+    const hasSearchQuery = searchCity.trim().length > 0;
+    
     return groups?.filter(group => {
       // Filtro de membro
       if (filter === "mine" && !isUserMember(group.id)) {
         return false;
       }
+      
+      // Em "Meus Grupos": grupos privados só aparecem se houver busca ativa
+      // Isso evita sobrecarregar a página com muitos grupos privados
+      if (filter === "mine" && group.is_private && !hasSearchQuery) {
+        return false;
+      }
+      
       // Filtro de cidade
-      if (searchCity.trim()) {
+      if (hasSearchQuery) {
         const normalizedSearch = searchCity.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
         const normalizedCity = group.city.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
         return normalizedCity.includes(normalizedSearch);
       }
+      
       return true;
     });
   }, [groups, filter, searchCity, userMemberships]);
