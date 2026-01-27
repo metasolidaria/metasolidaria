@@ -572,6 +572,7 @@ export type Database = {
       groups_search: {
         Row: {
           city: string | null
+          description: string | null
           donation_type: string | null
           id: string | null
           is_private: boolean | null
@@ -580,6 +581,7 @@ export type Database = {
         }
         Insert: {
           city?: string | null
+          description?: string | null
           donation_type?: string | null
           id?: string | null
           is_private?: boolean | null
@@ -588,6 +590,7 @@ export type Database = {
         }
         Update: {
           city?: string | null
+          description?: string | null
           donation_type?: string | null
           id?: string | null
           is_private?: boolean | null
