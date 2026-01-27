@@ -121,31 +121,34 @@ export type Database = {
       group_invitations: {
         Row: {
           created_at: string
-          email: string
+          email: string | null
           expires_at: string
           group_id: string
           id: string
           invite_code: string
+          invite_type: string | null
           invited_by: string
           status: string
         }
         Insert: {
           created_at?: string
-          email: string
+          email?: string | null
           expires_at?: string
           group_id: string
           id?: string
           invite_code?: string
+          invite_type?: string | null
           invited_by: string
           status?: string
         }
         Update: {
           created_at?: string
-          email?: string
+          email?: string | null
           expires_at?: string
           group_id?: string
           id?: string
           invite_code?: string
+          invite_type?: string | null
           invited_by?: string
           status?: string
         }
@@ -544,6 +547,10 @@ export type Database = {
     }
     Functions: {
       accept_group_invitation: {
+        Args: { _invite_code: string }
+        Returns: string
+      }
+      accept_link_invitation: {
         Args: { _invite_code: string }
         Returns: string
       }
