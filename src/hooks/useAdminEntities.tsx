@@ -9,6 +9,8 @@ export interface AdminEntity {
   phone: string | null;
   created_by: string | null;
   created_at: string;
+  total_donated: number;
+  groups_count: number;
 }
 
 export const useAdminEntities = () => {
@@ -18,13 +20,53 @@ export const useAdminEntities = () => {
   const { data: entities = [], isLoading } = useQuery({
     queryKey: ["admin-entities"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // Fetch entities
+      const { data: entitiesData, error: entitiesError } = await supabase
         .from("entities")
         .select("*")
         .order("name");
 
-      if (error) throw error;
-      return data as AdminEntity[];
+      if (entitiesError) throw entitiesError;
+
+      // Fetch groups with stats to calculate donations per entity
+      const { data: groupsData, error: groupsError } = await supabase
+        .from("groups")
+        .select("entity_id, id");
+
+      if (groupsError) throw groupsError;
+
+      // Fetch donation stats from group_stats
+      const { data: statsData, error: statsError } = await supabase
+        .from("group_stats")
+        .select("group_id, total_donations");
+
+      if (statsError) throw statsError;
+
+      // Create a map of group_id -> total_donations
+      const donationsByGroup = new Map<string, number>();
+      statsData?.forEach(stat => {
+        if (stat.group_id) {
+          donationsByGroup.set(stat.group_id, Number(stat.total_donations) || 0);
+        }
+      });
+
+      // Calculate totals per entity
+      const entityStats = new Map<string, { total: number; count: number }>();
+      groupsData?.forEach(group => {
+        if (group.entity_id) {
+          const current = entityStats.get(group.entity_id) || { total: 0, count: 0 };
+          current.total += donationsByGroup.get(group.id) || 0;
+          current.count += 1;
+          entityStats.set(group.entity_id, current);
+        }
+      });
+
+      // Merge entities with stats
+      return entitiesData.map(entity => ({
+        ...entity,
+        total_donated: entityStats.get(entity.id)?.total || 0,
+        groups_count: entityStats.get(entity.id)?.count || 0,
+      })) as AdminEntity[];
     },
   });
 

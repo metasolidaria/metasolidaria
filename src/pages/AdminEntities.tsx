@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { CreateEntityModal } from "@/components/admin/CreateEntityModal";
 import { EditEntityModal } from "@/components/admin/EditEntityModal";
-import { Search, Plus, Pencil, Trash2, Building2, Phone, MapPin, Loader2 } from "lucide-react";
+import { Search, Plus, Pencil, Trash2, Building2, Phone, MapPin, Loader2, Gift, Users } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -134,6 +134,8 @@ const AdminEntities = () => {
                 <TableRow>
                   <TableHead>Nome</TableHead>
                   <TableHead>Cidade</TableHead>
+                  <TableHead>Grupos</TableHead>
+                  <TableHead>Doações</TableHead>
                   <TableHead>Telefone</TableHead>
                   <TableHead>Cadastrado em</TableHead>
                   <TableHead className="w-[100px]">Ações</TableHead>
@@ -142,13 +144,13 @@ const AdminEntities = () => {
               <TableBody>
                 {isLoading ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center py-8">
+                    <TableCell colSpan={7} className="text-center py-8">
                       <Loader2 className="w-6 h-6 animate-spin mx-auto text-muted-foreground" />
                     </TableCell>
                   </TableRow>
                 ) : filteredEntities.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                       {search ? "Nenhuma entidade encontrada" : "Nenhuma entidade cadastrada"}
                     </TableCell>
                   </TableRow>
@@ -160,6 +162,18 @@ const AdminEntities = () => {
                         <div className="flex items-center gap-1 text-muted-foreground">
                           <MapPin className="w-3 h-3" />
                           {entity.city}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1 text-muted-foreground">
+                          <Users className="w-3 h-3" />
+                          {entity.groups_count}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1 font-medium text-primary">
+                          <Gift className="w-3 h-3" />
+                          {entity.total_donated.toLocaleString("pt-BR")}
                         </div>
                       </TableCell>
                       <TableCell>
