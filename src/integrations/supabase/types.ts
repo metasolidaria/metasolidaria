@@ -835,6 +835,22 @@ export type Database = {
           updated_at: string
         }[]
       }
+      get_admin_invitations: {
+        Args: never
+        Returns: {
+          created_at: string
+          email: string
+          expires_at: string
+          group_id: string
+          group_name: string
+          id: string
+          invite_code: string
+          invite_type: string
+          invited_by: string
+          invited_by_name: string
+          status: string
+        }[]
+      }
       get_admin_users: {
         Args: never
         Returns: {
@@ -849,6 +865,16 @@ export type Database = {
           user_created_at: string
           user_id: string
           whatsapp: string
+        }[]
+      }
+      get_invitation_stats: {
+        Args: never
+        Returns: {
+          acceptance_rate: number
+          accepted_invitations: number
+          expired_invitations: number
+          pending_invitations: number
+          total_invitations: number
         }[]
       }
       has_role: {
@@ -873,6 +899,11 @@ export type Database = {
         }[]
       }
       reject_join_request: { Args: { _request_id: string }; Returns: undefined }
+      renew_invitation: { Args: { _invitation_id: string }; Returns: string }
+      revoke_invitation: {
+        Args: { _invitation_id: string }
+        Returns: undefined
+      }
       validate_invite_code: {
         Args: { _invite_code: string }
         Returns: {
