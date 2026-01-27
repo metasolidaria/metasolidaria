@@ -53,8 +53,7 @@ export const InviteMemberModal = ({ open, onOpenChange, groupId, groupName, grou
 
     try {
       const inviteCode = await createLinkInvitation.mutateAsync(groupId);
-      const baseUrl = window.location.origin;
-      const inviteUrl = `${baseUrl}?invite=${inviteCode}`;
+      const inviteUrl = `https://metasolidaria.com.br?invite=${inviteCode}`;
       const inviteText = generateInviteText(inviteUrl);
       
       await navigator.clipboard.writeText(inviteText);
@@ -78,8 +77,7 @@ export const InviteMemberModal = ({ open, onOpenChange, groupId, groupName, grou
 
     try {
       const inviteCode = await createLinkInvitation.mutateAsync(groupId);
-      const baseUrl = window.location.origin;
-      const inviteUrl = `${baseUrl}?invite=${inviteCode}`;
+      const inviteUrl = `https://metasolidaria.com.br?invite=${inviteCode}`;
       const inviteText = generateInviteText(inviteUrl);
       
       const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(inviteText)}`;
