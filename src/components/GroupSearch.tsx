@@ -47,17 +47,18 @@ export const GroupSearch = ({ onRequireAuth, userMemberships }: GroupSearchProps
     setHasSearched(true);
 
     try {
-      // Buscar todos os grupos pelo nome
+      // Buscar todos os grupos pelo nome usando view pública que ignora RLS
       const { data, error } = await supabase
-        .from("groups")
+        .from("groups_search" as any)
         .select("id, name, city, leader_name, is_private")
         .ilike("name", `%${searchQuery.trim()}%`)
         .limit(10);
 
       if (error) throw error;
 
-      // Filtrar grupos dos quais o usuário já é membro
-      const filteredResults = (data || []).filter(
+      // Cast para o tipo correto e filtrar grupos dos quais o usuário já é membro
+      const results = (data || []) as unknown as SearchGroup[];
+      const filteredResults = results.filter(
         (group) => !userMemberships.includes(group.id)
       );
 

@@ -110,6 +110,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "goal_progress_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "groups_search"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "goal_progress_member_id_fkey"
             columns: ["member_id"]
             isOneToOne: false
@@ -174,6 +181,13 @@ export type Database = {
             referencedRelation: "groups_public"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "group_invitations_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "groups_search"
+            referencedColumns: ["id"]
+          },
         ]
       }
       group_join_requests: {
@@ -230,6 +244,13 @@ export type Database = {
             columns: ["group_id"]
             isOneToOne: false
             referencedRelation: "groups_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "group_join_requests_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "groups_search"
             referencedColumns: ["id"]
           },
         ]
@@ -303,6 +324,13 @@ export type Database = {
             columns: ["group_id"]
             isOneToOne: false
             referencedRelation: "groups_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "group_members_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "groups_search"
             referencedColumns: ["id"]
           },
         ]
@@ -540,6 +568,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      groups_search: {
+        Row: {
+          city: string | null
+          donation_type: string | null
+          id: string | null
+          is_private: boolean | null
+          leader_name: string | null
+          name: string | null
+        }
+        Insert: {
+          city?: string | null
+          donation_type?: string | null
+          id?: string | null
+          is_private?: boolean | null
+          leader_name?: string | null
+          name?: string | null
+        }
+        Update: {
+          city?: string | null
+          donation_type?: string | null
+          id?: string | null
+          is_private?: boolean | null
+          leader_name?: string | null
+          name?: string | null
+        }
+        Relationships: []
       }
       hero_stats_public: {
         Row: {
