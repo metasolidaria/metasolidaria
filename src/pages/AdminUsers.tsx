@@ -241,13 +241,14 @@ const AdminUsers = () => {
                   <TableHead>Cidade</TableHead>
                   <TableHead>Papéis</TableHead>
                   <TableHead>Cadastro</TableHead>
+                  <TableHead>Último Login</TableHead>
                   <TableHead className="w-[180px]">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredUsers?.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                       Nenhum usuário encontrado
                     </TableCell>
                   </TableRow>
@@ -278,6 +279,11 @@ const AdminUsers = () => {
                       </TableCell>
                       <TableCell className="text-muted-foreground">
                         {format(new Date(u.created_at), "dd/MM/yyyy", { locale: ptBR })}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {u.last_sign_in_at 
+                          ? format(new Date(u.last_sign_in_at), "dd/MM/yyyy HH:mm", { locale: ptBR })
+                          : "-"}
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-1">
