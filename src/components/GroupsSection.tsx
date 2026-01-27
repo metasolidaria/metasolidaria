@@ -7,6 +7,7 @@ import { Button } from "./ui/button";
 import { CreateGroupModal } from "./CreateGroupModal";
 import { InviteMemberModal } from "./InviteMemberModal";
 import { CitySearchAutocomplete } from "./CitySearchAutocomplete";
+import { PrivateGroupSearch } from "./PrivateGroupSearch";
 import { useGroups } from "@/hooks/useGroups";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -78,27 +79,17 @@ export const GroupsSection = ({
 
   // Filtra os grupos baseado na seleção e cidade
   const filteredGroups = useMemo(() => {
-    const hasSearchQuery = searchCity.trim().length > 0;
-    
     return groups?.filter(group => {
       // Filtro de membro
       if (filter === "mine" && !isUserMember(group.id)) {
         return false;
       }
-      
-      // Em "Meus Grupos": grupos privados só aparecem se houver busca ativa
-      // Isso evita sobrecarregar a página com muitos grupos privados
-      if (filter === "mine" && group.is_private && !hasSearchQuery) {
-        return false;
-      }
-      
       // Filtro de cidade
-      if (hasSearchQuery) {
+      if (searchCity.trim()) {
         const normalizedSearch = searchCity.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
         const normalizedCity = group.city.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
         return normalizedCity.includes(normalizedSearch);
       }
-      
       return true;
     });
   }, [groups, filter, searchCity, userMemberships]);
@@ -185,24 +176,31 @@ export const GroupsSection = ({
         </motion.div>
 
         {/* Filtros */}
-        <div className="flex flex-col sm:flex-row gap-4 mb-8">
-          {user && <div className="flex gap-2">
-              <Button variant={filter === "all" ? "default" : "outline"} size="sm" onClick={() => setFilter("all")}>
-                <Globe className="w-4 h-4 mr-1" />
-                Todos os Grupos
-              </Button>
-              <Button variant={filter === "mine" ? "default" : "outline"} size="sm" onClick={() => setFilter("mine")}>
-                <Users className="w-4 h-4 mr-1" />
-                Meus Grupos
-                {userMemberships.length > 0 && <span className="ml-1 bg-primary-foreground/20 px-1.5 py-0.5 rounded-full text-xs">
-                    {userMemberships.length}
-                  </span>}
-              </Button>
-            </div>}
-          
-          {/* Busca por cidade */}
-          <div className="w-full sm:w-64">
-            <CitySearchAutocomplete value={searchCity} onChange={setSearchCity} placeholder="Filtrar por cidade..." />
+        <div className="flex flex-col gap-4 mb-8">
+          <div className="flex flex-col sm:flex-row gap-4">
+            {user && <div className="flex gap-2">
+                <Button variant={filter === "all" ? "default" : "outline"} size="sm" onClick={() => setFilter("all")}>
+                  <Globe className="w-4 h-4 mr-1" />
+                  Todos os Grupos
+                </Button>
+                <Button variant={filter === "mine" ? "default" : "outline"} size="sm" onClick={() => setFilter("mine")}>
+                  <Users className="w-4 h-4 mr-1" />
+                  Meus Grupos
+                  {userMemberships.length > 0 && <span className="ml-1 bg-primary-foreground/20 px-1.5 py-0.5 rounded-full text-xs">
+                      {userMemberships.length}
+                    </span>}
+                </Button>
+              </div>}
+            
+            {/* Busca por cidade */}
+            <div className="w-full sm:w-64">
+              <CitySearchAutocomplete value={searchCity} onChange={setSearchCity} placeholder="Filtrar por cidade..." />
+            </div>
+          </div>
+
+          {/* Busca de grupos privados */}
+          <div className="w-full sm:max-w-md">
+            <PrivateGroupSearch onRequireAuth={onRequireAuth} userMemberships={userMemberships} />
           </div>
         </div>
 
