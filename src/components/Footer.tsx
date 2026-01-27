@@ -99,13 +99,18 @@ export const Footer = () => {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="bg-background">
                   <DropdownMenuItem asChild>
-                    <Link to="/admin/parceiros" className="cursor-pointer">
-                      Parceiros
+                    <Link to="/admin/grupos" className="cursor-pointer">
+                      Grupos
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link to="/admin/usuarios" className="cursor-pointer">
                       Usuários
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/admin/parceiros" className="cursor-pointer">
+                      Parceiros
                     </Link>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
