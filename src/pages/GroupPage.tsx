@@ -79,6 +79,9 @@ export default function GroupPage() {
     updateMemberGoal,
   } = useGroupDetails(id);
 
+  // Hook for join requests - MUST be called before any early returns
+  const { userRequest, createRequest, isLoading: requestsLoading } = useJoinRequests(id);
+
   const handleLeaveGroup = () => {
     leaveGroup.mutate(undefined, {
       onSuccess: () => {
@@ -117,8 +120,6 @@ export default function GroupPage() {
     );
   }
 
-  // Hook for join requests
-  const { userRequest, createRequest, isLoading: requestsLoading } = useJoinRequests(id);
 
   // Show limited view for non-members of private groups
   if (!hasFullAccess && group.is_private) {
