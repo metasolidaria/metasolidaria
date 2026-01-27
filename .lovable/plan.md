@@ -1,44 +1,132 @@
 
-
-## Alterar Expiração de Convites para 30 Dias
+## Administração de Entidades Beneficiárias
 
 ### Objetivo
-Modificar o tempo de expiração dos convites de grupo de 7 para 30 dias, dando mais tempo para os convidados aceitarem.
+Criar uma página administrativa em `/admin/entidades` para gerenciamento completo das entidades beneficiárias, permitindo visualizar, adicionar, editar e excluir registros.
 
 ---
 
-### O que será alterado
+### Funcionalidades
 
-**Banco de Dados**
-- Atualizar o valor padrão da coluna `expires_at` na tabela `group_invitations`
-- Mudar de `now() + '7 days'` para `now() + '30 days'`
+| Funcionalidade | Descrição |
+|----------------|-----------|
+| Listar entidades | Tabela com todas as entidades (nome, cidade, telefone, data de criação) |
+| Busca | Filtro por nome ou cidade |
+| Adicionar | Modal para cadastrar nova entidade |
+| Editar | Modal para atualizar dados existentes |
+| Excluir | Confirmação antes de remover |
+
+---
+
+### Arquivos a Criar
+
+**1. Hook de dados**
+`src/hooks/useAdminEntities.tsx`
+- Query para buscar todas as entidades (acesso direto à tabela base `entities` para admins)
+- Mutations: criar, atualizar e excluir entidades
+
+**2. Página principal**
+`src/pages/AdminEntities.tsx`
+- Proteção de acesso (apenas admins)
+- Tabela com colunas: Nome, Cidade, Telefone, Data, Ações
+- Busca por texto
+- Botão "Nova Entidade"
+
+**3. Modal de edição**
+`src/components/admin/EditEntityModal.tsx`
+- Formulário com Nome, Cidade (autocomplete), Telefone
+- Pré-populado com dados existentes
+
+**4. Modal de criação**
+`src/components/admin/CreateEntityModal.tsx`
+- Formulário para nova entidade
+- Campos: Nome, Cidade, Telefone (opcional)
+
+---
+
+### Alterações em Arquivos Existentes
+
+**Rotas** - `src/App.tsx`
+- Adicionar rota `/admin/entidades`
+
+**Navegação** - `src/components/Footer.tsx`
+- Adicionar link "Entidades" no dropdown Admin
+
+---
+
+### Alterações no Banco de Dados
+
+**Política RLS para admins visualizarem**
+```sql
+CREATE POLICY "Admins can view all entities"
+ON public.entities FOR SELECT
+USING (is_admin(auth.uid()));
+```
+
+**Política RLS para admins atualizarem**
+```sql
+CREATE POLICY "Admins can update any entity"
+ON public.entities FOR UPDATE
+USING (is_admin(auth.uid()));
+```
+
+**Política RLS para admins excluírem**
+```sql
+CREATE POLICY "Admins can delete any entity"
+ON public.entities FOR DELETE
+USING (is_admin(auth.uid()));
+```
 
 ---
 
 ### Detalhes Técnicos
 
-A migração SQL executará:
+**Estrutura da tabela entities (existente)**
+- `id` (uuid) - identificador único
+- `name` (text) - nome da entidade
+- `city` (text) - cidade
+- `phone` (text, opcional) - telefone de contato
+- `created_by` (uuid) - usuário que cadastrou
+- `created_at` (timestamp) - data de criação
 
-```sql
-ALTER TABLE public.group_invitations 
-ALTER COLUMN expires_at 
-SET DEFAULT (now() + '30 days'::interval);
+**Interface AdminEntity**
+```typescript
+interface AdminEntity {
+  id: string;
+  name: string;
+  city: string;
+  phone: string | null;
+  created_by: string | null;
+  created_at: string;
+}
+```
+
+**Padrões seguidos**
+- Mesmo layout das páginas AdminPartners e AdminUsers
+- Uso de CityAutocomplete para seleção de cidade
+- AlertDialog para confirmação de exclusão
+- Toast notifications para feedback
+
+---
+
+### Fluxo de Navegação
+
+```text
+Rodapé (Admin Dropdown)
+        │
+        └── Entidades (/admin/entidades)
+                │
+                ├── [Listar] Tabela com todas entidades
+                ├── [Buscar] Input de pesquisa
+                ├── [Nova] → Modal CreateEntityModal
+                ├── [Editar] → Modal EditEntityModal
+                └── [Excluir] → AlertDialog de confirmação
 ```
 
 ---
 
-### Comportamento
-
-| Aspecto | Antes | Depois |
-|---------|-------|--------|
-| Novos convites | Expiram em 7 dias | Expiram em 30 dias |
-| Convites existentes | Mantêm data original | Mantêm data original |
-| Validação | Sem alteração | Sem alteração |
-
----
-
-### Impacto
-- Apenas novos convites criados após a migração terão expiração de 30 dias
-- Convites já existentes continuarão com suas datas de expiração originais
-- Nenhuma alteração de código é necessária (apenas schema do banco)
-
+### Segurança
+- Verificação de admin via `useIsAdmin()` hook
+- Redirect para home se não for admin
+- Políticas RLS no banco garantem acesso apenas a admins
+- Dados sensíveis (telefone) visíveis apenas no painel admin
