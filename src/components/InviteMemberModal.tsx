@@ -1,10 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Mail, Copy, Check, Send, Loader2, MessageCircle } from "lucide-react";
+import { X, Mail, Copy, Check, Loader2, MessageCircle } from "lucide-react";
 import { Button } from "./ui/button";
-import { Input } from "./ui/input";
-import { Label } from "./ui/label";
-import { useGroups } from "@/hooks/useGroups";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -18,12 +15,9 @@ interface InviteMemberModalProps {
 }
 
 export const InviteMemberModal = ({ open, onOpenChange, groupId, groupName, groupDescription }: InviteMemberModalProps) => {
-  const { inviteToGroup } = useGroups();
   const { toast } = useToast();
-  const [email, setEmail] = useState("");
   const [copied, setCopied] = useState(false);
 
-  // Mutation to create a link-based invitation
   const createLinkInvitation = useMutation({
     mutationFn: async (gId: string) => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -47,16 +41,6 @@ export const InviteMemberModal = ({ open, onOpenChange, groupId, groupName, grou
       return data.invite_code;
     },
   });
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!groupId || !email) return;
-
-    inviteToGroup.mutate({ groupId, email });
-    setEmail("");
-    onOpenChange(false);
-  };
 
   const generateInviteText = (inviteUrl: string) => {
     return groupDescription 
@@ -143,113 +127,67 @@ export const InviteMemberModal = ({ open, onOpenChange, groupId, groupName, grou
                   Convidar Membro
                 </h2>
                 <p className="text-primary-foreground/80 mt-1">
-                  Envie um convite para o grupo privado
+                  Compartilhe o link de convite para o grupo
                 </p>
               </div>
 
-              <form onSubmit={handleSubmit} className="p-6 space-y-5">
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="email" className="text-foreground font-medium">
-                      Email do convidado
-                    </Label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                      <Input
-                        id="email"
-                        type="email"
-                        placeholder="email@exemplo.com"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        className="pl-11"
-                        required
-                      />
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      O convite será registrado para este email
-                    </p>
-                  </div>
+              <div className="p-6 space-y-5">
+                <p className="text-sm text-muted-foreground text-center">
+                  Escolha como deseja compartilhar o convite:
+                </p>
 
-                  <div className="relative">
-                    <div className="absolute inset-0 flex items-center">
-                      <span className="w-full border-t border-border" />
-                    </div>
-                    <div className="relative flex justify-center text-xs uppercase">
-                      <span className="bg-card px-2 text-muted-foreground">ou</span>
-                    </div>
-                  </div>
-
-                  <div className="flex gap-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="flex-1"
-                      onClick={handleCopyLink}
-                      disabled={createLinkInvitation.isPending}
-                    >
-                      {createLinkInvitation.isPending ? (
-                        <>
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          Gerando...
-                        </>
-                      ) : copied ? (
-                        <>
-                          <Check className="w-4 h-4 mr-2 text-primary" />
-                          Copiado!
-                        </>
-                      ) : (
-                        <>
-                          <Copy className="w-4 h-4 mr-2" />
-                          Copiar Link
-                        </>
-                      )}
-                    </Button>
-
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="flex-1 text-green-600 border-green-600 hover:bg-green-50 hover:text-green-700"
-                      onClick={handleShareWhatsApp}
-                      disabled={createLinkInvitation.isPending}
-                    >
-                      {createLinkInvitation.isPending ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                      ) : (
-                        <>
-                          <MessageCircle className="w-4 h-4 mr-2" />
-                          WhatsApp
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="flex gap-3 pt-2">
+                <div className="flex flex-col gap-3">
                   <Button
                     type="button"
                     variant="outline"
-                    className="flex-1"
-                    onClick={() => onOpenChange(false)}
+                    className="w-full h-12"
+                    onClick={handleCopyLink}
+                    disabled={createLinkInvitation.isPending}
                   >
-                    Cancelar
-                  </Button>
-                  <Button 
-                    type="submit" 
-                    variant="hero" 
-                    className="flex-1"
-                    disabled={!email || inviteToGroup.isPending}
-                  >
-                    {inviteToGroup.isPending ? (
-                      "Enviando..."
+                    {createLinkInvitation.isPending ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Gerando...
+                      </>
+                    ) : copied ? (
+                      <>
+                        <Check className="w-4 h-4 mr-2 text-primary" />
+                        Copiado!
+                      </>
                     ) : (
                       <>
-                        <Send className="w-4 h-4 mr-2" />
-                        Enviar Convite
+                        <Copy className="w-4 h-4 mr-2" />
+                        Copiar Link de Convite
+                      </>
+                    )}
+                  </Button>
+
+                  <Button
+                    type="button"
+                    className="w-full h-12 bg-green-600 hover:bg-green-700 text-white"
+                    onClick={handleShareWhatsApp}
+                    disabled={createLinkInvitation.isPending}
+                  >
+                    {createLinkInvitation.isPending ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <>
+                        <MessageCircle className="w-4 h-4 mr-2" />
+                        Compartilhar via WhatsApp
                       </>
                     )}
                   </Button>
                 </div>
-              </form>
+
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="w-full"
+                  onClick={() => onOpenChange(false)}
+                >
+                  Fechar
+                </Button>
+              </div>
             </div>
           </motion.div>
         </>
