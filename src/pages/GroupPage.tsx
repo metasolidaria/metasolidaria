@@ -68,6 +68,7 @@ export default function GroupPage() {
     totalProgress,
     totalGroupGoal,
     userMember,
+    hasFullAccess,
     isLoading, 
     deleteProgress,
     removeMember,
@@ -110,6 +111,91 @@ export default function GroupPage() {
           <ArrowLeft className="w-4 h-4 mr-2" />
           Voltar
         </Button>
+      </div>
+    );
+  }
+
+  // Show limited view for non-members of private groups
+  if (!hasFullAccess && group.is_private) {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="bg-gradient-to-r from-primary/10 to-secondary/10 py-8">
+          <div className="container mx-auto px-4">
+            <Button 
+              variant="ghost" 
+              onClick={() => navigate("/")}
+              className="mb-4"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Voltar
+            </Button>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="max-w-lg mx-auto text-center"
+            >
+              <div className="w-20 h-20 bg-secondary/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                <Lock className="w-10 h-10 text-secondary" />
+              </div>
+              
+              <h1 className="text-3xl font-bold text-foreground mb-2">
+                {group.name}
+              </h1>
+              
+              <div className="flex items-center justify-center gap-2 text-muted-foreground mb-4">
+                <MapPin className="w-4 h-4" />
+                <span>{group.city}</span>
+              </div>
+
+              <span className="inline-flex items-center gap-1 bg-secondary/20 px-3 py-1 rounded-full text-sm text-secondary-foreground mb-6">
+                <Lock className="w-3 h-3" />
+                Grupo Privado
+              </span>
+
+              {group.description && (
+                <p className="text-muted-foreground mb-6">
+                  {group.description}
+                </p>
+              )}
+
+              <div className="bg-card rounded-2xl p-6 shadow-soft">
+                <h2 className="text-lg font-semibold text-foreground mb-2">
+                  Quer participar deste grupo?
+                </h2>
+                <p className="text-muted-foreground text-sm mb-4">
+                  Este é um grupo privado. Você precisa de um convite do líder para entrar.
+                </p>
+                
+                {!user ? (
+                  <div className="space-y-3">
+                    <p className="text-sm text-muted-foreground">
+                      Faça login para solicitar sua entrada no grupo.
+                    </p>
+                    <Button 
+                      variant="hero" 
+                      className="w-full"
+                      onClick={() => navigate("/?login=true")}
+                    >
+                      Fazer Login
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <p className="text-sm text-muted-foreground">
+                      Entre em contato com o líder do grupo para solicitar um convite.
+                    </p>
+                    {group.leader_name && (
+                      <p className="text-sm font-medium text-foreground">
+                        Líder: {group.leader_name}
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          </div>
+        </div>
       </div>
     );
   }

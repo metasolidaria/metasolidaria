@@ -38,20 +38,34 @@ export const useGroupDetails = (groupId: string | undefined) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Fetch group details with entity
-  const { data: group, isLoading: groupLoading } = useQuery({
+  // Fetch group details with entity (with fallback to public view)
+  const { data: group, isLoading: groupLoading, error: groupError } = useQuery({
     queryKey: ["group", groupId],
     queryFn: async () => {
       if (!groupId) return null;
 
+      // Try to fetch full group details first
       const { data, error } = await supabase
         .from("groups")
         .select("*, entity:entities(id, name, city)")
         .eq("id", groupId)
-        .single();
+        .maybeSingle();
 
-      if (error) throw error;
-      return data;
+      if (data) return { ...data, hasFullAccess: true };
+
+      // If no access, try public view for basic info
+      const { data: publicData, error: publicError } = await supabase
+        .from("groups_public" as any)
+        .select("*")
+        .eq("id", groupId)
+        .maybeSingle() as { data: any | null, error: any };
+
+      if (publicData) {
+        return { ...publicData, hasFullAccess: false };
+      }
+
+      if (error || publicError) throw error || publicError;
+      return null;
     },
     enabled: !!groupId,
   });
@@ -387,6 +401,9 @@ export const useGroupDetails = (groupId: string | undefined) => {
     return sum + memberTotal;
   }, 0);
 
+  // Check if user has full access to group details
+  const hasFullAccess = group?.hasFullAccess ?? false;
+
   return {
     group,
     members,
@@ -394,6 +411,7 @@ export const useGroupDetails = (groupId: string | undefined) => {
     totalProgress,
     totalGroupGoal,
     userMember,
+    hasFullAccess,
     isLoading: groupLoading || membersLoading || progressLoading,
     addProgress,
     deleteProgress,
