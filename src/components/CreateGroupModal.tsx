@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Users, Lock, Globe, User, Phone, FileText, CalendarIcon } from "lucide-react";
+import { X, Users, Lock, Globe, User, Phone, FileText, CalendarIcon, Camera, Loader2 } from "lucide-react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
@@ -18,6 +18,7 @@ import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { createGroupSchema, validateForm } from "@/lib/validations";
 import { useToast } from "@/hooks/use-toast";
+import { compressImage } from "@/lib/imageCompression";
 
 interface CreateGroupModalProps {
   open: boolean;
@@ -51,6 +52,10 @@ export const CreateGroupModal = ({ open, onOpenChange, onRequireAuth }: CreateGr
     endDate: new Date("2026-12-31"),
     entityId: null as string | null,
   });
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Buscar perfil do usuário para preencher nome e WhatsApp automaticamente
   useEffect(() => {
@@ -83,7 +88,83 @@ export const CreateGroupModal = ({ open, onOpenChange, onRequireAuth }: CreateGr
     }
   }, [open, user, onOpenChange, onRequireAuth]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Check file size (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      toast({
+        title: "Arquivo muito grande",
+        description: "A imagem deve ter no máximo 10MB",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Check file type
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Tipo inválido",
+        description: "Selecione um arquivo de imagem (JPEG, PNG ou WebP)",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setImageFile(file);
+    
+    // Create preview
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setImagePreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const uploadImage = async (groupId: string): Promise<string | null> => {
+    if (!imageFile) return null;
+
+    setIsUploadingImage(true);
+    try {
+      // Compress the image
+      const compressedBlob = await compressImage(imageFile);
+      
+      // Generate unique filename
+      const fileExt = 'jpg'; // Always jpg after compression
+      const fileName = `${groupId}-${Date.now()}.${fileExt}`;
+      const filePath = `${groupId}/${fileName}`;
+
+      // Upload to Supabase Storage
+      const { error: uploadError } = await supabase.storage
+        .from('group-images')
+        .upload(filePath, compressedBlob, {
+          contentType: 'image/jpeg',
+          upsert: true,
+        });
+
+      if (uploadError) throw uploadError;
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('group-images')
+        .getPublicUrl(filePath);
+
+      return publicUrl;
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      toast({
+        title: "Erro no upload",
+        description: "Não foi possível fazer upload da imagem",
+        variant: "destructive",
+      });
+      return null;
+    } finally {
+      setIsUploadingImage(false);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!user) {
@@ -111,6 +192,7 @@ export const CreateGroupModal = ({ open, onOpenChange, onRequireAuth }: CreateGr
       return;
     }
 
+    // Create the group first
     createGroup.mutate({
       name: formData.groupName.trim(),
       city: formData.city.trim(),
@@ -123,20 +205,38 @@ export const CreateGroupModal = ({ open, onOpenChange, onRequireAuth }: CreateGr
       description: formData.description.trim(),
       end_date: format(formData.endDate, "yyyy-MM-dd"),
       entity_id: formData.entityId,
+    }, {
+      onSuccess: async (result) => {
+        const groupId = result.id;
+        // Upload image if selected
+        if (imageFile && groupId) {
+          const imageUrl = await uploadImage(groupId);
+          if (imageUrl) {
+            // Update the group with the image URL
+            await supabase
+              .from('groups')
+              .update({ image_url: imageUrl })
+              .eq('id', groupId);
+          }
+        }
+        
+        // Reset form
+        setFormData({ 
+          groupName: "", 
+          city: "", 
+          donationType: "",
+          isPrivate: false,
+          leaderName: "",
+          leaderWhatsapp: "",
+          description: "",
+          endDate: new Date("2026-12-31"),
+          entityId: null,
+        });
+        setImageFile(null);
+        setImagePreview(null);
+        onOpenChange(false);
+      },
     });
-
-    setFormData({ 
-      groupName: "", 
-      city: "", 
-      donationType: "",
-      isPrivate: false,
-      leaderName: "",
-      leaderWhatsapp: "",
-      description: "",
-      endDate: new Date("2026-12-31"),
-      entityId: null,
-    });
-    onOpenChange(false);
   };
 
   if (!user) return null;
@@ -254,6 +354,55 @@ export const CreateGroupModal = ({ open, onOpenChange, onRequireAuth }: CreateGr
                         className="pl-11 min-h-[80px]"
                       />
                     </div>
+                  </div>
+
+                  {/* Image Upload */}
+                  <div className="space-y-2">
+                    <Label className="text-foreground font-medium">
+                      Foto do Grupo (opcional)
+                    </Label>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      onChange={handleImageSelect}
+                      className="hidden"
+                    />
+                    
+                    {imagePreview ? (
+                      <div className="relative">
+                        <img 
+                          src={imagePreview} 
+                          alt="Preview" 
+                          className="w-full h-32 object-cover rounded-xl border border-border"
+                        />
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="sm"
+                          className="absolute top-2 right-2"
+                          onClick={() => {
+                            setImageFile(null);
+                            setImagePreview(null);
+                            if (fileInputRef.current) {
+                              fileInputRef.current.value = '';
+                            }
+                          }}
+                        >
+                          <X className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="w-full h-24 border-dashed flex flex-col gap-2"
+                        onClick={() => fileInputRef.current?.click()}
+                      >
+                        <Camera className="w-6 h-6 text-muted-foreground" />
+                        <span className="text-sm text-muted-foreground">Adicionar foto</span>
+                      </Button>
+                    )}
                   </div>
 
                   <div className="space-y-2">
@@ -377,9 +526,14 @@ export const CreateGroupModal = ({ open, onOpenChange, onRequireAuth }: CreateGr
                     type="submit" 
                     variant="hero" 
                     className="flex-1"
-                    disabled={!formData.donationType || createGroup.isPending}
+                    disabled={!formData.donationType || createGroup.isPending || isUploadingImage}
                   >
-                    {createGroup.isPending ? "Criando..." : "Criar Grupo"}
+                    {(createGroup.isPending || isUploadingImage) ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        {isUploadingImage ? "Enviando foto..." : "Criando..."}
+                      </>
+                    ) : "Criar Grupo"}
                   </Button>
                 </div>
               </form>
