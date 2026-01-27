@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { EditGroupAdminModal } from "@/components/admin/EditGroupAdminModal";
 import { GroupMembersModal } from "@/components/admin/GroupMembersModal";
+import { AddMemberToGroupModal } from "@/components/admin/AddMemberToGroupModal";
 import {
   ArrowLeft,
   Pencil,
@@ -37,6 +38,7 @@ import {
   Lock,
   Globe,
   ExternalLink,
+  UserPlus,
 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -51,12 +53,15 @@ const AdminGroups = () => {
     fetchGroupMembers,
     updateGroup,
     deleteGroup,
+    addMemberToGroup,
+    fetchAllUsers,
   } = useAdminGroups();
 
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedGroup, setSelectedGroup] = useState<AdminGroup | null>(null);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [membersModalOpen, setMembersModalOpen] = useState(false);
+  const [addMemberModalOpen, setAddMemberModalOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [groupToDelete, setGroupToDelete] = useState<AdminGroup | null>(null);
 
@@ -107,6 +112,11 @@ const AdminGroups = () => {
     setMembersModalOpen(true);
   };
 
+  const handleAddMember = (group: AdminGroup) => {
+    setSelectedGroup(group);
+    setAddMemberModalOpen(true);
+  };
+
   const handleDelete = (group: AdminGroup) => {
     setGroupToDelete(group);
     setDeleteDialogOpen(true);
@@ -127,6 +137,20 @@ const AdminGroups = () => {
         {
           onSuccess: () => {
             setEditModalOpen(false);
+            setSelectedGroup(null);
+          },
+        }
+      );
+    }
+  };
+
+  const handleAddMemberSubmit = (userId: string, userName: string) => {
+    if (selectedGroup) {
+      addMemberToGroup.mutate(
+        { groupId: selectedGroup.id, userId, userName },
+        {
+          onSuccess: () => {
+            setAddMemberModalOpen(false);
             setSelectedGroup(null);
           },
         }
@@ -239,6 +263,15 @@ const AdminGroups = () => {
                           <Button
                             size="icon"
                             variant="ghost"
+                            className="h-8 w-8 text-green-600 hover:text-green-700"
+                            onClick={() => handleAddMember(g)}
+                            title="Adicionar membro"
+                          >
+                            <UserPlus className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="icon"
+                            variant="ghost"
                             className="h-8 w-8"
                             onClick={() => handleEdit(g)}
                             title="Editar"
@@ -285,6 +318,15 @@ const AdminGroups = () => {
         onOpenChange={setMembersModalOpen}
         group={selectedGroup}
         fetchGroupMembers={fetchGroupMembers}
+      />
+
+      <AddMemberToGroupModal
+        open={addMemberModalOpen}
+        onOpenChange={setAddMemberModalOpen}
+        group={selectedGroup}
+        onAdd={handleAddMemberSubmit}
+        isLoading={addMemberToGroup.isPending}
+        fetchAllUsers={fetchAllUsers}
       />
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>

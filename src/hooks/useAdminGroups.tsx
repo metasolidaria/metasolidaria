@@ -130,11 +130,72 @@ export const useAdminGroups = () => {
     },
   });
 
+  // Add member to group
+  const addMemberToGroup = useMutation({
+    mutationFn: async ({
+      groupId,
+      userId,
+      userName,
+    }: {
+      groupId: string;
+      userId: string;
+      userName: string;
+    }) => {
+      // Check if user is already a member
+      const { data: existing } = await supabase
+        .from("group_members")
+        .select("id")
+        .eq("group_id", groupId)
+        .eq("user_id", userId)
+        .maybeSingle();
+
+      if (existing) {
+        throw new Error("Usuário já é membro deste grupo");
+      }
+
+      const { error } = await supabase
+        .from("group_members")
+        .insert({
+          group_id: groupId,
+          user_id: userId,
+          name: userName,
+        });
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-groups"] });
+      toast({
+        title: "Membro adicionado",
+        description: "O usuário foi adicionado ao grupo com sucesso.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Erro ao adicionar membro",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Fetch all users for selection
+  const fetchAllUsers = async () => {
+    const { data, error } = await supabase
+      .from("users_admin")
+      .select("user_id, full_name, email, city");
+
+    if (error) throw error;
+    return data || [];
+  };
+
   return {
     groups,
     isLoading,
     fetchGroupMembers,
     updateGroup,
     deleteGroup,
+    addMemberToGroup,
+    fetchAllUsers,
   };
 };
