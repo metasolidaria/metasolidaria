@@ -83,7 +83,8 @@ export const AddMemberModal = ({ open, onOpenChange, groupId, groupName }: AddMe
       return data;
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["groupDetails", groupId] });
+      queryClient.invalidateQueries({ queryKey: ["groupMembers", groupId] });
+      queryClient.invalidateQueries({ queryKey: ["group", groupId] });
       queryClient.invalidateQueries({ queryKey: ["groups"] });
       queryClient.invalidateQueries({ queryKey: ["impactStats"] });
       
