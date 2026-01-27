@@ -10,6 +10,7 @@ import AdminPartners from "./pages/AdminPartners";
 import AdminUsers from "./pages/AdminUsers";
 import AdminGroups from "./pages/AdminGroups";
 import AdminInvitations from "./pages/AdminInvitations";
+import AdminEntities from "./pages/AdminEntities";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 import { InstallPWAPrompt } from "./components/InstallPWAPrompt";
@@ -30,6 +31,7 @@ const App = () => (
           <Route path="/admin/usuarios" element={<AdminUsers />} />
           <Route path="/admin/grupos" element={<AdminGroups />} />
           <Route path="/admin/convites" element={<AdminInvitations />} />
+          <Route path="/admin/entidades" element={<AdminEntities />} />
           <Route path="/perfil" element={<Profile />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

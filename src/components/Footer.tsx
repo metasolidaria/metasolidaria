@@ -118,6 +118,11 @@ export const Footer = () => {
                       Convites
                     </Link>
                   </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/admin/entidades" className="cursor-pointer">
+                      Entidades
+                    </Link>
+                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             )}
