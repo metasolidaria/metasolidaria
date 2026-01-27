@@ -220,19 +220,30 @@ export const useGroups = () => {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["groups"] });
+      queryClient.invalidateQueries({ queryKey: ["group", variables.groupId] });
+      queryClient.invalidateQueries({ queryKey: ["groupDetails", variables.groupId] });
       toast({
-        title: "Convite enviado! 📧",
-        description: "O convite foi registrado. Compartilhe o link com a pessoa.",
+        title: "Convite registrado! 📧",
+        description: "Compartilhe o link de convite com a pessoa.",
       });
     },
-    onError: (error) => {
-      toast({
-        title: "Erro ao enviar convite",
-        description: error.message,
-        variant: "destructive",
-      });
+    onError: (error: any) => {
+      // Handle duplicate invitation error
+      if (error.code === '23505' || error.message?.includes('duplicate')) {
+        toast({
+          title: "Convite já existe",
+          description: "Já existe um convite pendente para este email.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Erro ao enviar convite",
+          description: error.message,
+          variant: "destructive",
+        });
+      }
     },
   });
 
