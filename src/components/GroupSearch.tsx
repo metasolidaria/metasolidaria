@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { Search, Lock, Globe, Loader2, UserPlus, Users, CheckCircle2, MapPin, X } from "lucide-react";
+import { Search, Lock, Globe, Loader2, UserPlus, Users, CheckCircle2, MapPin, X, Clock } from "lucide-react";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 import { Card, CardContent } from "./ui/card";
@@ -50,6 +50,7 @@ export const GroupSearch = ({ onRequireAuth, userMemberships }: GroupSearchProps
   const [searchResults, setSearchResults] = useState<SearchGroup[]>([]);
   const [hasSearched, setHasSearched] = useState(false);
   const [actionGroupId, setActionGroupId] = useState<string | null>(null);
+  const [pendingRequestGroupIds, setPendingRequestGroupIds] = useState<string[]>([]);
   
   // City autocomplete state
   const [cities, setCities] = useState<City[]>([]);
@@ -59,6 +60,32 @@ export const GroupSearch = ({ onRequireAuth, userMemberships }: GroupSearchProps
   const [selectedCityIndex, setSelectedCityIndex] = useState(-1);
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Fetch pending join requests for current user
+  useEffect(() => {
+    const fetchPendingRequests = async () => {
+      if (!user) {
+        setPendingRequestGroupIds([]);
+        return;
+      }
+      
+      try {
+        const { data, error } = await supabase
+          .from("group_join_requests")
+          .select("group_id")
+          .eq("user_id", user.id)
+          .eq("status", "pending");
+        
+        if (error) throw error;
+        
+        setPendingRequestGroupIds((data || []).map(r => r.group_id));
+      } catch (error) {
+        console.error("Error fetching pending requests:", error);
+      }
+    };
+    
+    fetchPendingRequests();
+  }, [user]);
 
   // Fetch cities on mount for city search
   useEffect(() => {
@@ -274,8 +301,8 @@ export const GroupSearch = ({ onRequireAuth, userMemberships }: GroupSearchProps
         description: `Sua solicitação para entrar em "${groupName}" foi enviada ao líder.`,
       });
 
-      // Remover grupo da lista de resultados
-      setSearchResults((prev) => prev.filter((g) => g.id !== groupId));
+      // Adicionar grupo à lista de pendentes
+      setPendingRequestGroupIds((prev) => [...prev, groupId]);
     } catch (error: any) {
       console.error("Erro ao solicitar entrada:", error);
       toast({
@@ -466,6 +493,16 @@ export const GroupSearch = ({ onRequireAuth, userMemberships }: GroupSearchProps
                       className="shrink-0 text-muted-foreground"
                     >
                       Já participa
+                    </Button>
+                  ) : pendingRequestGroupIds.includes(group.id) ? (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      disabled
+                      className="shrink-0 text-amber-600"
+                    >
+                      <Clock className="w-4 h-4 mr-1" />
+                      Pendente
                     </Button>
                   ) : group.is_private ? (
                     <Button
