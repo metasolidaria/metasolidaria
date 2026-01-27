@@ -70,7 +70,7 @@ export const GroupsSection = ({
   const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [inviteModalOpen, setInviteModalOpen] = useState(false);
-  const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
+  const [selectedGroup, setSelectedGroup] = useState<{ id: string; name: string; description?: string } | null>(null);
   const [filter, setFilter] = useState<"all" | "mine">("all");
   const [currentPage, setCurrentPage] = useState(1);
   const isUserMember = (groupId: string) => userMemberships.includes(groupId);
@@ -133,12 +133,12 @@ export const GroupsSection = ({
       }
     });
   };
-  const handleInviteMembers = (groupId: string) => {
+  const handleInviteMembers = (group: { id: string; name: string; description?: string | null }) => {
     if (!user) {
       onRequireAuth();
       return;
     }
-    setSelectedGroupId(groupId);
+    setSelectedGroup({ id: group.id, name: group.name, description: group.description || undefined });
     setInviteModalOpen(true);
   };
   const handleCreateGroup = () => {
@@ -285,7 +285,7 @@ export const GroupsSection = ({
                     </div>
 
                     <div className="flex gap-2">
-                      {isGroupLeader(group.leader_id) && group.is_private && <Button variant="outline" size="sm" onClick={() => handleInviteMembers(group.id)} className="flex-1">
+                      {isGroupLeader(group.leader_id) && group.is_private && <Button variant="outline" size="sm" onClick={() => handleInviteMembers(group)} className="flex-1">
                           <Mail className="w-4 h-4 mr-1" />
                           Convidar
                         </Button>}
@@ -353,6 +353,6 @@ export const GroupsSection = ({
 
       <CreateGroupModal open={isModalOpen} onOpenChange={setIsModalOpen} onRequireAuth={onRequireAuth} />
 
-      <InviteMemberModal open={inviteModalOpen} onOpenChange={setInviteModalOpen} groupId={selectedGroupId} />
+      <InviteMemberModal open={inviteModalOpen} onOpenChange={setInviteModalOpen} groupId={selectedGroup?.id || null} groupName={selectedGroup?.name} groupDescription={selectedGroup?.description} />
     </section>;
 };
