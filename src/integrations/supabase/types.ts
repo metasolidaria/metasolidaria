@@ -591,6 +591,29 @@ export type Database = {
         }
         Relationships: []
       }
+      groups_admin: {
+        Row: {
+          city: string | null
+          created_at: string | null
+          description: string | null
+          donation_type: string | null
+          end_date: string | null
+          entity_id: string | null
+          goal_2026: number | null
+          id: string | null
+          image_url: string | null
+          is_private: boolean | null
+          leader_id: string | null
+          leader_name: string | null
+          leader_whatsapp: string | null
+          member_count: number | null
+          name: string | null
+          total_donations: number | null
+          total_goals: number | null
+          updated_at: string | null
+        }
+        Relationships: []
+      }
       groups_public: {
         Row: {
           city: string | null
@@ -789,6 +812,29 @@ export type Database = {
             }
             Returns: string
           }
+      get_admin_groups: {
+        Args: never
+        Returns: {
+          city: string
+          created_at: string
+          description: string
+          donation_type: string
+          end_date: string
+          entity_id: string
+          goal_2026: number
+          id: string
+          image_url: string
+          is_private: boolean
+          leader_id: string
+          leader_name: string
+          leader_whatsapp: string
+          member_count: number
+          name: string
+          total_donations: number
+          total_goals: number
+          updated_at: string
+        }[]
+      }
       get_admin_users: {
         Args: never
         Returns: {
