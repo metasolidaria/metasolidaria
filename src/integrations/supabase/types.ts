@@ -176,6 +176,64 @@ export type Database = {
           },
         ]
       }
+      group_join_requests: {
+        Row: {
+          created_at: string
+          group_id: string
+          id: string
+          message: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          user_id: string
+          user_name: string
+        }
+        Insert: {
+          created_at?: string
+          group_id: string
+          id?: string
+          message?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          user_id: string
+          user_name: string
+        }
+        Update: {
+          created_at?: string
+          group_id?: string
+          id?: string
+          message?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          user_id?: string
+          user_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_join_requests_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "group_stats"
+            referencedColumns: ["group_id"]
+          },
+          {
+            foreignKeyName: "group_join_requests_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "group_join_requests_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "groups_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       group_members: {
         Row: {
           commitment_donation: number | null
@@ -554,6 +612,7 @@ export type Database = {
         Args: { _invite_code: string }
         Returns: string
       }
+      approve_join_request: { Args: { _request_id: string }; Returns: string }
       create_group_with_leader:
         | {
             Args: {
@@ -611,6 +670,7 @@ export type Database = {
           member_id: string
         }[]
       }
+      reject_join_request: { Args: { _request_id: string }; Returns: undefined }
     }
     Enums: {
       [_ in never]: never

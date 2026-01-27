@@ -1,10 +1,11 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, Users, Target, MapPin, Lock, Globe, Plus, Trash2, Loader2, LogOut, TrendingUp, Sparkles, Pencil, CalendarDays, Building2, UserPlus, Mail } from "lucide-react";
+import { ArrowLeft, Users, Target, MapPin, Lock, Globe, Plus, Trash2, Loader2, LogOut, TrendingUp, Sparkles, Pencil, CalendarDays, Building2, UserPlus, Mail, Send, Clock, CheckCircle, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { useGroupDetails } from "@/hooks/useGroupDetails";
 import { useAuth } from "@/hooks/useAuth";
+import { useJoinRequests } from "@/hooks/useJoinRequests";
 import { AddProgressModal } from "@/components/AddProgressModal";
 import { AddMemberModal } from "@/components/AddMemberModal";
 import { EditGroupModal } from "@/components/EditGroupModal";
@@ -12,6 +13,7 @@ import { EditMemberGoalModal } from "@/components/EditMemberGoalModal";
 import { ProgressCharts } from "@/components/ProgressCharts";
 import { ProgressAnalysisModal } from "@/components/ProgressAnalysisModal";
 import { InviteMemberModal } from "@/components/InviteMemberModal";
+import { JoinRequestsPanel } from "@/components/JoinRequestsPanel";
 import { useProgressAnalysis } from "@/hooks/useProgressAnalysis";
 import { useState } from "react";
 import { format } from "date-fns";
@@ -115,8 +117,15 @@ export default function GroupPage() {
     );
   }
 
+  // Hook for join requests
+  const { userRequest, createRequest, isLoading: requestsLoading } = useJoinRequests(id);
+
   // Show limited view for non-members of private groups
   if (!hasFullAccess && group.is_private) {
+    const hasPendingRequest = userRequest?.status === "pending";
+    const wasRejected = userRequest?.status === "rejected";
+    const wasApproved = userRequest?.status === "approved";
+
     return (
       <div className="min-h-screen bg-background">
         <div className="bg-gradient-to-r from-primary/10 to-secondary/10 py-8">
@@ -163,9 +172,6 @@ export default function GroupPage() {
                 <h2 className="text-lg font-semibold text-foreground mb-2">
                   Quer participar deste grupo?
                 </h2>
-                <p className="text-muted-foreground text-sm mb-4">
-                  Este é um grupo privado. Você precisa de um convite do líder para entrar.
-                </p>
                 
                 {!user ? (
                   <div className="space-y-3">
@@ -180,13 +186,68 @@ export default function GroupPage() {
                       Fazer Login
                     </Button>
                   </div>
+                ) : hasPendingRequest ? (
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-center gap-2 text-amber-600 dark:text-amber-400">
+                      <Clock className="w-5 h-5" />
+                      <span className="font-medium">Solicitação Pendente</span>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      Sua solicitação foi enviada e está aguardando aprovação do líder.
+                    </p>
+                  </div>
+                ) : wasRejected ? (
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-center gap-2 text-destructive">
+                      <XCircle className="w-5 h-5" />
+                      <span className="font-medium">Solicitação Recusada</span>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      Infelizmente sua solicitação foi recusada pelo líder do grupo.
+                    </p>
+                  </div>
+                ) : wasApproved ? (
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-center gap-2 text-primary">
+                      <CheckCircle className="w-5 h-5" />
+                      <span className="font-medium">Solicitação Aprovada!</span>
+                    </div>
+                    <p className="text-sm text-muted-foreground mb-2">
+                      Você já faz parte do grupo. Recarregue a página para ver o conteúdo.
+                    </p>
+                    <Button 
+                      variant="hero" 
+                      className="w-full"
+                      onClick={() => window.location.reload()}
+                    >
+                      Recarregar Página
+                    </Button>
+                  </div>
                 ) : (
                   <div className="space-y-3">
-                    <p className="text-sm text-muted-foreground">
-                      Entre em contato com o líder do grupo para solicitar um convite.
+                    <p className="text-muted-foreground text-sm mb-4">
+                      Envie uma solicitação e aguarde a aprovação do líder.
                     </p>
+                    <Button 
+                      variant="hero" 
+                      className="w-full"
+                      onClick={() => createRequest.mutate({ groupId: id! })}
+                      disabled={createRequest.isPending || requestsLoading}
+                    >
+                      {createRequest.isPending ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Enviando...
+                        </>
+                      ) : (
+                        <>
+                          <Send className="w-4 h-4 mr-2" />
+                          Solicitar Entrada
+                        </>
+                      )}
+                    </Button>
                     {group.leader_name && (
-                      <p className="text-sm font-medium text-foreground">
+                      <p className="text-xs text-muted-foreground mt-2">
                         Líder: {group.leader_name}
                       </p>
                     )}
@@ -322,6 +383,10 @@ export default function GroupPage() {
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
+            {/* Join Requests Panel for Leaders */}
+            {isLeader && id && (
+              <JoinRequestsPanel groupId={id} />
+            )}
             {/* Progress Section */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
