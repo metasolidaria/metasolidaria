@@ -256,6 +256,7 @@ export type Database = {
           entity_id: string | null
           goal_2026: number
           id: string
+          image_url: string | null
           is_private: boolean
           leader_id: string
           leader_name: string | null
@@ -272,6 +273,7 @@ export type Database = {
           entity_id?: string | null
           goal_2026?: number
           id?: string
+          image_url?: string | null
           is_private?: boolean
           leader_id: string
           leader_name?: string | null
@@ -288,6 +290,7 @@ export type Database = {
           entity_id?: string | null
           goal_2026?: number
           id?: string
+          image_url?: string | null
           is_private?: boolean
           leader_id?: string
           leader_name?: string | null
@@ -457,6 +460,7 @@ export type Database = {
           entity_id: string | null
           goal_2026: number | null
           id: string | null
+          image_url: string | null
           is_private: boolean | null
           leader_id: string | null
           leader_name: string | null

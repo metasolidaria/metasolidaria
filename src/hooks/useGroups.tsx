@@ -18,6 +18,7 @@ export interface Group {
   member_count?: number;
   total_goals?: number;
   total_donations?: number;
+  image_url?: string | null;
 }
 
 // Type for public view (without sensitive data)
@@ -95,6 +96,7 @@ export const useGroups = () => {
         member_count: group.member_count || 0,
         total_goals: group.total_goals || 0,
         total_donations: group.total_donations || 0,
+        image_url: group.image_url || null,
       } as Group));
     },
   });
