@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useState, useMemo } from "react";
 import { 
   MapPin, 
@@ -24,8 +24,12 @@ import {
   Medal,
   ChevronLeft,
   ChevronRight,
-  Info
+  Info,
+  Filter,
+  ChevronDown,
+  ChevronUp
 } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 import { usePartners, PartnerTier } from "@/hooks/usePartners";
@@ -96,6 +100,80 @@ import logoImage from "@/assets/logo.jpg";
 import naturuaiLogo from "@/assets/naturuai-logo.jpg";
 
 const ITEMS_PER_PAGE = 10;
+
+// Component for collapsible category filters
+interface CategoryFiltersProps {
+  categories: typeof allCategories;
+  selectedCategory: string;
+  onSelectCategory: (id: string) => void;
+}
+
+const CategoryFilters = ({ categories, selectedCategory, onSelectCategory }: CategoryFiltersProps) => {
+  const [isOpen, setIsOpen] = useState(false);
+  
+  // Find the selected category label
+  const selectedLabel = categories.find(c => c.id === selectedCategory)?.label || "Todos";
+  const selectedIcon = categories.find(c => c.id === selectedCategory)?.icon || Star;
+  const SelectedIcon = selectedIcon;
+  
+  // Count of available categories (excluding "all")
+  const categoryCount = categories.length - 1;
+
+  return (
+    <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+      <CollapsibleTrigger asChild>
+        <Button
+          variant="outline"
+          className="w-full justify-between gap-2 h-auto py-3"
+        >
+          <div className="flex items-center gap-2">
+            <Filter className="w-4 h-4 text-muted-foreground" />
+            <span className="text-sm text-muted-foreground">Categoria:</span>
+            <span className="font-medium flex items-center gap-1">
+              <SelectedIcon className="w-4 h-4" />
+              {selectedLabel}
+            </span>
+            {categoryCount > 0 && (
+              <span className="text-xs text-muted-foreground">
+                ({categoryCount} disponíveis)
+              </span>
+            )}
+          </div>
+          {isOpen ? (
+            <ChevronUp className="w-4 h-4 text-muted-foreground" />
+          ) : (
+            <ChevronDown className="w-4 h-4 text-muted-foreground" />
+          )}
+        </Button>
+      </CollapsibleTrigger>
+      <CollapsibleContent>
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="mt-3 p-4 bg-card rounded-lg border border-border"
+        >
+          <div className="flex flex-wrap gap-2">
+            {categories.map((category) => (
+              <Button
+                key={category.id}
+                variant={selectedCategory === category.id ? "default" : "outline"}
+                size="sm"
+                onClick={() => {
+                  onSelectCategory(category.id);
+                  setIsOpen(false);
+                }}
+                className="gap-2"
+              >
+                <category.icon className="w-4 h-4" />
+                {category.label}
+              </Button>
+            ))}
+          </div>
+        </motion.div>
+      </CollapsibleContent>
+    </Collapsible>
+  );
+};
 
 export const PartnersSection = () => {
   const [selectedCategory, setSelectedCategory] = useState("all");
@@ -428,20 +506,12 @@ export const PartnersSection = () => {
             </div>
           )}
 
-          <div className="flex flex-wrap gap-2">
-            {availableCategories.map((category) => (
-              <Button
-                key={category.id}
-                variant={selectedCategory === category.id ? "default" : "outline"}
-                size="sm"
-                onClick={() => setSelectedCategory(category.id)}
-                className="gap-2"
-              >
-                <category.icon className="w-4 h-4" />
-                {category.label}
-              </Button>
-            ))}
-          </div>
+          {/* Collapsible Category Filters */}
+          <CategoryFilters
+            categories={availableCategories}
+            selectedCategory={selectedCategory}
+            onSelectCategory={setSelectedCategory}
+          />
         </motion.div>
 
         {/* Partners Grid */}
