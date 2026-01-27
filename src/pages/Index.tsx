@@ -12,7 +12,7 @@ import { useInviteLink } from "@/hooks/useInviteLink";
 
 const Index = () => {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const { needsAuth, isAccepting } = useInviteLink();
+  const { needsAuth, isAccepting, inviteInfo, isLoading: inviteLoading } = useInviteLink();
 
   // Open auth modal if user needs to login to accept invite
   useEffect(() => {
@@ -28,11 +28,47 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header onAuthClick={() => setIsAuthModalOpen(true)} />
+      
+      {/* Loading invite info */}
+      {inviteLoading && (
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center">
+          <div className="bg-card p-6 rounded-lg shadow-lg text-center">
+            <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4" />
+            <p className="text-foreground font-medium">Carregando convite...</p>
+          </div>
+        </div>
+      )}
+
+      {/* Invite welcome message */}
+      {inviteInfo && !isAccepting && needsAuth && (
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-40 flex items-center justify-center p-4">
+          <div className="bg-card p-8 rounded-2xl shadow-xl text-center max-w-md">
+            <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+              <span className="text-3xl">🎉</span>
+            </div>
+            <h2 className="text-2xl font-bold text-foreground mb-2">
+              Você foi convidado!
+            </h2>
+            <p className="text-muted-foreground mb-4">
+              Você foi convidado para participar do grupo{" "}
+              <span className="font-semibold text-primary">{inviteInfo.groupName}</span>{" "}
+              do META SOLIDÁRIA.
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Faça login ou crie uma conta para entrar no grupo.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Accepting invite */}
       {isAccepting && (
         <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center">
           <div className="bg-card p-6 rounded-lg shadow-lg text-center">
             <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4" />
-            <p className="text-foreground font-medium">Entrando no grupo...</p>
+            <p className="text-foreground font-medium">
+              Entrando no grupo {inviteInfo?.groupName || ""}...
+            </p>
           </div>
         </div>
       )}
