@@ -183,70 +183,52 @@ export default function GroupPage() {
               </div>
             </div>
 
-            <div className="flex flex-wrap gap-2">
-              {isLeader && (
-                <>
-                  <Button 
-                    variant="outline"
-                    onClick={() => setAddMemberOpen(true)}
-                  >
-                    <UserPlus className="w-4 h-4 mr-2" />
-                    <span className="hidden sm:inline">Incluir Membro</span>
-                    <span className="sm:hidden">Membro</span>
-                  </Button>
-                  <Button 
-                    variant="outline"
-                    onClick={() => setInviteModalOpen(true)}
-                  >
-                    <Mail className="w-4 h-4 mr-2" />
-                    <span className="hidden sm:inline">Enviar Convite</span>
-                    <span className="sm:hidden">Convite</span>
-                  </Button>
-                  <Button 
-                    variant="outline"
-                    onClick={() => setEditGroupOpen(true)}
-                  >
-                    <Pencil className="w-4 h-4 mr-2" />
-                    <span className="hidden sm:inline">Editar Grupo</span>
-                    <span className="sm:hidden">Editar</span>
-                  </Button>
-                </>
-              )}
-              {/* Temporariamente desabilitado para economizar recursos
-              {userMember && (
-                <Button 
-                  variant="outline"
-                  onClick={() => {
-                    setAnalysisModalOpen(true);
-                    if (group && members && progressEntries) {
-                      analyzeProgress(
-                        group,
-                        members,
-                        progressEntries,
-                        totalProgress,
-                        donationType
-                      );
-                    }
-                  }}
-                  disabled={analysisLoading || !progressEntries?.length}
-                >
-                  <Sparkles className="w-4 h-4 mr-2" />
-                  Analisar com IA
-                </Button>
-              )}
-              */}
-              {userMember && !isLeader && (
-                <Button 
-                  variant="outline" 
-                  onClick={() => setLeaveDialogOpen(true)}
-                  disabled={leaveGroup.isPending}
-                >
-                  <LogOut className="w-4 h-4 mr-2" />
-                  Sair do Grupo
-                </Button>
-              )}
-            </div>
+            {userMember && !isLeader && (
+              <Button 
+                variant="outline" 
+                onClick={() => setLeaveDialogOpen(true)}
+                disabled={leaveGroup.isPending}
+              >
+                <LogOut className="w-4 h-4 mr-2" />
+                Sair do Grupo
+              </Button>
+            )}
           </motion.div>
+
+          {/* Leader Action Buttons */}
+          {isLeader && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="flex flex-col sm:flex-row gap-2 mt-4"
+            >
+              <Button 
+                variant="default"
+                className="flex-1 sm:flex-none"
+                onClick={() => setAddMemberOpen(true)}
+              >
+                <UserPlus className="w-4 h-4 mr-2" />
+                Adicionar Membro
+              </Button>
+              <Button 
+                variant="default"
+                className="flex-1 sm:flex-none"
+                onClick={() => setInviteModalOpen(true)}
+              >
+                <Mail className="w-4 h-4 mr-2" />
+                Enviar Convite
+              </Button>
+              <Button 
+                variant="outline"
+                className="flex-1 sm:flex-none"
+                onClick={() => setEditGroupOpen(true)}
+              >
+                <Pencil className="w-4 h-4 mr-2" />
+                Editar Grupo
+              </Button>
+            </motion.div>
+          )}
         </div>
       </div>
 
@@ -283,7 +265,7 @@ export default function GroupPage() {
               </div>
             </motion.div>
 
-            {/* Progress Charts */}
+            {/* Progress Charts - Temporariamente desabilitado
             {progressEntries && progressEntries.length > 0 && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -304,6 +286,7 @@ export default function GroupPage() {
                 />
               </motion.div>
             )}
+            */}
 
             {/* Progress Entries */}
             <motion.div
