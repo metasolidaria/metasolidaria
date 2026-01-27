@@ -1,132 +1,85 @@
 
-## Administração de Entidades Beneficiárias
+
+## Adicionar Convites na Administração de Grupos
 
 ### Objetivo
-Criar uma página administrativa em `/admin/entidades` para gerenciamento completo das entidades beneficiárias, permitindo visualizar, adicionar, editar e excluir registros.
+Incluir botões de ação na página `/admin/grupos` para que administradores possam gerar links de convite e compartilhar via WhatsApp diretamente da tabela de grupos.
 
 ---
 
 ### Funcionalidades
 
-| Funcionalidade | Descrição |
-|----------------|-----------|
-| Listar entidades | Tabela com todas as entidades (nome, cidade, telefone, data de criação) |
-| Busca | Filtro por nome ou cidade |
-| Adicionar | Modal para cadastrar nova entidade |
-| Editar | Modal para atualizar dados existentes |
-| Excluir | Confirmação antes de remover |
+| Ação | Descrição |
+|------|-----------|
+| Gerar Link | Cria convite do tipo `link` e copia mensagem formatada para a área de transferência |
+| WhatsApp | Cria convite e abre WhatsApp Web com mensagem pré-formatada |
 
 ---
 
-### Arquivos a Criar
+### Alterações Necessárias
 
-**1. Hook de dados**
-`src/hooks/useAdminEntities.tsx`
-- Query para buscar todas as entidades (acesso direto à tabela base `entities` para admins)
-- Mutations: criar, atualizar e excluir entidades
+**1. Página AdminGroups.tsx**
+- Importar o componente `InviteMemberModal` já existente
+- Adicionar estado para controlar o modal de convite (`inviteModalOpen`)
+- Adicionar estado para armazenar o grupo selecionado para convite
+- Incluir botão com ícone `Link` na coluna de ações de cada grupo
+- Renderizar o modal `InviteMemberModal` passando os dados do grupo
 
-**2. Página principal**
-`src/pages/AdminEntities.tsx`
-- Proteção de acesso (apenas admins)
-- Tabela com colunas: Nome, Cidade, Telefone, Data, Ações
-- Busca por texto
-- Botão "Nova Entidade"
+**2. Banco de Dados - Nova Política RLS**
+Criar política para permitir que administradores criem convites em nome de qualquer grupo:
 
-**3. Modal de edição**
-`src/components/admin/EditEntityModal.tsx`
-- Formulário com Nome, Cidade (autocomplete), Telefone
-- Pré-populado com dados existentes
-
-**4. Modal de criação**
-`src/components/admin/CreateEntityModal.tsx`
-- Formulário para nova entidade
-- Campos: Nome, Cidade, Telefone (opcional)
-
----
-
-### Alterações em Arquivos Existentes
-
-**Rotas** - `src/App.tsx`
-- Adicionar rota `/admin/entidades`
-
-**Navegação** - `src/components/Footer.tsx`
-- Adicionar link "Entidades" no dropdown Admin
-
----
-
-### Alterações no Banco de Dados
-
-**Política RLS para admins visualizarem**
 ```sql
-CREATE POLICY "Admins can view all entities"
-ON public.entities FOR SELECT
-USING (is_admin(auth.uid()));
-```
-
-**Política RLS para admins atualizarem**
-```sql
-CREATE POLICY "Admins can update any entity"
-ON public.entities FOR UPDATE
-USING (is_admin(auth.uid()));
-```
-
-**Política RLS para admins excluírem**
-```sql
-CREATE POLICY "Admins can delete any entity"
-ON public.entities FOR DELETE
-USING (is_admin(auth.uid()));
+CREATE POLICY "Admins can create invitations for any group"
+ON public.group_invitations FOR INSERT
+WITH CHECK (is_admin(auth.uid()));
 ```
 
 ---
 
-### Detalhes Técnicos
+### Detalhes da Implementação
 
-**Estrutura da tabela entities (existente)**
-- `id` (uuid) - identificador único
-- `name` (text) - nome da entidade
-- `city` (text) - cidade
-- `phone` (text, opcional) - telefone de contato
-- `created_by` (uuid) - usuário que cadastrou
-- `created_at` (timestamp) - data de criação
-
-**Interface AdminEntity**
-```typescript
-interface AdminEntity {
-  id: string;
-  name: string;
-  city: string;
-  phone: string | null;
-  created_by: string | null;
-  created_at: string;
-}
-```
-
-**Padrões seguidos**
-- Mesmo layout das páginas AdminPartners e AdminUsers
-- Uso de CityAutocomplete para seleção de cidade
-- AlertDialog para confirmação de exclusão
-- Toast notifications para feedback
-
----
-
-### Fluxo de Navegação
-
+**Novo botão na tabela (entre UserPlus e Pencil):**
 ```text
-Rodapé (Admin Dropdown)
-        │
-        └── Entidades (/admin/entidades)
-                │
-                ├── [Listar] Tabela com todas entidades
-                ├── [Buscar] Input de pesquisa
-                ├── [Nova] → Modal CreateEntityModal
-                ├── [Editar] → Modal EditEntityModal
-                └── [Excluir] → AlertDialog de confirmação
+[ExternalLink] [Users] [UserPlus] [Link] [Pencil] [Trash2]
+                                   ↑ novo
+```
+
+**Props do InviteMemberModal:**
+- `open`: boolean para controlar visibilidade
+- `onOpenChange`: função para fechar modal
+- `groupId`: ID do grupo selecionado
+- `groupName`: nome do grupo para personalizar mensagem
+- `groupDescription`: descrição para enriquecer o convite
+
+**Fluxo do Usuário:**
+1. Admin clica no ícone de link (🔗) na linha do grupo
+2. Modal abre com duas opções:
+   - "Copiar Link de Convite" → gera convite e copia
+   - "Compartilhar via WhatsApp" → gera convite e abre WhatsApp
+3. Link gerado: `https://metasolidaria.com.br?invite={code}`
+4. Convite válido por 30 dias
+
+---
+
+### Arquivos a Modificar
+
+| Arquivo | Alteração |
+|---------|-----------|
+| `src/pages/AdminGroups.tsx` | Adicionar botão de convite e integrar modal |
+
+### Migração de Banco
+
+```sql
+-- Permitir admins criarem convites para qualquer grupo
+CREATE POLICY "Admins can create invitations for any group"
+ON public.group_invitations FOR INSERT
+WITH CHECK (is_admin(auth.uid()));
 ```
 
 ---
 
 ### Segurança
-- Verificação de admin via `useIsAdmin()` hook
-- Redirect para home se não for admin
-- Políticas RLS no banco garantem acesso apenas a admins
-- Dados sensíveis (telefone) visíveis apenas no painel admin
+- A política RLS existente já permite líderes criarem convites para seus grupos
+- Nova política permite que administradores criem convites para qualquer grupo
+- O modal reutiliza a lógica segura existente de geração de códigos
+
