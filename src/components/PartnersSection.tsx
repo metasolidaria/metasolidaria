@@ -150,6 +150,12 @@ export const PartnersSection = () => {
     return parts.length > 1 ? parts[1].trim().toUpperCase() : null;
   };
 
+  // Verificar se o parceiro é nacional (Brasil)
+  const isNationwidePartner = (partnerCity: string) => {
+    const normalized = normalizeText(partnerCity.trim());
+    return normalized === "brasil";
+  };
+
   // Verificar se o parceiro é estadual (cidade = nome do estado)
   const isStatewidePartner = (partnerCity: string) => {
     const normalized = normalizeText(partnerCity.trim());
@@ -172,6 +178,10 @@ export const PartnersSection = () => {
     const searchStateAbbr = extractStateFromCity(searchCity);
     
     const partnersInCity = (partners || []).filter((partner) => {
+      // Parceiro nacional (Brasil) - aparece em todas as cidades
+      if (isNationwidePartner(partner.city)) {
+        return true;
+      }
       // Parceiro estadual
       if (isStatewidePartner(partner.city)) {
         const partnerStateAbbr = getStatewidePartnerState(partner.city);
@@ -206,8 +216,12 @@ export const PartnersSection = () => {
         const searchCityLower = searchCity.toLowerCase();
         const searchStateAbbr = extractStateFromCity(searchCity);
         
+        // Verifica se o parceiro é nacional (Brasil)
+        if (isNationwidePartner(partner.city)) {
+          matchesCity = true; // Aparece em todas as cidades
+        }
         // Verifica se o parceiro é estadual
-        if (isStatewidePartner(partner.city)) {
+        else if (isStatewidePartner(partner.city)) {
           const partnerStateAbbr = getStatewidePartnerState(partner.city);
           // Parceiro estadual aparece se a busca é por uma cidade do mesmo estado
           matchesCity = partnerStateAbbr === searchStateAbbr;
