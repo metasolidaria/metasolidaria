@@ -4,6 +4,7 @@ import { Heart, Apple, BookOpen, Shirt, BedDouble, Soup, Gift, Package } from "l
 import { useImpactStats, DonationsByType } from "@/hooks/useImpactStats";
 import { PremiumPartnerSlots } from "./PremiumPartnerSlots";
 
+// Animated counter - only animates once when value first becomes available
 const AnimatedNumber = ({
   value,
   suffix,
@@ -11,9 +12,16 @@ const AnimatedNumber = ({
   value: number;
   suffix: string;
 }) => {
-  const [displayValue, setDisplayValue] = useState(0);
+  const [displayValue, setDisplayValue] = useState(value);
+  const [hasAnimated, setHasAnimated] = useState(false);
 
   useEffect(() => {
+    // Skip animation if already animated or no value
+    if (hasAnimated || value === 0) {
+      setDisplayValue(value);
+      return;
+    }
+
     const duration = 2000;
     const steps = 60;
     const increment = value / steps;
@@ -23,6 +31,7 @@ const AnimatedNumber = ({
       current += increment;
       if (current >= value) {
         setDisplayValue(value);
+        setHasAnimated(true);
         clearInterval(timer);
       } else {
         setDisplayValue(Math.floor(current));
@@ -30,7 +39,7 @@ const AnimatedNumber = ({
     }, duration / steps);
 
     return () => clearInterval(timer);
-  }, [value]);
+  }, [value, hasAnimated]);
 
   return (
     <span>

@@ -21,6 +21,9 @@ interface ImpactStatsRow {
 export const useImpactStats = () => {
   return useQuery({
     queryKey: ["impactStats"],
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes to prevent flickering
+    gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
+    refetchOnWindowFocus: false, // Don't refetch when window regains focus
     queryFn: async () => {
       // Buscar dados agregados da view pública (sem restrição de RLS)
       const { data, error } = await supabase
