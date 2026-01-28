@@ -63,10 +63,10 @@ export const ImpactCounter = () => {
       </div>
 
       <div className="container mx-auto px-4 relative z-10">
-        {/* Main Grid: Doadômetro + Premium Partners */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 lg:gap-12">
-          {/* Doadômetro Section - 3 columns */}
-          <div className="lg:col-span-3">
+        {/* Main Layout: Vertical Stack */}
+        <div className="flex flex-col items-center">
+          {/* Doadômetro Section */}
+          <div className="w-full max-w-5xl">
             {/* Header */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -106,7 +106,7 @@ export const ImpactCounter = () => {
             </motion.div>
 
             {/* Breakdown by Type */}
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-4">
               {donationTypeConfig.map((type, index) => (
                 <motion.div
                   key={type.key}
@@ -133,17 +133,16 @@ export const ImpactCounter = () => {
             </div>
           </div>
 
-          {/* Premium Partners Section - 1 column */}
-          <div className="lg:col-span-1">
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: 0.4 }}
-            >
-              <PremiumPartnerSlots />
-            </motion.div>
-          </div>
+          {/* Premium Partners Section - Centered below */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+            className="mt-12"
+          >
+            <PremiumPartnerSlots />
+          </motion.div>
         </div>
       </div>
     </section>
