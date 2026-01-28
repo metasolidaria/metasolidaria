@@ -18,6 +18,7 @@ export default defineConfig(({ mode }) => ({
     mode === "development" && componentTagger(),
     VitePWA({
       registerType: "autoUpdate",
+      injectRegister: null, // Don't inject register script - we'll do it manually after page load
       includeAssets: ["favicon.jpg", "robots.txt"],
       manifest: {
         name: "Meta Solidária",
