@@ -1,65 +1,93 @@
 
-# Plano: Corrigir View groups_admin - Permission Denied
 
-## Problema Identificado
-A página de Administração de Grupos não está mostrando dados devido ao mesmo problema que afetou a view `users_admin`:
-- **Erro**: `permission denied for table users`
-- **Causa**: A view `groups_admin` está com `security_invoker = on`
-- **Conflito**: A view faz JOIN com `auth.users` para obter o email do líder, mas o usuário autenticado não tem permissão direta nessa tabela
+# Plano: Adicionar Colunas de Expiração de Parceria
 
-## Situação Atual
+## Objetivo
+Adicionar duas novas colunas na tabela de administração de parceiros:
+1. **Data de Expiração** - editável pelo administrador
+2. **Dias até Expiração** - calculado automaticamente (data expiração - hoje)
 
-```text
-┌─────────────────────────────────────────────────────────────┐
-│ View: groups_admin (security_invoker = on)                  │
-│                                                             │
-│   SELECT ... FROM groups g                                  │
-│   LEFT JOIN auth.users u ON u.id = g.leader_id  ← ERRO!     │
-│                                                             │
-│   Usuário autenticado não tem acesso a auth.users           │
-└─────────────────────────────────────────────────────────────┘
-```
+## Alterações Necessárias
 
-## Solução
-Igual à correção aplicada para `users_admin`:
-1. Recriar a view `groups_admin` **sem** `security_invoker = on`
-2. Usar a função `get_admin_groups()` que já existe e é `SECURITY DEFINER`
+### 1. Migração de Banco de Dados
 
-## Alterações
-
-### Migração de Banco de Dados
+Adicionar coluna `expires_at` na tabela `partners`:
 
 ```sql
--- Remover a view com security_invoker
-DROP VIEW IF EXISTS public.groups_admin;
+ALTER TABLE public.partners 
+ADD COLUMN expires_at date DEFAULT NULL;
 
--- Recriar baseada na função SECURITY DEFINER
-CREATE VIEW public.groups_admin AS
-SELECT 
-  id, name, city, donation_type, goal_2026, is_private,
-  leader_id, leader_name, leader_whatsapp, leader_email,
-  description, entity_id, image_url, end_date,
-  created_at, updated_at, member_count, total_donations, total_goals
-FROM get_admin_groups();
-
--- Manter controle de acesso restritivo
-REVOKE ALL ON public.groups_admin FROM anon, authenticated;
-GRANT SELECT ON public.groups_admin TO authenticated;
+COMMENT ON COLUMN public.partners.expires_at IS 
+  'Data de expiração da parceria';
 ```
 
-## Camadas de Segurança
+### 2. Atualizar Componente AdminPartners.tsx
 
-| Camada | Descrição |
+#### 2.1 Adicionar novas colunas na tabela
+
+| Coluna | Descrição |
 |--------|-----------|
-| Função `SECURITY DEFINER` | `get_admin_groups()` executa com privilégios do criador |
-| Verificação `is_admin()` | A função só retorna dados para admins |
-| GRANT restritivo | Apenas usuários autenticados podem SELECT |
+| Expiração | Data de expiração editável com DatePicker inline |
+| Dias Restantes | Cálculo automático: `expires_at - hoje` |
 
-## Arquivos Afetados
+#### 2.2 Lógica de exibição dos dias restantes
 
-Apenas a migração de banco de dados - nenhuma alteração de código necessária.
+```text
+┌──────────────────────────────────────────────────────────┐
+│ Dias Restantes    │ Estilo                              │
+├───────────────────┼─────────────────────────────────────┤
+│ > 30 dias         │ Verde (normal)                      │
+│ 7-30 dias         │ Amarelo (atenção)                   │
+│ 1-7 dias          │ Laranja (urgente)                   │
+│ 0 ou negativo     │ Vermelho (expirado)                 │
+│ Sem data          │ Cinza "Indefinido"                  │
+└──────────────────────────────────────────────────────────┘
+```
 
-## Resultado Esperado
-- Página de Administração de Grupos exibirá todos os grupos corretamente
-- Funciona em todos os navegadores (Safari, Chrome, etc.)
-- Segurança mantida através das múltiplas camadas de proteção
+### 3. Atualizar EditPartnerModal.tsx
+
+Adicionar campo de seleção de data de expiração usando o componente DatePicker com Popover e Calendar.
+
+### 4. Atualizar CreatePartnerModal.tsx
+
+Adicionar campo opcional de data de expiração para novos parceiros.
+
+### 5. Atualizar Hook useAdminPartners.tsx
+
+Incluir o campo `expires_at` nas operações de criação e atualização.
+
+### 6. Atualizar Tipos TypeScript
+
+O tipo `Partner` em `usePartners.tsx` será atualizado automaticamente após a migração.
+
+## Interface Visual
+
+```text
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ Nome      │ Cidade │ Especialidade │ Nível  │ Status │ Expiração  │ Dias   │
+├───────────┼────────┼───────────────┼────────┼────────┼────────────┼────────┤
+│ NaturUai  │ Ouro F │ Loja Natural  │ Ouro   │ Aprov  │ 📅 15/06/26│ 🟢 138 │
+│ Clínica X │ Jacuti │ Nutricionista │ Apoiad │ Aprov  │ 📅 01/03/26│ 🟡 32  │
+│ Parceiro Y│ Monte S│ Personal      │ Diamat │ Aprov  │ 📅 05/02/26│ 🟠 8   │
+│ Antigo Z  │ Bueno  │ Veterinário   │ Apoiad │ Aprov  │ 📅 20/01/26│ 🔴 -8  │
+│ Novo W    │ Águas L│ Pet Shop      │ Apoiad │ Penden │ —          │ ⚪ —   │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+## Funcionalidades
+
+1. **Edição Inline Rápida**: Clicar no ícone de calendário abre um popover para selecionar a data
+2. **Atualização Automática**: O contador de dias é calculado em tempo real
+3. **Ordenação**: Nova coluna "Expiração" será ordenável
+4. **Visual Intuitivo**: Cores indicam urgência da renovação
+
+## Arquivos a Modificar
+
+| Arquivo | Alteração |
+|---------|-----------|
+| Migração SQL | Adicionar coluna `expires_at` |
+| `src/pages/AdminPartners.tsx` | Novas colunas + DatePicker inline |
+| `src/components/EditPartnerModal.tsx` | Campo de data de expiração |
+| `src/components/CreatePartnerModal.tsx` | Campo opcional de expiração |
+| `src/hooks/usePartners.tsx` | Tipo Partner (atualizado automaticamente) |
+
