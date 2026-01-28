@@ -1,79 +1,82 @@
 
-# Plano: Estabilizar Carrossel de Parceiros Premium no Hero
+# Plano: Corrigir Sobreposição no Header em Telas Tablet
 
-## Diagnostico
+## Problema Identificado
 
-Apos investigacao detalhada:
-- O codigo atual esta correto e o carrossel **esta funcionando** na versao mais recente
-- A request retorna 3 parceiros premium (NaturUai + Padaria Doce Mel)
-- Screenshot confirmou que o logo esta aparecendo ao lado do texto "Transforme suas metas..."
+Na visualização tablet (834px), o nome do usuário está sobrepondo os botões de navegação (Parceiros, Impacto). Isso ocorre porque:
 
-O problema pode ser:
-1. Cache do navegador mostrando versao antiga
-2. Build nao completamente atualizado no momento da visualizacao
-3. Instabilidade visual durante o carregamento da query
+1. O menu de navegação está centralizado com posição absoluta
+2. O nome de usuário pode ser muito longo (ex: "dbmetasolidaria")
+3. Não há limite de largura ou truncamento no nome do usuário
+4. Os elementos colidem quando o espaço horizontal é limitado
 
-## Solucao Proposta
+## Solução Proposta
 
-### 1. Adicionar Skeleton Durante Carregamento
+### 1. Limitar a largura máxima do nome de usuário
 
-Mostrar um placeholder visual enquanto os dados carregam para evitar "pulos" no layout:
+Adicionar `max-w-[120px]` e `truncate` no botão do nome do usuário para que nomes longos sejam cortados com "..." e não invadam o menu central.
+
+### 2. Adicionar z-index ao menu de autenticação
+
+Garantir que os botões de auth tenham `z-10` igual ao logo para manter hierarquia visual consistente.
+
+### 3. Reduzir gap do menu de navegação em tablets
+
+Mudar o `gap-8` para `gap-4 lg:gap-8` para dar mais espaço em telas menores.
+
+## Alterações Técnicas
+
+**Arquivo: `src/components/Header.tsx`**
 
 ```tsx
-const HeroPremiumLogos = () => {
-  const { data: premiumPartners, isLoading } = usePremiumPartnersHero();
-  
-  // Mostrar skeleton durante loading ao inves de null
-  if (isLoading) {
-    return (
-      <div className="border-l border-primary-foreground/30 pl-3">
-        <Skeleton className="w-12 h-12 rounded-lg bg-primary-foreground/20" />
-      </div>
-    );
-  }
-  
-  // Se nao houver parceiros, nao exibe nada
-  if (!premiumPartners || premiumPartners.length === 0) {
-    return null;
-  }
-  
-  // ... resto do codigo
-};
+// Antes (linha 62)
+<nav className="hidden md:flex items-center gap-8 absolute left-1/2 -translate-x-1/2">
+
+// Depois
+<nav className="hidden md:flex items-center gap-4 lg:gap-8 absolute left-1/2 -translate-x-1/2">
 ```
 
-### 2. Garantir Estabilidade do Plugin Autoplay
-
-Mover a criacao do plugin autoplay para dentro de um `useMemo` para evitar recriacao:
-
 ```tsx
-const autoplayPlugin = useMemo(
-  () => Autoplay({ delay: 2500, stopOnInteraction: false, stopOnMouseEnter: true }),
-  []
-);
+// Antes (linha 79)
+<div className="hidden md:flex items-center gap-3">
+
+// Depois
+<div className="hidden md:flex items-center gap-3 z-10">
 ```
 
-### 3. Adicionar CSS para Garantir Visibilidade
-
-Garantir que o carousel nao seja cortado pelo `overflow-hidden` do container pai:
-
 ```tsx
-<motion.div
-  className="inline-flex items-center gap-3 ... overflow-visible"
+// Antes (linhas 82-90)
+<Button
+  variant="ghost"
+  size="sm"
+  onClick={() => navigate("/perfil")}
+  className={isScrolled ? "text-foreground" : "text-primary-foreground hover:text-primary-foreground/80"}
 >
+  <Settings className="w-4 h-4 mr-1" />
+  {user.user_metadata?.full_name || user.email?.split("@")[0]}
+</Button>
+
+// Depois
+<Button
+  variant="ghost"
+  size="sm"
+  onClick={() => navigate("/perfil")}
+  className={`max-w-[140px] ${isScrolled ? "text-foreground" : "text-primary-foreground hover:text-primary-foreground/80"}`}
+>
+  <Settings className="w-4 h-4 mr-1 shrink-0" />
+  <span className="truncate">
+    {user.user_metadata?.full_name || user.email?.split("@")[0]}
+  </span>
+</Button>
 ```
 
-## Arquivos a Modificar
+## Resultado Esperado
 
-- `src/components/Hero.tsx`
+- Nome de usuário limitado a ~140px com truncamento (ex: "dbmetasoli...")
+- Menu de navegação com espaçamento menor em tablets (gap-4) e maior em desktop (gap-8)
+- Sem sobreposição entre elementos do header
+- Layout consistente em todas as dimensões de tela
 
-## Beneficios
+## Arquivo a Modificar
 
-1. **Melhor UX**: Usuario ve um placeholder durante o carregamento
-2. **Maior estabilidade**: Plugin autoplay nao recria a cada render
-3. **Prevencao de bugs visuais**: Evita cortes inesperados no layout
-
-## Teste Recomendado
-
-- Limpar cache do navegador (Ctrl+Shift+R)
-- Verificar se o carrossel aparece com o skeleton durante carregamento
-- Confirmar que os logos rotacionam a cada 2.5 segundos
+- `src/components/Header.tsx`
