@@ -1,4 +1,5 @@
-import { usePremiumAndGoldPartners } from "@/hooks/useGoldPartners";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import logoImage from "@/assets/logo.jpg";
@@ -7,21 +8,42 @@ import Autoplay from "embla-carousel-autoplay";
 import { useRef } from "react";
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 
-interface PremiumLogosCarouselProps {
-  groupCity: string;
-}
+// Hook to fetch ALL premium partners (national scope)
+const useAllPremiumPartners = () => {
+  return useQuery({
+    queryKey: ["allPremiumPartners"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("partners_public")
+        .select("*")
+        .eq("is_approved", true)
+        .eq("tier", "premium")
+        .order("name", { ascending: true });
 
-export const PremiumLogosCarousel = ({ groupCity }: PremiumLogosCarouselProps) => {
-  const { data: partners, isLoading } = usePremiumAndGoldPartners(groupCity);
+      if (error) throw error;
+      
+      // Remove duplicates by name (keep first occurrence)
+      const uniquePartners = data?.reduce((acc, partner) => {
+        if (!acc.find(p => p.name === partner.name)) {
+          acc.push(partner);
+        }
+        return acc;
+      }, [] as typeof data) || [];
+      
+      return uniquePartners;
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+};
+
+export const PremiumLogosCarousel = () => {
+  const { data: premiumPartners, isLoading } = useAllPremiumPartners();
   
   const autoplayPlugin = useRef(
     Autoplay({ delay: 2000, stopOnInteraction: false, stopOnMouseEnter: true })
   );
 
-  // Filter only premium tier partners
-  const premiumPartners = partners?.filter(p => p.tier === "premium") || [];
-
-  if (isLoading || premiumPartners.length === 0) {
+  if (isLoading || !premiumPartners || premiumPartners.length === 0) {
     return null;
   }
 

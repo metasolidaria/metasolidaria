@@ -335,9 +335,7 @@ export default function GroupPage() {
 
             {/* Premium Logos Carousel - Top Right */}
             <div className="flex items-center gap-4">
-              {group.city && (
-                <PremiumLogosCarousel groupCity={group.city} />
-              )}
+              <PremiumLogosCarousel />
               
               {userMember && !isLeader && (
                 <Button 
