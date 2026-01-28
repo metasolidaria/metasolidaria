@@ -12,6 +12,7 @@ export interface AdminGroup {
   leader_id: string;
   leader_name: string | null;
   leader_whatsapp: string | null;
+  leader_email: string | null;
   description: string | null;
   entity_id: string | null;
   image_url: string | null;

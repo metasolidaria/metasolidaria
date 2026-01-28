@@ -28,6 +28,7 @@ import { EditGroupAdminModal } from "@/components/admin/EditGroupAdminModal";
 import { GroupMembersModal } from "@/components/admin/GroupMembersModal";
 import { AddMemberToGroupModal } from "@/components/admin/AddMemberToGroupModal";
 import { CreateGroupAdminModal } from "@/components/admin/CreateGroupAdminModal";
+import { LeaderInfoPopover } from "@/components/admin/LeaderInfoPopover";
 import {
   ArrowLeft,
   Pencil,
@@ -271,6 +272,11 @@ const AdminGroups = () => {
                           >
                             <ExternalLink className="h-4 w-4" />
                           </Button>
+                          <LeaderInfoPopover
+                            leaderName={g.leader_name}
+                            leaderWhatsapp={g.leader_whatsapp}
+                            leaderEmail={g.leader_email}
+                          />
                           <Button
                             size="icon"
                             variant="ghost"
