@@ -1,93 +1,81 @@
 
+# Plano: Corrigir Problema de Fuso Horário nas Datas de Expiração
 
-# Plano: Adicionar Colunas de Expiração de Parceria
+## Problema Identificado
+Ao selecionar 31/01/2026, o sistema exibe 30/01/2026 devido à interpretação incorreta de timezone.
 
-## Objetivo
-Adicionar duas novas colunas na tabela de administração de parceiros:
-1. **Data de Expiração** - editável pelo administrador
-2. **Dias até Expiração** - calculado automaticamente (data expiração - hoje)
+### Causa Raiz
+```
+Banco: "2026-01-31" (string ISO)
+    ↓
+JavaScript: new Date("2026-01-31") → 2026-01-31T00:00:00 UTC
+    ↓
+Brasil (UTC-3): 30/01/2026 às 21:00 (dia anterior!)
+```
+
+## Solução
+Criar uma função auxiliar que parse datas ISO como **horário local** em vez de UTC, evitando a conversão de timezone.
 
 ## Alterações Necessárias
 
-### 1. Migração de Banco de Dados
+### 1. Adicionar função auxiliar em `src/lib/utils.ts`
 
-Adicionar coluna `expires_at` na tabela `partners`:
-
-```sql
-ALTER TABLE public.partners 
-ADD COLUMN expires_at date DEFAULT NULL;
-
-COMMENT ON COLUMN public.partners.expires_at IS 
-  'Data de expiração da parceria';
+```typescript
+/**
+ * Parse ISO date string (YYYY-MM-DD) as local date, not UTC
+ * This prevents timezone issues where "2026-01-31" becomes "30/01/2026" in BR
+ */
+export function parseLocalDate(dateString: string): Date {
+  const [year, month, day] = dateString.split('-').map(Number);
+  return new Date(year, month - 1, day); // month is 0-indexed
+}
 ```
 
-### 2. Atualizar Componente AdminPartners.tsx
+### 2. Atualizar `src/pages/AdminPartners.tsx`
 
-#### 2.1 Adicionar novas colunas na tabela
+| Local | Antes | Depois |
+|-------|-------|--------|
+| Linha 137 | `new Date(expiresAt)` | `parseLocalDate(expiresAt)` |
+| Linha 279 | `new Date(partner.expires_at)` | `parseLocalDate(partner.expires_at)` |
+| Linha 286 | `new Date(partner.expires_at)` | `parseLocalDate(partner.expires_at)` |
 
-| Coluna | Descrição |
-|--------|-----------|
-| Expiração | Data de expiração editável com DatePicker inline |
-| Dias Restantes | Cálculo automático: `expires_at - hoje` |
+### 3. Atualizar `src/components/EditPartnerModal.tsx`
 
-#### 2.2 Lógica de exibição dos dias restantes
+| Local | Antes | Depois |
+|-------|-------|--------|
+| Linha 48 | `new Date(partner.expires_at)` | `parseLocalDate(partner.expires_at)` |
+
+### 4. Atualizar `src/components/CreatePartnerModal.tsx`
+
+Nenhuma alteração necessária pois usa Date objects diretamente (não strings).
+
+## Explicação Técnica
 
 ```text
-┌──────────────────────────────────────────────────────────┐
-│ Dias Restantes    │ Estilo                              │
-├───────────────────┼─────────────────────────────────────┤
-│ > 30 dias         │ Verde (normal)                      │
-│ 7-30 dias         │ Amarelo (atenção)                   │
-│ 1-7 dias          │ Laranja (urgente)                   │
-│ 0 ou negativo     │ Vermelho (expirado)                 │
-│ Sem data          │ Cinza "Indefinido"                  │
-└──────────────────────────────────────────────────────────┘
+ANTES (problema):
+┌─────────────────────────────────────────────────────────┐
+│ "2026-01-31" → new Date() → 31/01 00:00 UTC            │
+│                           → 30/01 21:00 Brasil (UTC-3) │
+│                           → Exibe "30/01/2026" ❌       │
+└─────────────────────────────────────────────────────────┘
+
+DEPOIS (correção):
+┌─────────────────────────────────────────────────────────┐
+│ "2026-01-31" → parseLocalDate() → 31/01 00:00 LOCAL    │
+│                                 → Exibe "31/01/2026" ✅ │
+└─────────────────────────────────────────────────────────┘
 ```
 
-### 3. Atualizar EditPartnerModal.tsx
+## Cálculo de Dias Restantes Corrigido
 
-Adicionar campo de seleção de data de expiração usando o componente DatePicker com Popover e Calendar.
-
-### 4. Atualizar CreatePartnerModal.tsx
-
-Adicionar campo opcional de data de expiração para novos parceiros.
-
-### 5. Atualizar Hook useAdminPartners.tsx
-
-Incluir o campo `expires_at` nas operações de criação e atualização.
-
-### 6. Atualizar Tipos TypeScript
-
-O tipo `Partner` em `usePartners.tsx` será atualizado automaticamente após a migração.
-
-## Interface Visual
-
-```text
-┌─────────────────────────────────────────────────────────────────────────────┐
-│ Nome      │ Cidade │ Especialidade │ Nível  │ Status │ Expiração  │ Dias   │
-├───────────┼────────┼───────────────┼────────┼────────┼────────────┼────────┤
-│ NaturUai  │ Ouro F │ Loja Natural  │ Ouro   │ Aprov  │ 📅 15/06/26│ 🟢 138 │
-│ Clínica X │ Jacuti │ Nutricionista │ Apoiad │ Aprov  │ 📅 01/03/26│ 🟡 32  │
-│ Parceiro Y│ Monte S│ Personal      │ Diamat │ Aprov  │ 📅 05/02/26│ 🟠 8   │
-│ Antigo Z  │ Bueno  │ Veterinário   │ Apoiad │ Aprov  │ 📅 20/01/26│ 🔴 -8  │
-│ Novo W    │ Águas L│ Pet Shop      │ Apoiad │ Penden │ —          │ ⚪ —   │
-└─────────────────────────────────────────────────────────────────────────────┘
-```
-
-## Funcionalidades
-
-1. **Edição Inline Rápida**: Clicar no ícone de calendário abre um popover para selecionar a data
-2. **Atualização Automática**: O contador de dias é calculado em tempo real
-3. **Ordenação**: Nova coluna "Expiração" será ordenável
-4. **Visual Intuitivo**: Cores indicam urgência da renovação
+Com a correção, se hoje é 27/01/2026:
+- Data expiração: 31/01/2026
+- Dias restantes: 31 - 27 = **4 dias** (não mais 2)
 
 ## Arquivos a Modificar
 
 | Arquivo | Alteração |
 |---------|-----------|
-| Migração SQL | Adicionar coluna `expires_at` |
-| `src/pages/AdminPartners.tsx` | Novas colunas + DatePicker inline |
-| `src/components/EditPartnerModal.tsx` | Campo de data de expiração |
-| `src/components/CreatePartnerModal.tsx` | Campo opcional de expiração |
-| `src/hooks/usePartners.tsx` | Tipo Partner (atualizado automaticamente) |
-
+| `src/lib/utils.ts` | Adicionar função `parseLocalDate` |
+| `src/pages/AdminPartners.tsx` | Usar `parseLocalDate` em 3 locais |
+| `src/components/EditPartnerModal.tsx` | Usar `parseLocalDate` em 1 local |
