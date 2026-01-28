@@ -1,86 +1,79 @@
 
+# Plano: Estabilizar Carrossel de Parceiros Premium no Hero
 
-# Plano: Corrigir Carrossel de Parceiros Premium no Hero
+## Diagnostico
 
-## Problema Identificado
+Apos investigacao detalhada:
+- O codigo atual esta correto e o carrossel **esta funcionando** na versao mais recente
+- A request retorna 3 parceiros premium (NaturUai + Padaria Doce Mel)
+- Screenshot confirmou que o logo esta aparecendo ao lado do texto "Transforme suas metas..."
 
-A caixa do carrossel está desaparecendo porque:
-1. A div container com a borda (`border-l`) é sempre renderizada
-2. Quando o componente `HeroPremiumLogos` retorna `null` (durante loading ou sem parceiros), a div fica vazia mas ainda ocupa espaço
-3. O carrossel pode estar "cortando" o conteúdo visualmente devido ao `overflow-hidden`
+O problema pode ser:
+1. Cache do navegador mostrando versao antiga
+2. Build nao completamente atualizado no momento da visualizacao
+3. Instabilidade visual durante o carregamento da query
 
 ## Solucao Proposta
 
-Mover a logica de renderizacao condicional para fora do componente, de forma que toda a secao do carrossel (incluindo a borda) so apareca quando houver parceiros para exibir.
+### 1. Adicionar Skeleton Durante Carregamento
 
-## Alteracoes
-
-### 1. Modificar `src/components/Hero.tsx`
-
-**Atualizar o componente HeroPremiumLogos:**
-- Exportar uma funcao auxiliar para verificar se ha parceiros
-- Ou incluir a div container dentro do componente para que tudo seja renderizado ou nada
-
-**Opcao escolhida - Incluir container no componente:**
-
-```tsx
-// Antes (problema)
-<div className="border-l border-primary-foreground/30 pl-3">
-  <HeroPremiumLogos />  {/* Pode retornar null */}
-</div>
-
-// Depois (solucao)
-<HeroPremiumLogos />  {/* Componente ja inclui o container com borda */}
-```
-
-O componente `HeroPremiumLogos` passara a renderizar a div com borda internamente, garantindo que:
-- Se nao houver parceiros, nada e exibido (nem a borda)
-- Se houver parceiros, a borda e o carrossel aparecem juntos
-
-## Detalhes Tecnicos
+Mostrar um placeholder visual enquanto os dados carregam para evitar "pulos" no layout:
 
 ```tsx
 const HeroPremiumLogos = () => {
   const { data: premiumPartners, isLoading } = usePremiumPartnersHero();
   
-  const autoplayPlugin = useRef(
-    Autoplay({ delay: 2500, stopOnInteraction: false, stopOnMouseEnter: true })
-  );
-
-  // Retorna null se nao houver parceiros (nao exibe nada)
-  if (isLoading || !premiumPartners || premiumPartners.length === 0) {
+  // Mostrar skeleton durante loading ao inves de null
+  if (isLoading) {
+    return (
+      <div className="border-l border-primary-foreground/30 pl-3">
+        <Skeleton className="w-12 h-12 rounded-lg bg-primary-foreground/20" />
+      </div>
+    );
+  }
+  
+  // Se nao houver parceiros, nao exibe nada
+  if (!premiumPartners || premiumPartners.length === 0) {
     return null;
   }
-
-  // ... resto do codigo ...
-
-  return (
-    // Container com borda agora esta DENTRO do componente
-    <div className="border-l border-primary-foreground/30 pl-3">
-      <TooltipProvider delayDuration={100}>
-        <Carousel ...>
-          ...
-        </Carousel>
-      </TooltipProvider>
-    </div>
-  );
+  
+  // ... resto do codigo
 };
 ```
 
-E no JSX do Hero, remover a div container:
+### 2. Garantir Estabilidade do Plugin Autoplay
+
+Mover a criacao do plugin autoplay para dentro de um `useMemo` para evitar recriacao:
+
 ```tsx
-<motion.div className="inline-flex items-center gap-3 ...">
-  <Heart className="w-4 h-4 text-secondary" fill="currentColor" />
-  <span className="text-primary-foreground text-sm font-medium">
-    Transforme suas metas em solidariedade
-  </span>
-  <HeroPremiumLogos />  {/* Sem div wrapper */}
-</motion.div>
+const autoplayPlugin = useMemo(
+  () => Autoplay({ delay: 2500, stopOnInteraction: false, stopOnMouseEnter: true }),
+  []
+);
 ```
 
-## Resultado Esperado
+### 3. Adicionar CSS para Garantir Visibilidade
 
-- Quando houver parceiros premium: a caixa com borda e carrossel aparece
-- Quando nao houver parceiros ou durante o loading: nada extra e exibido
-- A animacao do carrossel continuara funcionando normalmente
+Garantir que o carousel nao seja cortado pelo `overflow-hidden` do container pai:
 
+```tsx
+<motion.div
+  className="inline-flex items-center gap-3 ... overflow-visible"
+>
+```
+
+## Arquivos a Modificar
+
+- `src/components/Hero.tsx`
+
+## Beneficios
+
+1. **Melhor UX**: Usuario ve um placeholder durante o carregamento
+2. **Maior estabilidade**: Plugin autoplay nao recria a cada render
+3. **Prevencao de bugs visuais**: Evita cortes inesperados no layout
+
+## Teste Recomendado
+
+- Limpar cache do navegador (Ctrl+Shift+R)
+- Verificar se o carrossel aparece com o skeleton durante carregamento
+- Confirmar que os logos rotacionam a cada 2.5 segundos
