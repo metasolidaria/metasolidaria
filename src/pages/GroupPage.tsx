@@ -16,6 +16,7 @@ import { InviteMemberModal } from "@/components/InviteMemberModal";
 import { JoinRequestsPanel } from "@/components/JoinRequestsPanel";
 import { useProgressAnalysis } from "@/hooks/useProgressAnalysis";
 import { GoldPartnersCarousel } from "@/components/GoldPartnersCarousel";
+import { PremiumLogosCarousel } from "@/components/PremiumLogosCarousel";
 import { useState } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -285,9 +286,9 @@ export default function GroupPage() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="flex flex-col md:flex-row md:items-center justify-between gap-4"
+            className="flex flex-col md:flex-row md:items-start justify-between gap-4"
           >
-            <div>
+            <div className="flex-1">
               <div className="flex items-center gap-2 mb-2">
                 {group.is_private ? (
                   <span className="bg-secondary/80 px-2 py-1 rounded-full text-xs text-secondary-foreground flex items-center gap-1">
@@ -332,16 +333,23 @@ export default function GroupPage() {
               </div>
             </div>
 
-            {userMember && !isLeader && (
-              <Button 
-                variant="outline" 
-                onClick={() => setLeaveDialogOpen(true)}
-                disabled={leaveGroup.isPending}
-              >
-                <LogOut className="w-4 h-4 mr-2" />
-                Sair do Grupo
-              </Button>
-            )}
+            {/* Premium Logos Carousel - Top Right */}
+            <div className="flex items-center gap-4">
+              {group.city && (
+                <PremiumLogosCarousel groupCity={group.city} />
+              )}
+              
+              {userMember && !isLeader && (
+                <Button 
+                  variant="outline" 
+                  onClick={() => setLeaveDialogOpen(true)}
+                  disabled={leaveGroup.isPending}
+                >
+                  <LogOut className="w-4 h-4 mr-2" />
+                  Sair do Grupo
+                </Button>
+              )}
+            </div>
           </motion.div>
 
           {/* Leader Action Buttons */}
