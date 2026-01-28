@@ -114,6 +114,7 @@ const AdminPartners = () => {
   const [specialtyFilter, setSpecialtyFilter] = useState<string>("all");
   const [tierFilter, setTierFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [expirationFilter, setExpirationFilter] = useState<string>("all");
 
   const sortPartners = (partners: Partner[]) => {
     return [...partners].sort((a, b) => {
@@ -189,13 +190,29 @@ const AdminPartners = () => {
       if (statusFilter === "inactive" && partner.is_approved) {
         return false;
       }
+      // Expiration filter
+      if (expirationFilter !== "all") {
+        const daysRemaining = getDaysRemaining(partner.expires_at);
+        if (expirationFilter === "expired" && (daysRemaining === null || daysRemaining >= 0)) {
+          return false;
+        }
+        if (expirationFilter === "expiring_soon" && (daysRemaining === null || daysRemaining < 0 || daysRemaining > 30)) {
+          return false;
+        }
+        if (expirationFilter === "expiring_week" && (daysRemaining === null || daysRemaining < 0 || daysRemaining > 7)) {
+          return false;
+        }
+        if (expirationFilter === "no_expiration" && daysRemaining !== null) {
+          return false;
+        }
+      }
       return true;
     });
   };
 
-  const sortedPendingPartners = useMemo(() => sortPartners(filterPartners(pendingPartners)), [pendingPartners, sortColumn, sortDirection, cityFilter, specialtyFilter, tierFilter, statusFilter]);
-  const sortedApprovedPartners = useMemo(() => sortPartners(filterPartners(approvedPartners)), [approvedPartners, sortColumn, sortDirection, cityFilter, specialtyFilter, tierFilter, statusFilter]);
-  const sortedAllPartners = useMemo(() => sortPartners(filterPartners(allPartners || [])), [allPartners, sortColumn, sortDirection, cityFilter, specialtyFilter, tierFilter, statusFilter]);
+  const sortedPendingPartners = useMemo(() => sortPartners(filterPartners(pendingPartners)), [pendingPartners, sortColumn, sortDirection, cityFilter, specialtyFilter, tierFilter, statusFilter, expirationFilter]);
+  const sortedApprovedPartners = useMemo(() => sortPartners(filterPartners(approvedPartners)), [approvedPartners, sortColumn, sortDirection, cityFilter, specialtyFilter, tierFilter, statusFilter, expirationFilter]);
+  const sortedAllPartners = useMemo(() => sortPartners(filterPartners(allPartners || [])), [allPartners, sortColumn, sortDirection, cityFilter, specialtyFilter, tierFilter, statusFilter, expirationFilter]);
 
   // Get unique cities for filter
   const uniqueCities = useMemo(() => {
@@ -209,9 +226,10 @@ const AdminPartners = () => {
     setSpecialtyFilter("all");
     setTierFilter("all");
     setStatusFilter("all");
+    setExpirationFilter("all");
   };
 
-  const hasActiveFilters = cityFilter || specialtyFilter !== "all" || tierFilter !== "all" || statusFilter !== "all";
+  const hasActiveFilters = cityFilter || specialtyFilter !== "all" || tierFilter !== "all" || statusFilter !== "all" || expirationFilter !== "all";
 
   const handleSort = (column: SortColumn) => {
     if (sortColumn === column) {
@@ -526,6 +544,22 @@ const AdminPartners = () => {
                     <SelectItem value="all">Todos</SelectItem>
                     <SelectItem value="active">Ativo</SelectItem>
                     <SelectItem value="inactive">Inativo</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="flex flex-col gap-1">
+                <label className="text-sm font-medium text-muted-foreground">Expiração</label>
+                <Select value={expirationFilter} onValueChange={setExpirationFilter}>
+                  <SelectTrigger className="w-44">
+                    <SelectValue placeholder="Todas" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todas</SelectItem>
+                    <SelectItem value="expired">Expirados</SelectItem>
+                    <SelectItem value="expiring_week">Expira em 7 dias</SelectItem>
+                    <SelectItem value="expiring_soon">Expira em 30 dias</SelectItem>
+                    <SelectItem value="no_expiration">Sem data</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
