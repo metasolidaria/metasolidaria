@@ -12,7 +12,7 @@ import { CityAutocomplete } from "@/components/CityAutocomplete";
 import { Loader2, Gem, Medal, Heart, CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { cn } from "@/lib/utils";
+import { cn, parseLocalDate } from "@/lib/utils";
 import type { Partner, PartnerTier } from "@/hooks/usePartners";
 
 interface EditPartnerModalProps {
@@ -59,7 +59,7 @@ export const EditPartnerModal = ({
         description: partner.description || "",
         tier: partner.tier || "apoiador",
         is_approved: partner.is_approved || false,
-        expires_at: partner.expires_at ? new Date(partner.expires_at) : null,
+        expires_at: partner.expires_at ? parseLocalDate(partner.expires_at) : null,
       });
     }
   }, [partner]);

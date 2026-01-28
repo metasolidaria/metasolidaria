@@ -47,7 +47,7 @@ import {
 } from "lucide-react";
 import { format, differenceInDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { cn } from "@/lib/utils";
+import { cn, parseLocalDate } from "@/lib/utils";
 import type { Partner, PartnerTier } from "@/hooks/usePartners";
 
 type SortColumn = "name" | "city" | "specialty" | "tier" | "is_approved" | "created_at" | "expires_at";
@@ -134,7 +134,7 @@ const AdminPartners = () => {
 
   const getDaysRemaining = (expiresAt: string | null): number | null => {
     if (!expiresAt) return null;
-    return differenceInDays(new Date(expiresAt), new Date());
+    return differenceInDays(parseLocalDate(expiresAt), new Date());
   };
 
   const getDaysRemainingStyle = (days: number | null) => {
@@ -276,14 +276,14 @@ const AdminPartners = () => {
               >
                 <CalendarIcon className="mr-2 h-4 w-4" />
                 {partner.expires_at
-                  ? format(new Date(partner.expires_at), "dd/MM/yyyy", { locale: ptBR })
+                  ? format(parseLocalDate(partner.expires_at), "dd/MM/yyyy", { locale: ptBR })
                   : "—"}
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="start">
               <Calendar
                 mode="single"
-                selected={partner.expires_at ? new Date(partner.expires_at) : undefined}
+                selected={partner.expires_at ? parseLocalDate(partner.expires_at) : undefined}
                 onSelect={(date) => handleExpirationChange(partner, date)}
                 initialFocus
                 className="pointer-events-auto"
