@@ -41,7 +41,7 @@ const socialLinks = [
   {
     name: "WhatsApp",
     icon: MessageCircle,
-    href: "https://wa.me/5500000000000",
+    href: "https://wa.me/5519994662603?text=Olá! Vim pelo site Meta Solidária.",
     color: "hover:text-green-400"
   }
 ];
