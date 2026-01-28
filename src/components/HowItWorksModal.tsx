@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { HelpCircle, Users, Scale, Apple, Heart, X } from "lucide-react";
+import { motion } from "framer-motion";
+import { HelpCircle, Users, Scale, Apple, Heart } from "lucide-react";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -57,14 +58,14 @@ export const HowItWorksModal = () => {
             <DialogTitle className="text-2xl font-bold text-center">
               Como Funciona
             </DialogTitle>
+            <DialogDescription className="text-center">
+              Um processo simples para transformar suas metas pessoais em impacto
+              coletivo
+            </DialogDescription>
           </DialogHeader>
 
-          <p className="text-muted-foreground text-center mb-6">
-            Um processo simples para transformar suas metas pessoais em impacto
+          <div className="grid gap-4 mt-4">
             coletivo
-          </p>
-
-          <div className="grid gap-4">
             {steps.map((step, index) => (
               <motion.div
                 key={step.title}
