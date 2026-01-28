@@ -1,14 +1,27 @@
 import { useState, useEffect } from 'react';
-import { Download, X } from 'lucide-react';
+import { Download, X, Share, MoreVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { usePWAInstall } from '@/hooks/usePWAInstall';
 
 const DISMISSED_KEY = 'pwa-prompt-dismissed';
 const DISMISS_DURATION = 7 * 24 * 60 * 60 * 1000; // 7 days
 
+const isIOS = () => {
+  return /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+};
+
+const isAndroid = () => {
+  return /Android/.test(navigator.userAgent);
+};
+
+const isSafari = () => {
+  return /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent);
+};
+
 export const InstallPWAPrompt = () => {
   const { isInstallable, isInstalled, installApp } = usePWAInstall();
   const [isDismissed, setIsDismissed] = useState(true);
+  const [showManualInstructions, setShowManualInstructions] = useState(false);
 
   useEffect(() => {
     const dismissedAt = localStorage.getItem(DISMISSED_KEY);
@@ -31,12 +44,21 @@ export const InstallPWAPrompt = () => {
     const success = await installApp();
     if (success) {
       handleDismiss();
+    } else {
+      // Show manual instructions if native prompt failed
+      setShowManualInstructions(true);
     }
   };
 
-  if (!isInstallable || isInstalled || isDismissed) {
+  // Don't show if already installed or dismissed
+  if (isInstalled || isDismissed) {
     return null;
   }
+
+  // Show manual instructions for iOS Safari or when native prompt isn't available
+  const shouldShowManual = !isInstallable || showManualInstructions;
+  const isiOSDevice = isIOS();
+  const isAndroidDevice = isAndroid();
 
   return (
     <div className="fixed bottom-4 left-4 right-4 z-50 mx-auto max-w-md animate-in slide-in-from-bottom-4 duration-300">
@@ -50,25 +72,50 @@ export const InstallPWAPrompt = () => {
             <h3 className="font-semibold text-foreground text-sm">
               Instalar Meta Solidária
             </h3>
-            <p className="text-muted-foreground text-xs mt-0.5">
-              Acesse o app direto da sua tela inicial, sem precisar do navegador.
-            </p>
+            
+            {shouldShowManual ? (
+              <div className="text-muted-foreground text-xs mt-1 space-y-2">
+                {isiOSDevice ? (
+                  <>
+                    <p className="flex items-center gap-1">
+                      Toque em <Share className="w-3 h-3 inline" /> <strong>Compartilhar</strong> e depois em <strong>"Adicionar à Tela Inicial"</strong>
+                    </p>
+                  </>
+                ) : isAndroidDevice ? (
+                  <>
+                    <p className="flex items-center gap-1">
+                      Toque em <MoreVertical className="w-3 h-3 inline" /> <strong>Menu</strong> e depois em <strong>"Instalar app"</strong> ou <strong>"Adicionar à tela inicial"</strong>
+                    </p>
+                  </>
+                ) : (
+                  <p>
+                    Use o menu do navegador para adicionar à tela inicial.
+                  </p>
+                )}
+              </div>
+            ) : (
+              <p className="text-muted-foreground text-xs mt-0.5">
+                Acesse o app direto da sua tela inicial, sem precisar do navegador.
+              </p>
+            )}
             
             <div className="flex gap-2 mt-3">
-              <Button 
-                onClick={handleInstall}
-                size="sm"
-                className="flex-1"
-              >
-                Instalar App
-              </Button>
+              {!shouldShowManual && (
+                <Button 
+                  onClick={handleInstall}
+                  size="sm"
+                  className="flex-1"
+                >
+                  Instalar App
+                </Button>
+              )}
               <Button 
                 onClick={handleDismiss}
-                variant="ghost"
+                variant={shouldShowManual ? "default" : "ghost"}
                 size="sm"
-                className="px-2"
+                className={shouldShowManual ? "flex-1" : "px-2"}
               >
-                <X className="w-4 h-4" />
+                {shouldShowManual ? "Entendi" : <X className="w-4 h-4" />}
               </Button>
             </div>
           </div>
