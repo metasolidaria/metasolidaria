@@ -79,15 +79,15 @@ export const PremiumLogosCarousel = () => {
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Avatar 
-                      className="w-10 h-10 rounded-lg border-2 border-purple-500/50 bg-white cursor-pointer hover:border-purple-500 transition-colors shadow-sm hover:shadow-md"
+                      className="w-14 h-14 sm:w-12 sm:h-12 rounded-lg border-2 border-purple-500/50 bg-white cursor-pointer hover:border-purple-500 transition-colors shadow-sm hover:shadow-md"
                       onClick={() => handleWhatsAppClick(partner)}
                     >
                       <AvatarImage 
                         src={getPartnerLogo(partner.name || "")} 
                         alt={partner.name || "Parceiro Premium"}
-                        className="object-contain p-0.5"
+                        className="object-contain p-1"
                       />
-                      <AvatarFallback className="rounded-lg bg-purple-100 text-purple-700 font-semibold text-xs">
+                      <AvatarFallback className="rounded-lg bg-purple-100 text-purple-700 font-semibold text-sm">
                         {partner.name?.charAt(0) || "P"}
                       </AvatarFallback>
                     </Avatar>
