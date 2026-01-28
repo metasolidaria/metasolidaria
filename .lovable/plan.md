@@ -1,98 +1,88 @@
 
-# Plano: Adicionar Botão de Informações do Líder na Administração de Grupos
+# Plano: Corrigir Layout do Doadômetro na Versão Web
 
-## Objetivo
-Adicionar um botão nas ações de cada grupo que, ao clicar, exiba um popover/modal com as informações do líder: nome, telefone (WhatsApp) e email.
+## Problema
+Na versão web, o layout do Doadômetro está quebrando:
+- O parceiro premium (NaturUai) aparece à direita no topo, desalinhado
+- Os 7 cards de tipos de doação não cabem em 6 colunas, fazendo o último (Brinquedos) quebrar para uma linha sozinha
 
----
+## Solução Proposta
+Reorganizar o layout para que fique igual ao mobile: tudo centralizado e empilhado verticalmente, com o parceiro premium aparecendo abaixo dos cards de doação.
 
-## Situação Atual
+## Alterações
 
-| Dado | Disponível? | Fonte |
-|------|-------------|-------|
-| Nome do líder | Sim | `groups.leader_name` |
-| WhatsApp do líder | Sim | `groups.leader_whatsapp` |
-| Email do líder | **Não** | Precisa JOIN com `auth.users` |
+### 1. Componente ImpactCounter.tsx
 
----
+**Mudanças no grid principal:**
+- Remover o layout side-by-side (`lg:grid-cols-4`)
+- Usar layout vertical para todas as telas
 
-## Alterações Necessárias
+**Mudanças no grid de tipos de doação:**
+- Ajustar de `lg:grid-cols-6` para `lg:grid-cols-7` (acomodar todos os 7 tipos)
+- Ou usar `grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7` para melhor responsividade
 
-### 1. Banco de Dados
-Atualizar a função `get_admin_groups()` e a view `groups_admin` para incluir o email do líder:
+**Mover parceiro premium para baixo:**
+- Posicionar a seção de parceiros premium centralizada abaixo dos cards de doação
 
-```sql
--- Adicionar coluna leader_email via JOIN com auth.users
-SELECT 
-  g.*,
-  u.email as leader_email
-FROM groups g
-LEFT JOIN auth.users u ON u.id = g.leader_id
-```
-
-### 2. TypeScript (Hook)
-Atualizar a interface `AdminGroup` em `useAdminGroups.tsx`:
-
-```typescript
-export interface AdminGroup {
-  // campos existentes...
-  leader_email: string | null;  // novo campo
-}
-```
-
-### 3. Componente de Modal/Popover
-Criar um componente `LeaderInfoModal` ou usar um Popover simples para exibir:
-- Nome do líder
-- WhatsApp (com link para abrir conversa)
-- Email (com link mailto)
-
-### 4. Botão na Tabela
-Adicionar um botão com ícone de pessoa/coroa na coluna de ações:
+### 2. Estrutura Visual Final
 
 ```text
-[Ver grupo] [Membros] [Add membro] [Convite] [Líder] [Editar] [Excluir]
-                                              ^^^^^
-                                            (novo)
+┌─────────────────────────────────────────────┐
+│              🤍 Doadômetro                  │
+│    Impacto social gerado até o momento      │
+│                                             │
+│              313.597                        │
+│          doações realizadas                 │
+│                                             │
+│  ┌───┐ ┌───┐ ┌───┐ ┌───┐ ┌───┐ ┌───┐ ┌───┐ │
+│  │Alm│ │Liv│ │Rou│ │Cob│ │Sop│ │Hig│ │Bri│ │
+│  └───┘ └───┘ └───┘ └───┘ └───┘ └───┘ └───┘ │
+│                                             │
+│          ⭐ Parceiros Premium               │
+│             [NaturUai]                      │
+└─────────────────────────────────────────────┘
 ```
 
----
-
-## Arquivos a Modificar
+### Arquivo a Modificar
 
 | Arquivo | Alteração |
 |---------|-----------|
-| Função SQL `get_admin_groups()` | Adicionar JOIN com `auth.users` para buscar email |
-| View SQL `groups_admin` | Atualizar para incluir `leader_email` |
-| `src/hooks/useAdminGroups.tsx` | Adicionar `leader_email` na interface |
-| `src/pages/AdminGroups.tsx` | Adicionar botão e modal/popover com info do líder |
+| `src/components/ImpactCounter.tsx` | Reorganizar grid para layout vertical, ajustar colunas dos cards |
 
 ---
 
-## Interface Visual Proposta
+## Detalhes Técnicos
 
-Ao clicar no botão, exibir um popover com:
-
-```text
-┌─────────────────────────────────┐
-│  👤 Informações do Líder        │
-├─────────────────────────────────┤
-│  Nome: Piero Bueno              │
-│  📱 (19) 98251-1944   [Abrir]   │
-│  ✉️  piero@email.com  [Enviar]  │
-└─────────────────────────────────┘
+**Grid principal (antes):**
+```jsx
+<div className="grid grid-cols-1 lg:grid-cols-4 gap-8 lg:gap-12">
+  <div className="lg:col-span-3">...</div>
+  <div className="lg:col-span-1">...</div>
+</div>
 ```
 
----
+**Grid principal (depois):**
+```jsx
+<div className="flex flex-col items-center">
+  <div className="w-full max-w-5xl">...</div>
+  <div className="mt-8">...</div>
+</div>
+```
 
-## Considerações Técnicas
+**Grid de tipos (antes):**
+```jsx
+<div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+```
 
-- A função usa `SECURITY DEFINER` e já verifica `is_admin()`, garantindo que apenas administradores acessem os dados
-- O email vem da tabela `auth.users`, que requer acesso via função server-side
-- Os links de WhatsApp usarão o formato `https://wa.me/55XXXXXXXXXXX`
-- Os links de email usarão `mailto:email@exemplo.com`
+**Grid de tipos (depois):**
+```jsx
+<div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-4">
+```
 
 ---
 
 ## Resultado Esperado
-
-Administradores poderão visualizar rapidamente as informações de contato do líder de cada grupo sem precisar acessar outras páginas ou buscar manualmente.
+- Layout consistente entre mobile e web
+- Todos os 7 cards de tipos de doação em uma única linha no desktop
+- Parceiro premium centralizado abaixo das estatísticas
+- Visual limpo e organizado em todas as resoluções
