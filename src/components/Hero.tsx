@@ -170,9 +170,15 @@ export const Hero = () => {
     }
   };
   return <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-      {/* Background Image with Overlay */}
+      {/* Background Image with Overlay - using fetchpriority for LCP optimization */}
       <div className="absolute inset-0 z-0">
-        <img src={heroImage} alt="Comunidade unida" className="w-full h-full object-cover" />
+        <img 
+          src={heroImage} 
+          alt="Comunidade unida" 
+          className="w-full h-full object-cover"
+          fetchPriority="high"
+          decoding="async"
+        />
         <div className="absolute inset-0 bg-gradient-to-b from-foreground/70 via-foreground/50 to-foreground/80" />
       </div>
 
