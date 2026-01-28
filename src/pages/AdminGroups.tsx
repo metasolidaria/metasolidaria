@@ -46,6 +46,7 @@ import {
   ArrowUpDown,
   ArrowUp,
   ArrowDown,
+  Eye,
 } from "lucide-react";
 import { InviteMemberModal } from "@/components/InviteMemberModal";
 import { format } from "date-fns";
@@ -145,6 +146,10 @@ const AdminGroups = () => {
       case "total_goals":
         aValue = a.total_goals ?? 0;
         bValue = b.total_goals ?? 0;
+        break;
+      case "view_count":
+        aValue = a.view_count ?? 0;
+        bValue = b.view_count ?? 0;
         break;
       case "created_at":
         aValue = new Date(a.created_at).getTime();
@@ -299,6 +304,7 @@ const AdminGroups = () => {
                   <TableHead><SortableHeader column="is_private">Visibilidade</SortableHeader></TableHead>
                   <TableHead className="text-right"><SortableHeader column="member_count">Membros</SortableHeader></TableHead>
                   <TableHead className="text-right"><SortableHeader column="total_goals">Metas</SortableHeader></TableHead>
+                  <TableHead className="text-right"><SortableHeader column="view_count">Acessos</SortableHeader></TableHead>
                   <TableHead><SortableHeader column="created_at">Criação</SortableHeader></TableHead>
                   <TableHead className="w-[150px]">Ações</TableHead>
                 </TableRow>
@@ -306,7 +312,7 @@ const AdminGroups = () => {
               <TableBody>
                 {sortedGroups?.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
                       Nenhum grupo encontrado
                     </TableCell>
                   </TableRow>
@@ -334,6 +340,12 @@ const AdminGroups = () => {
                         {g.total_goals && g.total_goals > 0 ? g.total_goals : (
                           <span className="text-muted-foreground">-</span>
                         )}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <span className="inline-flex items-center gap-1 text-muted-foreground">
+                          <Eye className="h-3 w-3" />
+                          {g.view_count || 0}
+                        </span>
                       </TableCell>
                       <TableCell className="text-muted-foreground">
                         {format(new Date(g.created_at), "dd/MM/yyyy", { locale: ptBR })}

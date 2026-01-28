@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -37,6 +38,15 @@ export const useGroupDetails = (groupId: string | undefined) => {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Increment view count on first load
+  useEffect(() => {
+    if (groupId) {
+      supabase.rpc('increment_group_view_count', { _group_id: groupId }).then(() => {
+        // View count incremented
+      });
+    }
+  }, [groupId]);
 
   // Fetch group details with entity (with fallback to public view)
   const { data: group, isLoading: groupLoading, error: groupError } = useQuery({
