@@ -61,7 +61,7 @@ export const GoldPartnersCarousel = ({ groupCity }: GoldPartnersCarouselProps) =
           <Crown className="w-5 h-5 text-purple-500" />
           <Star className="w-5 h-5 text-amber-500 fill-amber-500" />
         </div>
-        <h2 className="text-xl font-bold text-foreground">Parceiros da Região</h2>
+        <h2 className="text-xl font-bold text-foreground">Parceiros Solidários</h2>
         <Badge variant="outline" className="ml-auto bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/30">
           {partners.length} {partners.length === 1 ? "parceiro" : "parceiros"}
         </Badge>
