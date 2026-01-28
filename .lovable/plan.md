@@ -1,82 +1,98 @@
 
-# Plano: Unificar Sistema de Permissões Administrativas
+# Plano: Adicionar Botão de Informações do Líder na Administração de Grupos
 
-## Situação Atual
-
-O sistema possui duas fontes de verdade separadas para acesso administrativo:
-
-| Sistema | Função | Usuários com acesso |
-|---------|--------|---------------------|
-| `admin_emails` | Controla acesso ao painel e RLS | dbsmetasolidaria@gmail.com, dbmetasolidaria@gmail.com |
-| `user_roles` (role='admin') | Apenas exibe badge na UI | pierohsbueno@msn.com, dbmetasolidaria@gmail.com |
-
-**Problema:** `pierohsbueno@msn.com` tem papel "admin" mas não consegue acessar a administração.
+## Objetivo
+Adicionar um botão nas ações de cada grupo que, ao clicar, exiba um popover/modal com as informações do líder: nome, telefone (WhatsApp) e email.
 
 ---
 
-## Solução Proposta
+## Situação Atual
 
-Modificar a função `is_admin()` para verificar AMBAS as fontes:
-- Se o email está em `admin_emails` **OU**
-- Se o usuário tem role `admin` em `user_roles`
+| Dado | Disponível? | Fonte |
+|------|-------------|-------|
+| Nome do líder | Sim | `groups.leader_name` |
+| WhatsApp do líder | Sim | `groups.leader_whatsapp` |
+| Email do líder | **Não** | Precisa JOIN com `auth.users` |
 
-### Alteração na Função SQL
+---
+
+## Alterações Necessárias
+
+### 1. Banco de Dados
+Atualizar a função `get_admin_groups()` e a view `groups_admin` para incluir o email do líder:
 
 ```sql
-CREATE OR REPLACE FUNCTION public.is_admin(_user_id uuid)
-RETURNS boolean
-LANGUAGE sql
-STABLE
-SECURITY DEFINER
-SET search_path = public
-AS $$
-  SELECT EXISTS (
-    -- Verifica admin_emails (compatibilidade)
-    SELECT 1
-    FROM public.admin_emails ae
-    JOIN auth.users u ON lower(u.email) = lower(ae.email)
-    WHERE u.id = _user_id
-  ) OR EXISTS (
-    -- Verifica user_roles com role 'admin'
-    SELECT 1
-    FROM public.user_roles ur
-    WHERE ur.user_id = _user_id
-      AND ur.role = 'admin'
-  )
-$$;
+-- Adicionar coluna leader_email via JOIN com auth.users
+SELECT 
+  g.*,
+  u.email as leader_email
+FROM groups g
+LEFT JOIN auth.users u ON u.id = g.leader_id
+```
+
+### 2. TypeScript (Hook)
+Atualizar a interface `AdminGroup` em `useAdminGroups.tsx`:
+
+```typescript
+export interface AdminGroup {
+  // campos existentes...
+  leader_email: string | null;  // novo campo
+}
+```
+
+### 3. Componente de Modal/Popover
+Criar um componente `LeaderInfoModal` ou usar um Popover simples para exibir:
+- Nome do líder
+- WhatsApp (com link para abrir conversa)
+- Email (com link mailto)
+
+### 4. Botão na Tabela
+Adicionar um botão com ícone de pessoa/coroa na coluna de ações:
+
+```text
+[Ver grupo] [Membros] [Add membro] [Convite] [Líder] [Editar] [Excluir]
+                                              ^^^^^
+                                            (novo)
 ```
 
 ---
 
-## Benefícios
+## Arquivos a Modificar
 
-1. **Compatibilidade**: Mantém acesso dos emails já cadastrados em `admin_emails`
-2. **Unificação**: Permite conceder acesso admin via interface (atribuindo role)
-3. **Sem quebra**: Nenhum código frontend precisa ser alterado
-4. **Segurança**: Mantém verificação server-side via RLS
+| Arquivo | Alteração |
+|---------|-----------|
+| Função SQL `get_admin_groups()` | Adicionar JOIN com `auth.users` para buscar email |
+| View SQL `groups_admin` | Atualizar para incluir `leader_email` |
+| `src/hooks/useAdminGroups.tsx` | Adicionar `leader_email` na interface |
+| `src/pages/AdminGroups.tsx` | Adicionar botão e modal/popover com info do líder |
 
 ---
 
-## Arquivos/Recursos a Modificar
+## Interface Visual Proposta
 
-| Recurso | Alteração |
-|---------|-----------|
-| Função SQL `is_admin()` | Adicionar verificação em `user_roles` |
+Ao clicar no botão, exibir um popover com:
+
+```text
+┌─────────────────────────────────┐
+│  👤 Informações do Líder        │
+├─────────────────────────────────┤
+│  Nome: Piero Bueno              │
+│  📱 (19) 98251-1944   [Abrir]   │
+│  ✉️  piero@email.com  [Enviar]  │
+└─────────────────────────────────┘
+```
+
+---
+
+## Considerações Técnicas
+
+- A função usa `SECURITY DEFINER` e já verifica `is_admin()`, garantindo que apenas administradores acessem os dados
+- O email vem da tabela `auth.users`, que requer acesso via função server-side
+- Os links de WhatsApp usarão o formato `https://wa.me/55XXXXXXXXXXX`
+- Os links de email usarão `mailto:email@exemplo.com`
 
 ---
 
 ## Resultado Esperado
 
-Após a alteração:
-- `pierohsbueno@msn.com` terá acesso ao painel administrativo
-- Novos administradores podem ser criados atribuindo o papel "admin" via interface
-- A tabela `admin_emails` pode ser gradualmente descontinuada
-
----
-
-## Considerações Futuras
-
-Após a unificação funcionar, pode-se opcionalmente:
-1. Migrar todos os emails de `admin_emails` para `user_roles` com role='admin'
-2. Remover a verificação de `admin_emails` da função
-3. Adicionar interface para gerenciar `admin_emails` (se preferir manter ambos)
+Administradores poderão visualizar rapidamente as informações de contato do líder de cada grupo sem precisar acessar outras páginas ou buscar manualmente.
