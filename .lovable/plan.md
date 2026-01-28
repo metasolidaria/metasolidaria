@@ -1,70 +1,82 @@
 
-# Plano: Corrigir exibição de metas no dashboard de administração de grupos
+# Plano: Unificar Sistema de Permissões Administrativas
 
-## Diagnóstico
+## Situação Atual
 
-### Problema Identificado
-Na página de Administração de Grupos (`/admin/grupos`), a coluna "Meta" está exibindo o valor incorreto:
-- **Exibindo**: `g.goal_2026` = 0 (campo legado da tabela groups)
-- **Deveria exibir**: `g.total_goals` = 22 (soma das metas individuais dos membros)
+O sistema possui duas fontes de verdade separadas para acesso administrativo:
 
-### Evidência
-Consulta direta no banco confirmou:
-- Grupo "Gerando futuro" tem `goal_2026: 0`
-- View materializada `group_stats` tem `total_goals: 22`
-- Os membros possuem 3 blocos de compromisso com metas definidas em `member_commitments`
+| Sistema | Função | Usuários com acesso |
+|---------|--------|---------------------|
+| `admin_emails` | Controla acesso ao painel e RLS | dbsmetasolidaria@gmail.com, dbmetasolidaria@gmail.com |
+| `user_roles` (role='admin') | Apenas exibe badge na UI | pierohsbueno@msn.com, dbmetasolidaria@gmail.com |
 
-### Causa Raiz
-O sistema de metas foi reestruturado para usar "blocos de compromisso" (`member_commitments`), mas a interface de administração ainda referencia o campo antigo `goal_2026`.
+**Problema:** `pierohsbueno@msn.com` tem papel "admin" mas não consegue acessar a administração.
 
 ---
 
 ## Solução Proposta
 
-### 1. Atualizar AdminGroups.tsx
-Modificar a exibição da coluna "Meta" para usar `total_goals`:
+Modificar a função `is_admin()` para verificar AMBAS as fontes:
+- Se o email está em `admin_emails` **OU**
+- Se o usuário tem role `admin` em `user_roles`
 
-**Arquivo**: `src/pages/AdminGroups.tsx`
-- **Linha 255**: Trocar `{g.goal_2026}` por `{g.total_goals}`
-- Adicionar indicador visual quando não houver metas definidas
+### Alteração na Função SQL
 
-### 2. Melhorar o cabeçalho da coluna
-Renomear o cabeçalho para "Metas" (plural) para refletir que é a soma das metas individuais dos membros.
-
----
-
-## Detalhes Técnicos
-
-```text
-Antes (linha 255):
-<TableCell className="text-right">{g.goal_2026}</TableCell>
-
-Depois:
-<TableCell className="text-right">
-  {g.total_goals > 0 ? g.total_goals : (
-    <span className="text-muted-foreground">-</span>
-  )}
-</TableCell>
+```sql
+CREATE OR REPLACE FUNCTION public.is_admin(_user_id uuid)
+RETURNS boolean
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT EXISTS (
+    -- Verifica admin_emails (compatibilidade)
+    SELECT 1
+    FROM public.admin_emails ae
+    JOIN auth.users u ON lower(u.email) = lower(ae.email)
+    WHERE u.id = _user_id
+  ) OR EXISTS (
+    -- Verifica user_roles com role 'admin'
+    SELECT 1
+    FROM public.user_roles ur
+    WHERE ur.user_id = _user_id
+      AND ur.role = 'admin'
+  )
+$$;
 ```
 
-### Opcional: Exibir ambos os valores
-Se for útil manter visibilidade da meta global do grupo vs. metas individuais:
-- Coluna "Meta do Grupo": `goal_2026` (meta definida pelo líder)
-- Coluna "Metas Individuais": `total_goals` (soma das metas dos membros)
+---
+
+## Benefícios
+
+1. **Compatibilidade**: Mantém acesso dos emails já cadastrados em `admin_emails`
+2. **Unificação**: Permite conceder acesso admin via interface (atribuindo role)
+3. **Sem quebra**: Nenhum código frontend precisa ser alterado
+4. **Segurança**: Mantém verificação server-side via RLS
 
 ---
 
-## Arquivos a Modificar
+## Arquivos/Recursos a Modificar
 
-| Arquivo | Alteração |
+| Recurso | Alteração |
 |---------|-----------|
-| `src/pages/AdminGroups.tsx` | Linha 223: "Meta" → "Metas" |
-| `src/pages/AdminGroups.tsx` | Linha 255: `g.goal_2026` → `g.total_goals` |
+| Função SQL `is_admin()` | Adicionar verificação em `user_roles` |
 
 ---
 
 ## Resultado Esperado
-Após a correção:
-- Grupo "Gerando futuro" exibirá **22** na coluna de metas
-- Grupos sem metas individuais exibirão **-** ou **0**
-- A informação ficará consistente com a página do grupo
+
+Após a alteração:
+- `pierohsbueno@msn.com` terá acesso ao painel administrativo
+- Novos administradores podem ser criados atribuindo o papel "admin" via interface
+- A tabela `admin_emails` pode ser gradualmente descontinuada
+
+---
+
+## Considerações Futuras
+
+Após a unificação funcionar, pode-se opcionalmente:
+1. Migrar todos os emails de `admin_emails` para `user_roles` com role='admin'
+2. Remover a verificação de `admin_emails` da função
+3. Adicionar interface para gerenciar `admin_emails` (se preferir manter ambos)
