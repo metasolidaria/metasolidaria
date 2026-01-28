@@ -63,14 +63,14 @@ type SortColumn = "name" | "city" | "specialty" | "tier" | "is_approved" | "crea
 type SortDirection = "asc" | "desc";
 
 const tierOrder: Record<PartnerTier, number> = {
-  diamante: 1,
+  premium: 1,
   ouro: 2,
   apoiador: 3,
 };
 
 const tierConfig: Record<PartnerTier, { label: string; icon: React.ReactNode; className: string }> = {
-  diamante: {
-    label: "Diamante",
+  premium: {
+    label: "Premium",
     icon: <Gem className="h-3 w-3" />,
     className: "bg-cyan-500/20 text-cyan-700 border-cyan-500/30",
   },
@@ -527,7 +527,7 @@ const AdminPartners = () => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Todos</SelectItem>
-                    <SelectItem value="diamante">Diamante</SelectItem>
+                    <SelectItem value="premium">Premium</SelectItem>
                     <SelectItem value="ouro">Ouro</SelectItem>
                     <SelectItem value="apoiador">Apoiador</SelectItem>
                   </SelectContent>

@@ -33,7 +33,7 @@ interface CreatePartnerModalProps {
 }
 
 const tierOptions: { value: PartnerTier; label: string; icon: React.ReactNode }[] = [
-  { value: "diamante", label: "Diamante", icon: <Gem className="h-4 w-4 text-cyan-500" /> },
+  { value: "premium", label: "Premium", icon: <Gem className="h-4 w-4 text-cyan-500" /> },
   { value: "ouro", label: "Ouro", icon: <Medal className="h-4 w-4 text-yellow-500" /> },
   { value: "apoiador", label: "Apoiador", icon: <Heart className="h-4 w-4 text-rose-500" /> },
 ];
