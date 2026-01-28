@@ -9,6 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { CityAutocomplete } from "@/components/CityAutocomplete";
+import { SpecialtySelect } from "@/components/SpecialtySelect";
 import { Loader2, Gem, Medal, Heart, CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -104,11 +105,10 @@ export const EditPartnerModal = ({
 
           <div className="space-y-2">
             <Label htmlFor="specialty">Especialidade</Label>
-            <Input
-              id="specialty"
+            <SpecialtySelect
               value={formData.specialty}
-              onChange={(e) => setFormData({ ...formData, specialty: e.target.value })}
-              placeholder="Ex: Nutricionista, Personal Trainer"
+              onChange={(specialty) => setFormData({ ...formData, specialty })}
+              placeholder="Selecione a especialidade"
             />
           </div>
 
