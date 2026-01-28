@@ -3,19 +3,28 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { useEffect } from "react";
+import { lazy, Suspense } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import Index from "./pages/Index";
-import GroupPage from "./pages/GroupPage";
-import ResetPassword from "./pages/ResetPassword";
-import AdminPartners from "./pages/AdminPartners";
-import AdminUsers from "./pages/AdminUsers";
-import AdminGroups from "./pages/AdminGroups";
-import AdminInvitations from "./pages/AdminInvitations";
-import AdminEntities from "./pages/AdminEntities";
-import Profile from "./pages/Profile";
-import NotFound from "./pages/NotFound";
 import { InstallPWAPrompt } from "./components/InstallPWAPrompt";
+
+// Lazy load non-critical routes to reduce initial bundle size
+const GroupPage = lazy(() => import("./pages/GroupPage"));
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
+const AdminPartners = lazy(() => import("./pages/AdminPartners"));
+const AdminUsers = lazy(() => import("./pages/AdminUsers"));
+const AdminGroups = lazy(() => import("./pages/AdminGroups"));
+const AdminInvitations = lazy(() => import("./pages/AdminInvitations"));
+const AdminEntities = lazy(() => import("./pages/AdminEntities"));
+const Profile = lazy(() => import("./pages/Profile"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+
+// Loading fallback for lazy-loaded routes
+const PageLoader = () => (
+  <div className="min-h-screen flex items-center justify-center">
+    <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />
+  </div>
+);
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -91,16 +100,16 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
-          <Route path="/grupo/:id" element={<GroupPage />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
-          <Route path="/admin/parceiros" element={<AdminPartners />} />
-          <Route path="/admin/usuarios" element={<AdminUsers />} />
-          <Route path="/admin/grupos" element={<AdminGroups />} />
-          <Route path="/admin/convites" element={<AdminInvitations />} />
-          <Route path="/admin/entidades" element={<AdminEntities />} />
-          <Route path="/perfil" element={<Profile />} />
+          <Route path="/grupo/:id" element={<Suspense fallback={<PageLoader />}><GroupPage /></Suspense>} />
+          <Route path="/reset-password" element={<Suspense fallback={<PageLoader />}><ResetPassword /></Suspense>} />
+          <Route path="/admin/parceiros" element={<Suspense fallback={<PageLoader />}><AdminPartners /></Suspense>} />
+          <Route path="/admin/usuarios" element={<Suspense fallback={<PageLoader />}><AdminUsers /></Suspense>} />
+          <Route path="/admin/grupos" element={<Suspense fallback={<PageLoader />}><AdminGroups /></Suspense>} />
+          <Route path="/admin/convites" element={<Suspense fallback={<PageLoader />}><AdminInvitations /></Suspense>} />
+          <Route path="/admin/entidades" element={<Suspense fallback={<PageLoader />}><AdminEntities /></Suspense>} />
+          <Route path="/perfil" element={<Suspense fallback={<PageLoader />}><Profile /></Suspense>} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
+          <Route path="*" element={<Suspense fallback={<PageLoader />}><NotFound /></Suspense>} />
         </Routes>
         <InstallPWAPrompt />
       </BrowserRouter>
