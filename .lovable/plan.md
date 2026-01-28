@@ -1,77 +1,67 @@
 
-# Plano: Adicionar Botão para Habilitar/Desabilitar Parceiro
 
-## Objetivo
-Permitir que administradores ativem ou desativem parceiros diretamente na tabela, alternando o status `is_approved`. Isso é útil para desabilitar parceiros que expiraram sem precisar excluí-los.
+# Plano: Corrigir Constraint de Tier no Banco de Dados
 
-## Comportamento Proposto
-- Parceiros **aprovados** terão um botão para **desabilitar** (ícone de toggle off)
-- Parceiros **não aprovados** terão um botão para **aprovar** (ícone de check, já existente)
-- O status será alterado inline com feedback visual imediato
+## Problema Identificado
+O frontend foi atualizado para usar "premium" em vez de "diamante", mas o banco de dados ainda tem uma constraint que valida apenas os valores antigos.
+
+**Erro no banco:**
+```
+new row for relation "partners" violates check constraint "partners_tier_check"
+```
+
+**Constraint atual:**
+```sql
+CHECK (tier = ANY (ARRAY['diamante', 'ouro', 'apoiador']))
+```
+
+## Solução
+Atualizar a constraint do banco de dados para aceitar o novo valor "premium".
 
 ## Alterações Necessárias
 
-### 1. Adicionar mutation `togglePartnerStatus` em `useAdminPartners.tsx`
+### 1. Migration para atualizar a constraint
 
-Criar uma nova mutation para alternar o status do parceiro de forma mais semântica:
+```sql
+-- Remover constraint antiga
+ALTER TABLE public.partners DROP CONSTRAINT partners_tier_check;
 
-```typescript
-const togglePartnerStatus = useMutation({
-  mutationFn: async ({ partnerId, isApproved }: { partnerId: string; isApproved: boolean }) => {
-    const { error } = await supabase
-      .from("partners")
-      .update({ is_approved: isApproved })
-      .eq("id", partnerId);
-    if (error) throw error;
-  },
-  onSuccess: (_, { isApproved }) => {
-    queryClient.invalidateQueries({ queryKey: ["adminPartners"] });
-    queryClient.invalidateQueries({ queryKey: ["partners"] });
-    toast({
-      title: isApproved ? "Parceiro ativado! ✅" : "Parceiro desativado",
-      description: isApproved 
-        ? "O parceiro agora está visível no guia."
-        : "O parceiro não aparecerá mais no guia.",
-    });
-  },
-});
+-- Adicionar nova constraint com "premium" no lugar de "diamante"
+ALTER TABLE public.partners 
+ADD CONSTRAINT partners_tier_check 
+CHECK (tier = ANY (ARRAY['premium', 'ouro', 'apoiador']));
+
+-- Atualizar registros existentes que usam "diamante" para "premium"
+UPDATE public.partners SET tier = 'premium' WHERE tier = 'diamante';
 ```
 
-### 2. Atualizar tabela em `AdminPartners.tsx`
-
-Substituir a lógica de botões na coluna de ações:
-
-| Estado Atual | Botão Mostrado | Ação |
-|--------------|----------------|------|
-| `is_approved: true` | Toggle desligar (vermelho) | Define `is_approved: false` |
-| `is_approved: false` | Toggle ligar (verde) | Define `is_approved: true` |
-
-**Ícones sugeridos:**
-- `ToggleRight` (Lucide) para indicar ativo/habilitar
-- `ToggleLeft` para indicar desativar
-
-Ou usar o componente `Switch` do shadcn/ui para uma experiência mais intuitiva.
-
-### 3. Layout da Coluna de Ações (Proposta Final)
+## Fluxo da Correção
 
 ```text
-┌────────────────────────────────────────────┐
-│  [Switch On/Off]  [Editar]  [Excluir]      │
-│      ↑                                     │
-│  Toggle para ativar/desativar              │
-└────────────────────────────────────────────┘
+ANTES:
+┌─────────────────────────────────────────────────────┐
+│ Frontend envia: tier = "premium"                    │
+│ Banco valida: ['diamante', 'ouro', 'apoiador']     │
+│ Resultado: ❌ ERRO - valor não permitido            │
+└─────────────────────────────────────────────────────┘
+
+DEPOIS:
+┌─────────────────────────────────────────────────────┐
+│ Frontend envia: tier = "premium"                    │
+│ Banco valida: ['premium', 'ouro', 'apoiador']      │
+│ Resultado: ✅ Sucesso                               │
+└─────────────────────────────────────────────────────┘
 ```
 
-## Arquivos a Modificar
+## Arquivos/Recursos a Modificar
 
-| Arquivo | Alteração |
+| Recurso | Alteração |
 |---------|-----------|
-| `src/hooks/useAdminPartners.tsx` | Adicionar `togglePartnerStatus` mutation e retorná-la |
-| `src/pages/AdminPartners.tsx` | Importar `Switch`, substituir botão de aprovar por toggle interativo |
+| Banco de dados | Atualizar constraint `partners_tier_check` via migration |
+| Dados existentes | Converter `tier = 'diamante'` para `tier = 'premium'` |
 
-## Vantagens desta Abordagem
+## Impacto
+- Nenhuma mudança de código necessária (já foi alterado)
+- Parceiros existentes com tier "diamante" serão migrados para "premium"
+- Após a migration, será possível alterar o nível dos parceiros normalmente
 
-1. **Não destrutivo**: Diferente de excluir, permite reativar o parceiro facilmente
-2. **Intuitivo**: Switch é um padrão reconhecido para ativar/desativar
-3. **Histórico preservado**: Mantém todos os dados do parceiro para referência futura
-4. **Ação rápida**: Um clique para alternar status, sem confirmação necessária
