@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { CreateEntityModal } from "@/components/admin/CreateEntityModal";
 import { EditEntityModal } from "@/components/admin/EditEntityModal";
-import { Search, Plus, Pencil, Trash2, Building2, Phone, MapPin, Loader2, Gift, Users } from "lucide-react";
+import { Search, Plus, Pencil, Trash2, Building2, Phone, MapPin, Loader2, Gift, Users, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -36,6 +36,8 @@ const AdminEntities = () => {
   const { entities, isLoading, createEntity, updateEntity, deleteEntity } = useAdminEntities();
 
   const [search, setSearch] = useState("");
+  const [sortColumn, setSortColumn] = useState<string | null>(null);
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -67,6 +69,70 @@ const AdminEntities = () => {
       normalizeText(entity.city).includes(searchNormalized)
     );
   });
+
+  const sortedEntities = filteredEntities.slice().sort((a, b) => {
+    if (!sortColumn) return 0;
+
+    let aValue: string | number | null = null;
+    let bValue: string | number | null = null;
+
+    switch (sortColumn) {
+      case "name":
+        aValue = a.name?.toLowerCase() ?? "";
+        bValue = b.name?.toLowerCase() ?? "";
+        break;
+      case "city":
+        aValue = a.city?.toLowerCase() ?? "";
+        bValue = b.city?.toLowerCase() ?? "";
+        break;
+      case "groups_count":
+        aValue = a.groups_count ?? 0;
+        bValue = b.groups_count ?? 0;
+        break;
+      case "total_donated":
+        aValue = a.total_donated ?? 0;
+        bValue = b.total_donated ?? 0;
+        break;
+      case "created_at":
+        aValue = new Date(a.created_at).getTime();
+        bValue = new Date(b.created_at).getTime();
+        break;
+      default:
+        return 0;
+    }
+
+    if (aValue < bValue) return sortDirection === "asc" ? -1 : 1;
+    if (aValue > bValue) return sortDirection === "asc" ? 1 : -1;
+    return 0;
+  });
+
+  const handleSort = (column: string) => {
+    if (sortColumn === column) {
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+    } else {
+      setSortColumn(column);
+      setSortDirection("asc");
+    }
+  };
+
+  const SortableHeader = ({ column, children }: { column: string; children: React.ReactNode }) => (
+    <Button
+      variant="ghost"
+      onClick={() => handleSort(column)}
+      className="h-auto p-0 font-medium text-muted-foreground hover:text-foreground hover:bg-transparent"
+    >
+      {children}
+      {sortColumn === column ? (
+        sortDirection === "asc" ? (
+          <ArrowUp className="ml-1 h-3 w-3" />
+        ) : (
+          <ArrowDown className="ml-1 h-3 w-3" />
+        )
+      ) : (
+        <ArrowUpDown className="ml-1 h-3 w-3 opacity-50" />
+      )}
+    </Button>
+  );
 
   const handleCreate = (data: { name: string; city: string; phone?: string }) => {
     createEntity.mutate(data, {
@@ -127,17 +193,16 @@ const AdminEntities = () => {
             />
           </div>
 
-          {/* Table */}
           <div className="border rounded-lg overflow-hidden">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Nome</TableHead>
-                  <TableHead>Cidade</TableHead>
-                  <TableHead>Grupos</TableHead>
-                  <TableHead>Doações</TableHead>
+                  <TableHead><SortableHeader column="name">Nome</SortableHeader></TableHead>
+                  <TableHead><SortableHeader column="city">Cidade</SortableHeader></TableHead>
+                  <TableHead><SortableHeader column="groups_count">Grupos</SortableHeader></TableHead>
+                  <TableHead><SortableHeader column="total_donated">Doações</SortableHeader></TableHead>
                   <TableHead>Telefone</TableHead>
-                  <TableHead>Cadastrado em</TableHead>
+                  <TableHead><SortableHeader column="created_at">Cadastrado em</SortableHeader></TableHead>
                   <TableHead className="w-[100px]">Ações</TableHead>
                 </TableRow>
               </TableHeader>
@@ -148,14 +213,14 @@ const AdminEntities = () => {
                       <Loader2 className="w-6 h-6 animate-spin mx-auto text-muted-foreground" />
                     </TableCell>
                   </TableRow>
-                ) : filteredEntities.length === 0 ? (
+                ) : sortedEntities.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                       {search ? "Nenhuma entidade encontrada" : "Nenhuma entidade cadastrada"}
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredEntities.map((entity) => (
+                  sortedEntities.map((entity) => (
                     <TableRow key={entity.id}>
                       <TableCell className="font-medium">{entity.name}</TableCell>
                       <TableCell>
@@ -223,7 +288,7 @@ const AdminEntities = () => {
 
           {/* Stats */}
           <p className="text-sm text-muted-foreground">
-            {filteredEntities.length} entidade{filteredEntities.length !== 1 ? "s" : ""} encontrada{filteredEntities.length !== 1 ? "s" : ""}
+            {sortedEntities.length} entidade{sortedEntities.length !== 1 ? "s" : ""} encontrada{sortedEntities.length !== 1 ? "s" : ""}
           </p>
         </div>
       </main>
