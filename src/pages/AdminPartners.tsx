@@ -258,11 +258,13 @@ const AdminPartners = () => {
         </TableCell>
         <TableCell>
           {partner.is_approved ? (
-            <Badge className="bg-green-500/20 text-green-700 border-green-500/30">Aprovado</Badge>
+            <Badge className="bg-green-500/20 text-green-700 border-green-500/30">Ativo</Badge>
           ) : (
-            <Badge variant="secondary">Pendente</Badge>
+            <Badge variant="secondary">Inativo</Badge>
           )}
         </TableCell>
+        <TableCell className="text-sm">{partner.referrer_name || "—"}</TableCell>
+        <TableCell className="text-sm">{partner.referrer_phone || "—"}</TableCell>
         <TableCell>
           <Popover>
             <PopoverTrigger asChild>
@@ -357,19 +359,21 @@ const AdminPartners = () => {
             <TableHead className="cursor-pointer hover:bg-muted/50" onClick={() => handleSort("is_approved")}>
               <span className="flex items-center">Status{getSortIcon("is_approved")}</span>
             </TableHead>
+            <TableHead>Indicado por</TableHead>
+            <TableHead>WhatsApp Indicador</TableHead>
             <TableHead className="cursor-pointer hover:bg-muted/50" onClick={() => handleSort("expires_at")}>
               <span className="flex items-center">Expiração{getSortIcon("expires_at")}</span>
             </TableHead>
             <TableHead className="cursor-pointer hover:bg-muted/50" onClick={() => handleSort("expires_at")}>
               <span className="flex items-center">Dias{getSortIcon("expires_at")}</span>
             </TableHead>
-            <TableHead className="w-[120px]">Ações</TableHead>
+            <TableHead className="w-[140px]">Ações</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {partners.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+              <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
                 Nenhum parceiro encontrado
               </TableCell>
             </TableRow>
