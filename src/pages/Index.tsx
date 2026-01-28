@@ -10,6 +10,7 @@ import { PartnersSection } from "@/components/PartnersSection";
 import { Footer } from "@/components/Footer";
 import { AuthModal } from "@/components/AuthModal";
 import { useInviteLink } from "@/hooks/useInviteLink";
+import { InstallPWAPrompt } from "@/components/InstallPWAPrompt";
 
 const Index = () => {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
@@ -103,6 +104,7 @@ const Index = () => {
       </main>
       <Footer />
       <AuthModal open={isAuthModalOpen} onOpenChange={setIsAuthModalOpen} />
+      <InstallPWAPrompt />
     </div>
   );
 };
