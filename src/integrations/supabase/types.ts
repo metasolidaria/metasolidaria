@@ -352,6 +352,7 @@ export type Database = {
           leader_whatsapp: string | null
           name: string
           updated_at: string
+          view_count: number
         }
         Insert: {
           city: string
@@ -369,6 +370,7 @@ export type Database = {
           leader_whatsapp?: string | null
           name: string
           updated_at?: string
+          view_count?: number
         }
         Update: {
           city?: string
@@ -386,6 +388,7 @@ export type Database = {
           leader_whatsapp?: string | null
           name?: string
           updated_at?: string
+          view_count?: number
         }
         Relationships: [
           {
@@ -640,6 +643,7 @@ export type Database = {
           total_donations: number | null
           total_goals: number | null
           updated_at: string | null
+          view_count: number | null
         }
         Relationships: [
           {
@@ -897,6 +901,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      increment_group_view_count: {
+        Args: { _group_id: string }
+        Returns: undefined
       }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
       is_current_user_email: { Args: { _email: string }; Returns: boolean }
