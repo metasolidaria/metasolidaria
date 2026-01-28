@@ -61,23 +61,30 @@ export const usePremiumAndGoldPartners = (groupCity: string | undefined) => {
       const filteredPartners = data.filter((partner) => {
         const partnerCity = partner.city || "";
         const partnerCityName = partnerCity.replace(/\s*[-,]\s*[A-Z]{2}$/, "").trim();
+        const partnerState = extractStateFromCity(partnerCity);
 
         // National visibility
         if (partnerCityName.toLowerCase() === "brasil") {
           return true;
         }
 
-        // Same city
+        // Same city name AND same state (or no state specified)
         if (partnerCityName.toLowerCase() === groupCityName.toLowerCase()) {
+          // If both have states, they must match
+          if (partnerState && groupState) {
+            return partnerState === groupState;
+          }
+          // Otherwise, assume same city
           return true;
         }
 
-        // Regional visibility (partner registered with state name)
+        // Regional visibility: partner city is the state name (e.g., "São Paulo" or "Minas Gerais")
+        // This means the partner is available for ALL cities in that state
         if (groupState) {
-          const stateNames = Object.entries(stateMapping).filter(([_, codes]) =>
+          const stateEntry = Object.entries(stateMapping).find(([_, codes]) =>
             codes.includes(groupState)
           );
-          if (stateNames.some(([name]) => partnerCityName.toLowerCase() === name.toLowerCase())) {
+          if (stateEntry && partnerCityName.toLowerCase() === stateEntry[0].toLowerCase()) {
             return true;
           }
         }
