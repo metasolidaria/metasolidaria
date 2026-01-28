@@ -19,6 +19,8 @@ export interface Partner {
   tier: PartnerTier;
   instagram: string | null;
   expires_at: string | null;
+  referrer_name: string | null;
+  referrer_phone: string | null;
 }
 
 export const usePartners = () => {
