@@ -1,5 +1,6 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { 
   MapPin, 
   Phone, 
@@ -176,6 +177,7 @@ const CategoryFilters = ({ categories, selectedCategory, onSelectCategory }: Cat
 };
 
 export const PartnersSection = () => {
+  const [searchParams] = useSearchParams();
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [searchCity, setSearchCity] = useState("");
   const [radiusKm, setRadiusKm] = useState(50);
@@ -186,6 +188,14 @@ export const PartnersSection = () => {
   const { partners, isLoading } = usePartners();
   const { latitude, longitude, loading: geoLoading, error: geoError, requestLocation, hasLocation } = useGeolocation();
   const { profile } = useUserProfile();
+
+  // Initialize city filter from URL param
+  useEffect(() => {
+    const cidadeParam = searchParams.get("cidade");
+    if (cidadeParam && !searchCity) {
+      setSearchCity(cidadeParam);
+    }
+  }, [searchParams]);
 
   const handleEnableProximity = () => {
     if (!hasLocation) {

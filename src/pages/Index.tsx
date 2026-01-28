@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { Hero } from "@/components/Hero";
 import { HowItWorksModal } from "@/components/HowItWorksModal";
@@ -13,6 +14,7 @@ import { useInviteLink } from "@/hooks/useInviteLink";
 const Index = () => {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const { needsAuth, isAccepting, inviteInfo, isLoading: inviteLoading } = useInviteLink();
+  const [searchParams] = useSearchParams();
 
   // Open auth modal if user needs to login to accept invite
   useEffect(() => {
@@ -20,6 +22,19 @@ const Index = () => {
       setIsAuthModalOpen(true);
     }
   }, [needsAuth]);
+
+  // Scroll to partners section if parceiros param is present
+  useEffect(() => {
+    if (searchParams.get("parceiros") === "true") {
+      // Small delay to ensure DOM is ready
+      setTimeout(() => {
+        const partnersSection = document.getElementById("parceiros");
+        if (partnersSection) {
+          partnersSection.scrollIntoView({ behavior: "smooth" });
+        }
+      }, 100);
+    }
+  }, [searchParams]);
 
   const handleRequireAuth = () => {
     setIsAuthModalOpen(true);
@@ -82,7 +97,9 @@ const Index = () => {
         <div id="entidades">
           <EntitiesSection onRequireAuth={handleRequireAuth} />
         </div>
-        <PartnersSection />
+        <div id="parceiros">
+          <PartnersSection />
+        </div>
       </main>
       <Footer />
       <AuthModal open={isAuthModalOpen} onOpenChange={setIsAuthModalOpen} />
