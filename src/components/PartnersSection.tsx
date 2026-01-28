@@ -180,6 +180,7 @@ export const PartnersSection = () => {
   const [searchParams] = useSearchParams();
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [searchCity, setSearchCity] = useState("");
+  const [cityFromGroup, setCityFromGroup] = useState(false);
   const [radiusKm, setRadiusKm] = useState(50);
   const [useProximity, setUseProximity] = useState(false);
   const [isRecommendModalOpen, setIsRecommendModalOpen] = useState(false);
@@ -192,10 +193,23 @@ export const PartnersSection = () => {
   // Initialize city filter from URL param
   useEffect(() => {
     const cidadeParam = searchParams.get("cidade");
-    if (cidadeParam && !searchCity) {
+    const parceirosParam = searchParams.get("parceiros");
+    if (cidadeParam && parceirosParam === "true" && !searchCity) {
       setSearchCity(cidadeParam);
+      setCityFromGroup(true);
     }
   }, [searchParams]);
+
+  // Clear "from group" indicator when user manually changes the city
+  const handleCityChange = (newCity: string) => {
+    setSearchCity(newCity);
+    setCityFromGroup(false);
+  };
+
+  const handleClearCity = () => {
+    setSearchCity("");
+    setCityFromGroup(false);
+  };
 
   const handleEnableProximity = () => {
     if (!hasLocation) {
@@ -431,21 +445,31 @@ export const PartnersSection = () => {
           className="mb-10"
         >
           <div className="flex flex-col md:flex-row gap-4 mb-6">
-            <div className="flex-1 max-w-md relative">
-              <CitySearchAutocomplete
-                value={searchCity}
-                onChange={setSearchCity}
-                placeholder="Buscar por cidade..."
-              />
-              {searchCity && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setSearchCity("")}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
-                >
-                  <X className="w-4 h-4" />
-                </Button>
+            <div className="flex-1 max-w-md">
+              <div className="relative">
+                <CitySearchAutocomplete
+                  value={searchCity}
+                  onChange={handleCityChange}
+                  placeholder="Buscar por cidade..."
+                />
+                {searchCity && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleClearCity}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                )}
+              </div>
+              {cityFromGroup && searchCity && (
+                <div className="flex items-center gap-2 mt-2">
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-primary/10 text-primary text-xs font-medium rounded-full border border-primary/20">
+                    <MapPin className="w-3 h-3" />
+                    Filtrado pelo grupo
+                  </span>
+                </div>
               )}
             </div>
 
