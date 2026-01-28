@@ -59,7 +59,7 @@ export const Header = ({ onAuthClick }: HeaderProps) => {
           </div>
 
           {/* Desktop Navigation - Centered absolutely */}
-          <nav className="hidden md:flex items-center gap-8 absolute left-1/2 -translate-x-1/2">
+          <nav className="hidden md:flex items-center gap-4 lg:gap-8 absolute left-1/2 -translate-x-1/2">
             {["Grupos", "Entidades", "Parceiros", "Impacto"].map((item) => (
               <button
                 key={item}
@@ -76,17 +76,19 @@ export const Header = ({ onAuthClick }: HeaderProps) => {
           </nav>
 
           {/* Auth Buttons */}
-          <div className="hidden md:flex items-center gap-3">
+          <div className="hidden md:flex items-center gap-3 z-10">
             {user ? (
               <>
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => navigate("/perfil")}
-                  className={isScrolled ? "text-foreground" : "text-primary-foreground hover:text-primary-foreground/80"}
+                  className={`max-w-[140px] ${isScrolled ? "text-foreground" : "text-primary-foreground hover:text-primary-foreground/80"}`}
                 >
-                  <Settings className="w-4 h-4 mr-1" />
-                  {user.user_metadata?.full_name || user.email?.split("@")[0]}
+                  <Settings className="w-4 h-4 mr-1 shrink-0" />
+                  <span className="truncate">
+                    {user.user_metadata?.full_name || user.email?.split("@")[0]}
+                  </span>
                 </Button>
                 <Button
                   variant={isScrolled ? "outline" : "hero-outline"}
