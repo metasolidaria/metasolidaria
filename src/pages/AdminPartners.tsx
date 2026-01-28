@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
@@ -38,10 +38,22 @@ import {
   Medal,
   Heart,
   ShieldAlert,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import type { Partner, PartnerTier } from "@/hooks/usePartners";
+
+type SortColumn = "name" | "city" | "specialty" | "tier" | "is_approved" | "created_at";
+type SortDirection = "asc" | "desc";
+
+const tierOrder: Record<PartnerTier, number> = {
+  diamante: 1,
+  ouro: 2,
+  apoiador: 3,
+};
 
 const tierConfig: Record<PartnerTier, { label: string; icon: React.ReactNode; className: string }> = {
   diamante: {
@@ -81,6 +93,55 @@ const AdminPartners = () => {
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [partnerToDelete, setPartnerToDelete] = useState<Partner | null>(null);
+  const [sortColumn, setSortColumn] = useState<SortColumn>("created_at");
+  const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
+
+  const sortPartners = (partners: Partner[]) => {
+    return [...partners].sort((a, b) => {
+      let comparison = 0;
+      switch (sortColumn) {
+        case "name":
+          comparison = a.name.localeCompare(b.name, "pt-BR");
+          break;
+        case "city":
+          comparison = a.city.localeCompare(b.city, "pt-BR");
+          break;
+        case "specialty":
+          comparison = (a.specialty || "").localeCompare(b.specialty || "", "pt-BR");
+          break;
+        case "tier":
+          comparison = tierOrder[a.tier] - tierOrder[b.tier];
+          break;
+        case "is_approved":
+          comparison = (a.is_approved ? 1 : 0) - (b.is_approved ? 1 : 0);
+          break;
+        case "created_at":
+          comparison = new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+          break;
+      }
+      return sortDirection === "asc" ? comparison : -comparison;
+    });
+  };
+
+  const sortedPendingPartners = useMemo(() => sortPartners(pendingPartners), [pendingPartners, sortColumn, sortDirection]);
+  const sortedApprovedPartners = useMemo(() => sortPartners(approvedPartners), [approvedPartners, sortColumn, sortDirection]);
+  const sortedAllPartners = useMemo(() => sortPartners(allPartners || []), [allPartners, sortColumn, sortDirection]);
+
+  const handleSort = (column: SortColumn) => {
+    if (sortColumn === column) {
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+    } else {
+      setSortColumn(column);
+      setSortDirection("asc");
+    }
+  };
+
+  const getSortIcon = (column: SortColumn) => {
+    if (sortColumn !== column) return <ArrowUpDown className="h-4 w-4 ml-1 opacity-50" />;
+    return sortDirection === "asc" 
+      ? <ArrowUp className="h-4 w-4 ml-1" /> 
+      : <ArrowDown className="h-4 w-4 ml-1" />;
+  };
 
   // Redirect non-admins - only after loading is complete
   useEffect(() => {
@@ -215,12 +276,24 @@ const AdminPartners = () => {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Nome</TableHead>
-            <TableHead>Cidade</TableHead>
-            <TableHead>Especialidade</TableHead>
-            <TableHead>Nível</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Data</TableHead>
+            <TableHead className="cursor-pointer hover:bg-muted/50" onClick={() => handleSort("name")}>
+              <span className="flex items-center">Nome{getSortIcon("name")}</span>
+            </TableHead>
+            <TableHead className="cursor-pointer hover:bg-muted/50" onClick={() => handleSort("city")}>
+              <span className="flex items-center">Cidade{getSortIcon("city")}</span>
+            </TableHead>
+            <TableHead className="cursor-pointer hover:bg-muted/50" onClick={() => handleSort("specialty")}>
+              <span className="flex items-center">Especialidade{getSortIcon("specialty")}</span>
+            </TableHead>
+            <TableHead className="cursor-pointer hover:bg-muted/50" onClick={() => handleSort("tier")}>
+              <span className="flex items-center">Nível{getSortIcon("tier")}</span>
+            </TableHead>
+            <TableHead className="cursor-pointer hover:bg-muted/50" onClick={() => handleSort("is_approved")}>
+              <span className="flex items-center">Status{getSortIcon("is_approved")}</span>
+            </TableHead>
+            <TableHead className="cursor-pointer hover:bg-muted/50" onClick={() => handleSort("created_at")}>
+              <span className="flex items-center">Data{getSortIcon("created_at")}</span>
+            </TableHead>
             <TableHead className="w-[120px]">Ações</TableHead>
           </TableRow>
         </TableHeader>
@@ -281,9 +354,9 @@ const AdminPartners = () => {
               <TabsTrigger value="all">Todos ({allPartners?.length || 0})</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="pending">{renderTable(pendingPartners)}</TabsContent>
-            <TabsContent value="approved">{renderTable(approvedPartners)}</TabsContent>
-            <TabsContent value="all">{renderTable(allPartners || [])}</TabsContent>
+            <TabsContent value="pending">{renderTable(sortedPendingPartners)}</TabsContent>
+            <TabsContent value="approved">{renderTable(sortedApprovedPartners)}</TabsContent>
+            <TabsContent value="all">{renderTable(sortedAllPartners)}</TabsContent>
           </Tabs>
         )}
       </div>
