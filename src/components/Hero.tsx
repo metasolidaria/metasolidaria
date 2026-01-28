@@ -124,7 +124,7 @@ const HeroPremiumLogos = () => {
               loop: true,
             }}
             plugins={[autoplayPlugin]}
-          className="w-[80px]"
+          className="w-[90px]"
         >
           <CarouselContent className="-ml-1">
             {premiumPartners.map((partner) => (
@@ -132,7 +132,7 @@ const HeroPremiumLogos = () => {
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Avatar 
-                      className="w-12 h-12 rounded-lg border-2 border-primary-foreground/30 bg-white/90 cursor-pointer hover:border-primary-foreground/60 transition-all shadow-md hover:shadow-lg hover:scale-105"
+                      className="w-14 h-14 rounded-lg border-2 border-primary-foreground/30 bg-white/90 cursor-pointer hover:border-primary-foreground/60 transition-all shadow-md hover:shadow-lg hover:scale-105"
                       onClick={() => handleWhatsAppClick(partner)}
                     >
                       <AvatarImage 
@@ -205,7 +205,7 @@ export const Hero = () => {
             className="inline-flex items-center gap-3 bg-primary-foreground/10 backdrop-blur-sm border border-primary-foreground/20 rounded-full px-4 py-2 mb-8 overflow-visible"
           >
             <Heart className="w-4 h-4 text-secondary" fill="currentColor" />
-            <span className="text-primary-foreground text-sm font-medium">
+            <span className="text-primary-foreground text-base font-medium">
               Transforme suas metas em solidariedade
             </span>
             <HeroPremiumLogos />
