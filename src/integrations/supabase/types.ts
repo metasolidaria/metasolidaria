@@ -106,13 +106,6 @@ export type Database = {
             foreignKeyName: "goal_progress_group_id_fkey"
             columns: ["group_id"]
             isOneToOne: false
-            referencedRelation: "groups_admin"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "goal_progress_group_id_fkey"
-            columns: ["group_id"]
-            isOneToOne: false
             referencedRelation: "groups_public"
             referencedColumns: ["id"]
           },
@@ -185,13 +178,6 @@ export type Database = {
             foreignKeyName: "group_invitations_group_id_fkey"
             columns: ["group_id"]
             isOneToOne: false
-            referencedRelation: "groups_admin"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "group_invitations_group_id_fkey"
-            columns: ["group_id"]
-            isOneToOne: false
             referencedRelation: "groups_public"
             referencedColumns: ["id"]
           },
@@ -251,13 +237,6 @@ export type Database = {
             columns: ["group_id"]
             isOneToOne: false
             referencedRelation: "groups"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "group_join_requests_group_id_fkey"
-            columns: ["group_id"]
-            isOneToOne: false
-            referencedRelation: "groups_admin"
             referencedColumns: ["id"]
           },
           {
@@ -338,13 +317,6 @@ export type Database = {
             columns: ["group_id"]
             isOneToOne: false
             referencedRelation: "groups"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "group_members_group_id_fkey"
-            columns: ["group_id"]
-            isOneToOne: false
-            referencedRelation: "groups_admin"
             referencedColumns: ["id"]
           },
           {
@@ -641,22 +613,7 @@ export type Database = {
           total_goals: number | null
           updated_at: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "groups_entity_id_fkey"
-            columns: ["entity_id"]
-            isOneToOne: false
-            referencedRelation: "entities"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "groups_entity_id_fkey"
-            columns: ["entity_id"]
-            isOneToOne: false
-            referencedRelation: "entities_public"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       groups_public: {
         Row: {
