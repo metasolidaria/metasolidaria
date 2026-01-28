@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { compressImage } from "@/lib/imageCompression";
 import type { Partner, PartnerTier } from "./usePartners";
 
 export const useAdminPartners = () => {
@@ -144,31 +145,38 @@ export const useAdminPartners = () => {
 
   const uploadLogo = useMutation({
     mutationFn: async ({ partnerId, file }: { partnerId: string; file: File }) => {
-      const fileExt = file.name.split(".").pop();
-      const fileName = `${partnerId}.${fileExt}`;
+      // Compress the image before upload (max 400x400 for logos, high quality)
+      const compressedBlob = await compressImage(file, 400, 400, 0.85);
+      
+      const fileName = `${partnerId}.jpg`;
       const filePath = `logos/${fileName}`;
 
-      // Upload the file
+      // Upload the compressed file
       const { error: uploadError } = await supabase.storage
         .from("partner-logos")
-        .upload(filePath, file, { upsert: true });
+        .upload(filePath, compressedBlob, { 
+          upsert: true,
+          contentType: 'image/jpeg'
+        });
 
       if (uploadError) throw uploadError;
 
-      // Get public URL
+      // Get public URL with cache buster
       const { data: urlData } = supabase.storage
         .from("partner-logos")
         .getPublicUrl(filePath);
 
+      const logoUrlWithCacheBuster = `${urlData.publicUrl}?t=${Date.now()}`;
+
       // Update partner with logo URL
       const { error: updateError } = await supabase
         .from("partners")
-        .update({ logo_url: urlData.publicUrl })
+        .update({ logo_url: logoUrlWithCacheBuster })
         .eq("id", partnerId);
 
       if (updateError) throw updateError;
 
-      return urlData.publicUrl;
+      return logoUrlWithCacheBuster;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["adminPartners"] });
