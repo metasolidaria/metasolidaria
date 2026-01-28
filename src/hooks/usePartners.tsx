@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
-export type PartnerTier = 'diamante' | 'ouro' | 'apoiador';
+export type PartnerTier = 'premium' | 'ouro' | 'apoiador';
 
 export interface Partner {
   id: string;
