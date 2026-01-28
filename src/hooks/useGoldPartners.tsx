@@ -19,12 +19,25 @@ const stateMapping: Record<string, string[]> = {
 // Function to extract state from city name (format: "Cidade - UF" or just "Cidade")
 const extractStateFromCity = (city: string): string | null => {
   const match = city.match(/\s*-\s*([A-Z]{2})$/);
-  return match ? match[1] : null;
+  if (match) return match[1];
+  // Try format "Cidade, UF"
+  const commaMatch = city.match(/,\s*([A-Z]{2})$/);
+  return commaMatch ? commaMatch[1] : null;
 };
 
-export const useGoldPartners = (groupCity: string | undefined) => {
+// Shuffle array function
+const shuffleArray = <T,>(array: T[]): T[] => {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+};
+
+export const usePremiumAndGoldPartners = (groupCity: string | undefined) => {
   return useQuery({
-    queryKey: ["goldPartners", groupCity],
+    queryKey: ["premiumGoldPartners", groupCity],
     queryFn: async () => {
       if (!groupCity) return [];
 
@@ -32,14 +45,14 @@ export const useGoldPartners = (groupCity: string | undefined) => {
         .from("partners_public")
         .select("*")
         .eq("is_approved", true)
-        .eq("tier", "ouro")
+        .in("tier", ["premium", "ouro"])
         .order("created_at", { ascending: false });
 
       if (error) throw error;
       if (!data) return [];
 
       const groupState = extractStateFromCity(groupCity);
-      const groupCityName = groupCity.replace(/\s*-\s*[A-Z]{2}$/, "").trim();
+      const groupCityName = groupCity.replace(/\s*[-,]\s*[A-Z]{2}$/, "").trim();
 
       // Filter partners by:
       // 1. Same city as the group
@@ -47,7 +60,7 @@ export const useGoldPartners = (groupCity: string | undefined) => {
       // 3. National visibility (partner city = "Brasil")
       const filteredPartners = data.filter((partner) => {
         const partnerCity = partner.city || "";
-        const partnerCityName = partnerCity.replace(/\s*-\s*[A-Z]{2}$/, "").trim();
+        const partnerCityName = partnerCity.replace(/\s*[-,]\s*[A-Z]{2}$/, "").trim();
 
         // National visibility
         if (partnerCityName.toLowerCase() === "brasil") {
@@ -72,9 +85,13 @@ export const useGoldPartners = (groupCity: string | undefined) => {
         return false;
       });
 
-      return filteredPartners as Partner[];
+      // Shuffle the results for random order
+      return shuffleArray(filteredPartners) as Partner[];
     },
     enabled: !!groupCity,
     staleTime: 5 * 60 * 1000, // Cache for 5 minutes
   });
 };
+
+// Keep the old hook for backwards compatibility
+export const useGoldPartners = usePremiumAndGoldPartners;
