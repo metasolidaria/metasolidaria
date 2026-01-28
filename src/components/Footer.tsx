@@ -41,7 +41,7 @@ const socialLinks = [
   {
     name: "Facebook",
     icon: Facebook,
-    href: "https://facebook.com/metasolidaria",
+    href: "https://www.facebook.com/share/1AYyZ7KxxN/",
     color: "hover:text-blue-400"
   },
   {
