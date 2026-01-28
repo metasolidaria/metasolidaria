@@ -177,15 +177,15 @@ export const GroupsSection = ({
         {/* Filtros */}
         <div className="flex flex-col gap-4 mb-8">
           <div className="flex flex-col sm:flex-row gap-4">
-            {user && <div className="flex gap-2">
-                <Button variant={filter === "all" ? "default" : "outline"} size="sm" onClick={() => setFilter("all")}>
-                  <Globe className="w-4 h-4 mr-1" />
-                  Todos os Grupos
+            {user && <div className="flex flex-wrap gap-2">
+                <Button variant={filter === "all" ? "default" : "outline"} size="sm" onClick={() => setFilter("all")} className="whitespace-nowrap">
+                  <Globe className="w-4 h-4 mr-1 shrink-0" />
+                  <span className="truncate">Todos</span>
                 </Button>
-                <Button variant={filter === "mine" ? "default" : "outline"} size="sm" onClick={() => setFilter("mine")}>
-                  <Users className="w-4 h-4 mr-1" />
-                  Meus Grupos
-                  {userMemberships.length > 0 && <span className="ml-1 bg-primary-foreground/20 px-1.5 py-0.5 rounded-full text-xs">
+                <Button variant={filter === "mine" ? "default" : "outline"} size="sm" onClick={() => setFilter("mine")} className="whitespace-nowrap">
+                  <Users className="w-4 h-4 mr-1 shrink-0" />
+                  <span className="truncate">Meus Grupos</span>
+                  {userMemberships.length > 0 && <span className="ml-1 bg-primary-foreground/20 px-1.5 py-0.5 rounded-full text-xs shrink-0">
                       {userMemberships.length}
                     </span>}
                 </Button>
