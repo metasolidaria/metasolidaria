@@ -98,20 +98,20 @@ export const GoldPartnersCarousel = ({ groupCity, groupId, groupName }: GoldPart
               >
                 <CardContent className="p-4">
                   <div className="flex items-start gap-3">
-                    <Avatar className="w-12 h-12 rounded-xl border-2 border-amber-500/30 bg-white">
+                    <Avatar className="w-16 h-16 rounded-xl border-2 border-amber-500/30 bg-white">
                       <AvatarImage 
                         src={getPartnerLogo(partner.name || "")} 
                         alt={partner.name || "Parceiro"}
-                        className="object-contain p-1"
+                        className="object-contain p-1.5"
                       />
-                      <AvatarFallback className="rounded-xl bg-amber-100 text-amber-700 font-semibold">
+                      <AvatarFallback className="rounded-xl bg-amber-100 text-amber-700 font-semibold text-lg">
                         {partner.name?.charAt(0) || "P"}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between">
                         <div className="flex-1 min-w-0">
-                          <h3 className={`font-semibold truncate transition-colors ${
+                          <h3 className={`text-xs font-medium truncate transition-colors ${
                             isPremium(partner.tier)
                               ? "text-purple-700 dark:text-purple-300 group-hover:text-purple-600 dark:group-hover:text-purple-200"
                               : "text-foreground group-hover:text-amber-600 dark:group-hover:text-amber-400"
@@ -119,26 +119,26 @@ export const GoldPartnersCarousel = ({ groupCity, groupId, groupName }: GoldPart
                             {partner.name}
                           </h3>
                           {partner.specialty && (
-                            <p className="text-sm text-muted-foreground truncate">
+                            <p className="text-[10px] text-muted-foreground truncate">
                               {partner.specialty}
                             </p>
                           )}
                         </div>
                         <div className="flex items-center gap-1 ml-2">
                           {isPremium(partner.tier) ? (
-                            <Crown className="w-4 h-4 text-purple-500 fill-purple-500/30" />
+                            <Crown className="w-3 h-3 text-purple-500 fill-purple-500/30" />
                           ) : (
-                            <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
+                            <Star className="w-3 h-3 text-amber-500 fill-amber-500" />
                           )}
-                          <ExternalLink className="w-3 h-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                          <ExternalLink className="w-2.5 h-2.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
                         </div>
                       </div>
                     </div>
                   </div>
                   
-                  <div className="flex items-center justify-between mt-3">
-                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                      <MapPin className="w-3 h-3" />
+                  <div className="flex items-center justify-between mt-2">
+                    <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                      <MapPin className="w-2.5 h-2.5" />
                       <span className="truncate">{partner.city}</span>
                     </div>
                     <Badge 
