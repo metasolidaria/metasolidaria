@@ -65,7 +65,6 @@ export const HowItWorksModal = () => {
           </DialogHeader>
 
           <div className="grid gap-4 mt-4">
-            coletivo
             {steps.map((step, index) => (
               <motion.div
                 key={step.title}
