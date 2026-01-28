@@ -105,46 +105,48 @@ const HeroPremiumLogos = () => {
   };
 
   return (
-    <TooltipProvider delayDuration={100}>
-      <Carousel
-        opts={{
-          align: "center",
-          loop: true,
-        }}
-        plugins={[autoplayPlugin.current]}
-        className="w-[80px]"
-      >
-        <CarouselContent className="-ml-1">
-          {premiumPartners.map((partner) => (
-            <CarouselItem key={partner.id} className="pl-1 basis-full flex justify-center">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Avatar 
-                    className="w-12 h-12 rounded-lg border-2 border-primary-foreground/30 bg-white/90 cursor-pointer hover:border-primary-foreground/60 transition-all shadow-md hover:shadow-lg hover:scale-105"
-                    onClick={() => handleWhatsAppClick(partner)}
-                  >
-                    <AvatarImage 
-                      src={getPartnerLogo(partner)}
-                      alt={partner.name || "Parceiro Premium"}
-                      className="object-contain p-1"
-                    />
-                    <AvatarFallback className="rounded-lg bg-primary/10 text-primary font-semibold text-sm">
-                      {partner.name?.charAt(0) || "P"}
-                    </AvatarFallback>
-                  </Avatar>
-                </TooltipTrigger>
-                <TooltipContent side="bottom" className="bg-primary text-primary-foreground border-primary">
-                  <p className="font-medium text-xs">{partner.name}</p>
-                  {partner.specialty && (
-                    <p className="text-[10px] text-primary-foreground/80">{partner.specialty}</p>
-                  )}
-                </TooltipContent>
-              </Tooltip>
-            </CarouselItem>
-          ))}
-        </CarouselContent>
-      </Carousel>
-    </TooltipProvider>
+    <div className="border-l border-primary-foreground/30 pl-3">
+      <TooltipProvider delayDuration={100}>
+        <Carousel
+          opts={{
+            align: "center",
+            loop: true,
+          }}
+          plugins={[autoplayPlugin.current]}
+          className="w-[80px]"
+        >
+          <CarouselContent className="-ml-1">
+            {premiumPartners.map((partner) => (
+              <CarouselItem key={partner.id} className="pl-1 basis-full flex justify-center">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Avatar 
+                      className="w-12 h-12 rounded-lg border-2 border-primary-foreground/30 bg-white/90 cursor-pointer hover:border-primary-foreground/60 transition-all shadow-md hover:shadow-lg hover:scale-105"
+                      onClick={() => handleWhatsAppClick(partner)}
+                    >
+                      <AvatarImage 
+                        src={getPartnerLogo(partner)}
+                        alt={partner.name || "Parceiro Premium"}
+                        className="object-contain p-1"
+                      />
+                      <AvatarFallback className="rounded-lg bg-primary/10 text-primary font-semibold text-sm">
+                        {partner.name?.charAt(0) || "P"}
+                      </AvatarFallback>
+                    </Avatar>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom" className="bg-primary text-primary-foreground border-primary">
+                    <p className="font-medium text-xs">{partner.name}</p>
+                    {partner.specialty && (
+                      <p className="text-[10px] text-primary-foreground/80">{partner.specialty}</p>
+                    )}
+                  </TooltipContent>
+                </Tooltip>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+        </Carousel>
+      </TooltipProvider>
+    </div>
   );
 };
 
@@ -195,9 +197,7 @@ export const Hero = () => {
             <span className="text-primary-foreground text-sm font-medium">
               Transforme suas metas em solidariedade
             </span>
-            <div className="border-l border-primary-foreground/30 pl-3">
-              <HeroPremiumLogos />
-            </div>
+            <HeroPremiumLogos />
           </motion.div>
 
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold text-primary-foreground mb-6 leading-tight">
