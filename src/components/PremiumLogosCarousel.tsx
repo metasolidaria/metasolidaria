@@ -47,8 +47,11 @@ export const PremiumLogosCarousel = () => {
     return null;
   }
 
-  const getPartnerLogo = (partnerName: string) => {
-    if (partnerName === "NaturUai") return naturuaiLogo;
+  const getPartnerLogo = (partner: { name?: string | null; logo_url?: string | null }) => {
+    // Use the partner's custom logo if available
+    if (partner.logo_url) return partner.logo_url;
+    // Fallback to static logos for known partners
+    if (partner.name === "NaturUai") return naturuaiLogo;
     return logoImage;
   };
 
@@ -83,7 +86,7 @@ export const PremiumLogosCarousel = () => {
                       onClick={() => handleWhatsAppClick(partner)}
                     >
                       <AvatarImage 
-                        src={getPartnerLogo(partner.name || "")} 
+                        src={getPartnerLogo(partner)}
                         alt={partner.name || "Parceiro Premium"}
                         className="object-contain p-1"
                       />

@@ -458,6 +458,7 @@ export type Database = {
           instagram: string | null
           is_approved: boolean
           latitude: number | null
+          logo_url: string | null
           longitude: number | null
           name: string
           referrer_name: string | null
@@ -477,6 +478,7 @@ export type Database = {
           instagram?: string | null
           is_approved?: boolean
           latitude?: number | null
+          logo_url?: string | null
           longitude?: number | null
           name: string
           referrer_name?: string | null
@@ -496,6 +498,7 @@ export type Database = {
           instagram?: string | null
           is_approved?: boolean
           latitude?: number | null
+          logo_url?: string | null
           longitude?: number | null
           name?: string
           referrer_name?: string | null
@@ -711,6 +714,7 @@ export type Database = {
           instagram: string | null
           is_approved: boolean | null
           latitude: number | null
+          logo_url: string | null
           longitude: number | null
           name: string | null
           specialty: string | null
@@ -726,6 +730,7 @@ export type Database = {
           instagram?: string | null
           is_approved?: boolean | null
           latitude?: number | null
+          logo_url?: string | null
           longitude?: number | null
           name?: string | null
           specialty?: string | null
@@ -741,6 +746,7 @@ export type Database = {
           instagram?: string | null
           is_approved?: boolean | null
           latitude?: number | null
+          logo_url?: string | null
           longitude?: number | null
           name?: string | null
           specialty?: string | null
