@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { ArrowDown, Heart, Users, UserCheck, Target } from "lucide-react";
 import { Button } from "./ui/button";
@@ -8,7 +8,14 @@ import { useAuth } from "@/hooks/useAuth";
 import { AuthModal } from "./AuthModal";
 import { CreateGroupModal } from "./CreateGroupModal";
 import { useHeroStats } from "@/hooks/useHeroStats";
-
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
+import Autoplay from "embla-carousel-autoplay";
+import logoImage from "@/assets/logo.jpg";
+import naturuaiLogo from "@/assets/naturuai-logo.jpg";
 // Animated counter component - only animates once when value first becomes available
 const AnimatedCounter = ({ value, duration = 2000 }: { value: number; duration?: number }) => {
   const [count, setCount] = useState(value);
@@ -42,6 +49,103 @@ const AnimatedCounter = ({ value, duration = 2000 }: { value: number; duration?:
   }, [value, duration, hasAnimated]);
 
   return <span>{count.toLocaleString('pt-BR')}</span>;
+};
+
+// Hook to fetch premium partners for Hero
+const usePremiumPartnersHero = () => {
+  return useQuery({
+    queryKey: ["premiumPartnersHero"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("partners_public")
+        .select("id, name, logo_url, specialty, whatsapp")
+        .eq("is_approved", true)
+        .eq("tier", "premium")
+        .order("name", { ascending: true });
+
+      if (error) throw error;
+      
+      // Remove duplicates by name
+      const uniquePartners = data?.reduce((acc, partner) => {
+        if (!acc.find(p => p.name === partner.name)) {
+          acc.push(partner);
+        }
+        return acc;
+      }, [] as typeof data) || [];
+      
+      return uniquePartners;
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+};
+
+// Mini carousel component for Hero
+const HeroPremiumLogos = () => {
+  const { data: premiumPartners, isLoading } = usePremiumPartnersHero();
+  
+  const autoplayPlugin = useRef(
+    Autoplay({ delay: 2500, stopOnInteraction: false, stopOnMouseEnter: true })
+  );
+
+  if (isLoading || !premiumPartners || premiumPartners.length === 0) {
+    return null;
+  }
+
+  const getPartnerLogo = (partner: { name?: string | null; logo_url?: string | null }) => {
+    if (partner.logo_url) return partner.logo_url;
+    if (partner.name === "NaturUai") return naturuaiLogo;
+    return logoImage;
+  };
+
+  const handleWhatsAppClick = (partner: { name: string; whatsapp?: string | null }) => {
+    if (!partner.whatsapp) return;
+    const cleanNumber = partner.whatsapp.replace(/\D/g, "");
+    const message = encodeURIComponent(`Olá ${partner.name}! Encontrei seu contato no Meta Solidária.`);
+    window.open(`https://wa.me/55${cleanNumber}?text=${message}`, "_blank");
+  };
+
+  return (
+    <TooltipProvider delayDuration={100}>
+      <Carousel
+        opts={{
+          align: "center",
+          loop: true,
+        }}
+        plugins={[autoplayPlugin.current]}
+        className="w-[80px]"
+      >
+        <CarouselContent className="-ml-1">
+          {premiumPartners.map((partner) => (
+            <CarouselItem key={partner.id} className="pl-1 basis-full flex justify-center">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Avatar 
+                    className="w-12 h-12 rounded-lg border-2 border-primary-foreground/30 bg-white/90 cursor-pointer hover:border-primary-foreground/60 transition-all shadow-md hover:shadow-lg hover:scale-105"
+                    onClick={() => handleWhatsAppClick(partner)}
+                  >
+                    <AvatarImage 
+                      src={getPartnerLogo(partner)}
+                      alt={partner.name || "Parceiro Premium"}
+                      className="object-contain p-1"
+                    />
+                    <AvatarFallback className="rounded-lg bg-primary/10 text-primary font-semibold text-sm">
+                      {partner.name?.charAt(0) || "P"}
+                    </AvatarFallback>
+                  </Avatar>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="bg-primary text-primary-foreground border-primary">
+                  <p className="font-medium text-xs">{partner.name}</p>
+                  {partner.specialty && (
+                    <p className="text-[10px] text-primary-foreground/80">{partner.specialty}</p>
+                  )}
+                </TooltipContent>
+              </Tooltip>
+            </CarouselItem>
+          ))}
+        </CarouselContent>
+      </Carousel>
+    </TooltipProvider>
+  );
 };
 
 export const Hero = () => {
@@ -85,12 +189,15 @@ export const Hero = () => {
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-            className="inline-flex items-center gap-2 bg-primary-foreground/10 backdrop-blur-sm border border-primary-foreground/20 rounded-full px-4 py-2 mb-8"
+            className="inline-flex items-center gap-3 bg-primary-foreground/10 backdrop-blur-sm border border-primary-foreground/20 rounded-full px-4 py-2 mb-8"
           >
             <Heart className="w-4 h-4 text-secondary" fill="currentColor" />
             <span className="text-primary-foreground text-sm font-medium">
               Transforme suas metas em solidariedade
             </span>
+            <div className="border-l border-primary-foreground/30 pl-3">
+              <HeroPremiumLogos />
+            </div>
           </motion.div>
 
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold text-primary-foreground mb-6 leading-tight">
