@@ -481,7 +481,7 @@ export const PartnersSection = () => {
                   {groupOrigin && (
                     <a
                       href={`/grupo/${groupOrigin.id}`}
-                      className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-secondary/10 text-secondary-foreground text-xs font-medium rounded-full border border-secondary/20 hover:bg-secondary/20 transition-colors"
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-secondary text-secondary-foreground text-xs font-medium rounded-full hover:bg-secondary/80 transition-colors shadow-sm"
                     >
                       <ArrowLeft className="w-3 h-3" />
                       Voltar para {groupOrigin.name}
