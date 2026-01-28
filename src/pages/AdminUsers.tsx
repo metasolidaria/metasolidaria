@@ -43,6 +43,7 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 
 const roleConfig: Record<AppRole, { label: string; icon: React.ReactNode; className: string }> = {
   admin: {
@@ -78,6 +79,8 @@ const AdminUsers = () => {
   } = useAdminUsers();
 
   const [searchTerm, setSearchTerm] = useState("");
+  const [sortColumn, setSortColumn] = useState<string | null>(null);
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [createModalOpen, setCreateModalOpen] = useState(false);
@@ -122,6 +125,74 @@ const AdminUsers = () => {
       u.whatsapp?.includes(search)
     );
   });
+
+  const sortedUsers = filteredUsers?.slice().sort((a, b) => {
+    if (!sortColumn) return 0;
+
+    let aValue: string | number | null = null;
+    let bValue: string | number | null = null;
+
+    switch (sortColumn) {
+      case "full_name":
+        aValue = a.full_name?.toLowerCase() ?? "";
+        bValue = b.full_name?.toLowerCase() ?? "";
+        break;
+      case "email":
+        aValue = a.email?.toLowerCase() ?? "";
+        bValue = b.email?.toLowerCase() ?? "";
+        break;
+      case "city":
+        aValue = a.city?.toLowerCase() ?? "";
+        bValue = b.city?.toLowerCase() ?? "";
+        break;
+      case "roles":
+        aValue = a.roles?.length ?? 0;
+        bValue = b.roles?.length ?? 0;
+        break;
+      case "created_at":
+        aValue = new Date(a.created_at).getTime();
+        bValue = new Date(b.created_at).getTime();
+        break;
+      case "last_sign_in_at":
+        aValue = a.last_sign_in_at ? new Date(a.last_sign_in_at).getTime() : 0;
+        bValue = b.last_sign_in_at ? new Date(b.last_sign_in_at).getTime() : 0;
+        break;
+      default:
+        return 0;
+    }
+
+    if (aValue < bValue) return sortDirection === "asc" ? -1 : 1;
+    if (aValue > bValue) return sortDirection === "asc" ? 1 : -1;
+    return 0;
+  });
+
+  const handleSort = (column: string) => {
+    if (sortColumn === column) {
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+    } else {
+      setSortColumn(column);
+      setSortDirection("asc");
+    }
+  };
+
+  const SortableHeader = ({ column, children }: { column: string; children: React.ReactNode }) => (
+    <Button
+      variant="ghost"
+      onClick={() => handleSort(column)}
+      className="h-auto p-0 font-medium text-muted-foreground hover:text-foreground hover:bg-transparent"
+    >
+      {children}
+      {sortColumn === column ? (
+        sortDirection === "asc" ? (
+          <ArrowUp className="ml-1 h-3 w-3" />
+        ) : (
+          <ArrowDown className="ml-1 h-3 w-3" />
+        )
+      ) : (
+        <ArrowUpDown className="ml-1 h-3 w-3 opacity-50" />
+      )}
+    </Button>
+  );
 
   const handleEdit = (user: AdminUser) => {
     setSelectedUser(user);
@@ -236,24 +307,24 @@ const AdminUsers = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Nome</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Cidade</TableHead>
-                  <TableHead>Papéis</TableHead>
-                  <TableHead>Cadastro</TableHead>
-                  <TableHead>Último Login</TableHead>
+                  <TableHead><SortableHeader column="full_name">Nome</SortableHeader></TableHead>
+                  <TableHead><SortableHeader column="email">Email</SortableHeader></TableHead>
+                  <TableHead><SortableHeader column="city">Cidade</SortableHeader></TableHead>
+                  <TableHead><SortableHeader column="roles">Papéis</SortableHeader></TableHead>
+                  <TableHead><SortableHeader column="created_at">Cadastro</SortableHeader></TableHead>
+                  <TableHead><SortableHeader column="last_sign_in_at">Último Login</SortableHeader></TableHead>
                   <TableHead className="w-[180px]">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredUsers?.length === 0 ? (
+                {sortedUsers?.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                       Nenhum usuário encontrado
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredUsers?.map((u) => (
+                  sortedUsers?.map((u) => (
                     <TableRow key={u.user_id}>
                       <TableCell className="font-medium">{u.full_name}</TableCell>
                       <TableCell>{u.email}</TableCell>
@@ -334,9 +405,9 @@ const AdminUsers = () => {
         )}
 
         {/* Total count */}
-        {filteredUsers && (
+        {sortedUsers && (
           <p className="text-sm text-muted-foreground mt-4">
-            {filteredUsers.length} usuário{filteredUsers.length !== 1 ? "s" : ""} encontrado{filteredUsers.length !== 1 ? "s" : ""}
+            {sortedUsers.length} usuário{sortedUsers.length !== 1 ? "s" : ""} encontrado{sortedUsers.length !== 1 ? "s" : ""}
           </p>
         )}
       </div>

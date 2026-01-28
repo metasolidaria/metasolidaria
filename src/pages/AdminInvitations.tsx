@@ -51,6 +51,7 @@ import {
 import { format, isPast } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
+import { ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 
 const statusConfig: Record<string, { label: string; icon: React.ReactNode; className: string }> = {
   pending: {
@@ -79,6 +80,8 @@ const AdminInvitations = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [typeFilter, setTypeFilter] = useState<string>("all");
+  const [sortColumn, setSortColumn] = useState<string | null>(null);
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [invitationToDelete, setInvitationToDelete] = useState<AdminInvitation | null>(null);
 
@@ -128,6 +131,74 @@ const AdminInvitations = () => {
 
     return matchesSearch && matchesStatus && matchesType;
   });
+
+  const sortedInvitations = filteredInvitations?.slice().sort((a, b) => {
+    if (!sortColumn) return 0;
+
+    let aValue: string | number | null = null;
+    let bValue: string | number | null = null;
+
+    switch (sortColumn) {
+      case "group_name":
+        aValue = a.group_name?.toLowerCase() ?? "";
+        bValue = b.group_name?.toLowerCase() ?? "";
+        break;
+      case "invite_type":
+        aValue = a.invite_type?.toLowerCase() ?? "";
+        bValue = b.invite_type?.toLowerCase() ?? "";
+        break;
+      case "status":
+        aValue = getDisplayStatus(a);
+        bValue = getDisplayStatus(b);
+        break;
+      case "invited_by_name":
+        aValue = a.invited_by_name?.toLowerCase() ?? "";
+        bValue = b.invited_by_name?.toLowerCase() ?? "";
+        break;
+      case "created_at":
+        aValue = new Date(a.created_at).getTime();
+        bValue = new Date(b.created_at).getTime();
+        break;
+      case "expires_at":
+        aValue = new Date(a.expires_at).getTime();
+        bValue = new Date(b.expires_at).getTime();
+        break;
+      default:
+        return 0;
+    }
+
+    if (aValue < bValue) return sortDirection === "asc" ? -1 : 1;
+    if (aValue > bValue) return sortDirection === "asc" ? 1 : -1;
+    return 0;
+  });
+
+  const handleSort = (column: string) => {
+    if (sortColumn === column) {
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+    } else {
+      setSortColumn(column);
+      setSortDirection("asc");
+    }
+  };
+
+  const SortableHeader = ({ column, children }: { column: string; children: React.ReactNode }) => (
+    <Button
+      variant="ghost"
+      onClick={() => handleSort(column)}
+      className="h-auto p-0 font-medium text-muted-foreground hover:text-foreground hover:bg-transparent"
+    >
+      {children}
+      {sortColumn === column ? (
+        sortDirection === "asc" ? (
+          <ArrowUp className="ml-1 h-3 w-3" />
+        ) : (
+          <ArrowDown className="ml-1 h-3 w-3" />
+        )
+      ) : (
+        <ArrowUpDown className="ml-1 h-3 w-3 opacity-50" />
+      )}
+    </Button>
+  );
 
   const handleRevoke = (invitation: AdminInvitation) => {
     setInvitationToDelete(invitation);
@@ -287,25 +358,25 @@ const AdminInvitations = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Grupo</TableHead>
-                  <TableHead>Tipo</TableHead>
+                  <TableHead><SortableHeader column="group_name">Grupo</SortableHeader></TableHead>
+                  <TableHead><SortableHeader column="invite_type">Tipo</SortableHeader></TableHead>
                   <TableHead>Email/Link</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Convidado por</TableHead>
-                  <TableHead>Criado em</TableHead>
-                  <TableHead>Expira em</TableHead>
+                  <TableHead><SortableHeader column="status">Status</SortableHeader></TableHead>
+                  <TableHead><SortableHeader column="invited_by_name">Convidado por</SortableHeader></TableHead>
+                  <TableHead><SortableHeader column="created_at">Criado em</SortableHeader></TableHead>
+                  <TableHead><SortableHeader column="expires_at">Expira em</SortableHeader></TableHead>
                   <TableHead className="w-[140px]">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredInvitations?.length === 0 ? (
+                {sortedInvitations?.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                       Nenhum convite encontrado
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredInvitations?.map((inv) => {
+                  sortedInvitations?.map((inv) => {
                     const displayStatus = getDisplayStatus(inv);
                     const config = statusConfig[displayStatus] || statusConfig.pending;
                     const canRenew = displayStatus === "expired" || displayStatus === "pending";
@@ -397,9 +468,9 @@ const AdminInvitations = () => {
           </div>
         )}
 
-        {filteredInvitations && (
+        {sortedInvitations && (
           <p className="text-sm text-muted-foreground mt-4">
-            {filteredInvitations.length} convite{filteredInvitations.length !== 1 ? "s" : ""} encontrado{filteredInvitations.length !== 1 ? "s" : ""}
+            {sortedInvitations.length} convite{sortedInvitations.length !== 1 ? "s" : ""} encontrado{sortedInvitations.length !== 1 ? "s" : ""}
           </p>
         )}
       </div>
