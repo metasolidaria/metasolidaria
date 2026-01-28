@@ -8,13 +8,19 @@ import { AuthModal } from "./AuthModal";
 import { CreateGroupModal } from "./CreateGroupModal";
 import { useHeroStats } from "@/hooks/useHeroStats";
 
-// Animated counter component
+// Animated counter component - only animates once when value first becomes available
 const AnimatedCounter = ({ value, duration = 2000 }: { value: number; duration?: number }) => {
-  const [count, setCount] = useState(0);
+  const [count, setCount] = useState(value);
+  const [hasAnimated, setHasAnimated] = useState(false);
 
   useEffect(() => {
-    if (value === 0) return;
+    // Skip animation if already animated or no value
+    if (hasAnimated || value === 0) {
+      setCount(value);
+      return;
+    }
     
+    // Start animation
     const steps = 60;
     const increment = value / steps;
     const stepDuration = duration / steps;
@@ -24,6 +30,7 @@ const AnimatedCounter = ({ value, duration = 2000 }: { value: number; duration?:
       current += increment;
       if (current >= value) {
         setCount(value);
+        setHasAnimated(true);
         clearInterval(timer);
       } else {
         setCount(Math.floor(current));
@@ -31,7 +38,7 @@ const AnimatedCounter = ({ value, duration = 2000 }: { value: number; duration?:
     }, stepDuration);
 
     return () => clearInterval(timer);
-  }, [value, duration]);
+  }, [value, duration, hasAnimated]);
 
   return <span>{count.toLocaleString('pt-BR')}</span>;
 };

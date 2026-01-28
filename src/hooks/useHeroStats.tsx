@@ -10,7 +10,9 @@ interface HeroStatsRow {
 export const useHeroStats = () => {
   return useQuery({
     queryKey: ["heroStats"],
-    staleTime: 0, // Always fetch fresh data
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes to prevent flickering
+    gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
+    refetchOnWindowFocus: false, // Don't refetch when window regains focus
     queryFn: async () => {
       const { data, error } = await supabase
         .from("hero_stats_public")
