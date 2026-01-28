@@ -8,6 +8,9 @@ import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import Autoplay from "embla-carousel-autoplay";
 import { useRef } from "react";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import logoImage from "@/assets/logo.jpg";
+import naturuaiLogo from "@/assets/naturuai-logo.jpg";
 
 interface GoldPartnersCarouselProps {
   groupCity: string;
@@ -51,6 +54,11 @@ export const GoldPartnersCarousel = ({ groupCity, groupId, groupName }: GoldPart
 
   const isPremium = (tier: string | null) => tier === "premium";
 
+  const getPartnerLogo = (partnerName: string) => {
+    if (partnerName === "NaturUai") return naturuaiLogo;
+    return logoImage;
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -89,32 +97,46 @@ export const GoldPartnersCarousel = ({ groupCity, groupId, groupName }: GoldPart
                 onClick={() => handleWhatsAppClick(partner)}
               >
                 <CardContent className="p-4">
-                  <div className="flex items-start justify-between mb-2">
+                  <div className="flex items-start gap-3">
+                    <Avatar className="w-12 h-12 rounded-xl border-2 border-amber-500/30 bg-white">
+                      <AvatarImage 
+                        src={getPartnerLogo(partner.name || "")} 
+                        alt={partner.name || "Parceiro"}
+                        className="object-contain p-1"
+                      />
+                      <AvatarFallback className="rounded-xl bg-amber-100 text-amber-700 font-semibold">
+                        {partner.name?.charAt(0) || "P"}
+                      </AvatarFallback>
+                    </Avatar>
                     <div className="flex-1 min-w-0">
-                      <h3 className={`font-semibold truncate transition-colors ${
-                        isPremium(partner.tier)
-                          ? "text-purple-700 dark:text-purple-300 group-hover:text-purple-600 dark:group-hover:text-purple-200"
-                          : "text-foreground group-hover:text-amber-600 dark:group-hover:text-amber-400"
-                      }`}>
-                        {partner.name}
-                      </h3>
-                      {partner.specialty && (
-                        <p className="text-sm text-muted-foreground truncate">
-                          {partner.specialty}
-                        </p>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-1 ml-2">
-                      {isPremium(partner.tier) ? (
-                        <Crown className="w-4 h-4 text-purple-500 fill-purple-500/30" />
-                      ) : (
-                        <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
-                      )}
-                      <ExternalLink className="w-3 h-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1 min-w-0">
+                          <h3 className={`font-semibold truncate transition-colors ${
+                            isPremium(partner.tier)
+                              ? "text-purple-700 dark:text-purple-300 group-hover:text-purple-600 dark:group-hover:text-purple-200"
+                              : "text-foreground group-hover:text-amber-600 dark:group-hover:text-amber-400"
+                          }`}>
+                            {partner.name}
+                          </h3>
+                          {partner.specialty && (
+                            <p className="text-sm text-muted-foreground truncate">
+                              {partner.specialty}
+                            </p>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-1 ml-2">
+                          {isPremium(partner.tier) ? (
+                            <Crown className="w-4 h-4 text-purple-500 fill-purple-500/30" />
+                          ) : (
+                            <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
+                          )}
+                          <ExternalLink className="w-3 h-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                        </div>
+                      </div>
                     </div>
                   </div>
                   
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between mt-3">
                     <div className="flex items-center gap-1 text-xs text-muted-foreground">
                       <MapPin className="w-3 h-3" />
                       <span className="truncate">{partner.city}</span>
