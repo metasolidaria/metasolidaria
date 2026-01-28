@@ -55,10 +55,16 @@ export const usePremiumAndGoldPartners = (groupCity: string | undefined) => {
       const groupCityName = groupCity.replace(/\s*[-,]\s*[A-Z]{2}$/, "").trim();
 
       // Filter partners by:
-      // 1. Same city as the group
-      // 2. Regional visibility (partner city = state name)
-      // 3. National visibility (partner city = "Brasil")
+      // 1. Premium partners - ALWAYS visible (national scope)
+      // 2. Same city as the group
+      // 3. Regional visibility (partner city = state name)
+      // 4. National visibility (partner city = "Brasil")
       const filteredPartners = data.filter((partner) => {
+        // Premium partners are ALWAYS visible regardless of city
+        if (partner.tier === "premium") {
+          return true;
+        }
+
         const partnerCity = partner.city || "";
         const partnerCityName = partnerCity.replace(/\s*[-,]\s*[A-Z]{2}$/, "").trim();
         const partnerState = extractStateFromCity(partnerCity);
