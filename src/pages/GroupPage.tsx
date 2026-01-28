@@ -381,7 +381,12 @@ export default function GroupPage() {
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8 space-y-8">
+        {/* Gold Partners Carousel - Full Width */}
+        {group.city && (
+          <GoldPartnersCarousel groupCity={group.city} />
+        )}
+
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
@@ -417,11 +422,6 @@ export default function GroupPage() {
                 </div>
               </div>
             </motion.div>
-
-            {/* Gold Partners Carousel */}
-            {group.city && (
-              <GoldPartnersCarousel groupCity={group.city} />
-            )}
 
             {/* Progress Charts - Temporariamente desabilitado
             {progressEntries && progressEntries.length > 0 && (
