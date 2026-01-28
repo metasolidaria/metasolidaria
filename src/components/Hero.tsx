@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
 import { ArrowDown, Heart, Users, UserCheck, Target } from "lucide-react";
 import { Button } from "./ui/button";
@@ -83,11 +83,22 @@ const usePremiumPartnersHero = () => {
 const HeroPremiumLogos = () => {
   const { data: premiumPartners, isLoading } = usePremiumPartnersHero();
   
-  const autoplayPlugin = useRef(
-    Autoplay({ delay: 2500, stopOnInteraction: false, stopOnMouseEnter: true })
+  const autoplayPlugin = useMemo(
+    () => Autoplay({ delay: 2500, stopOnInteraction: false, stopOnMouseEnter: true }),
+    []
   );
 
-  if (isLoading || !premiumPartners || premiumPartners.length === 0) {
+  // Show skeleton while loading
+  if (isLoading) {
+    return (
+      <div className="border-l border-primary-foreground/30 pl-3">
+        <Skeleton className="w-12 h-12 rounded-lg bg-primary-foreground/20" />
+      </div>
+    );
+  }
+
+  // Hide if no partners
+  if (!premiumPartners || premiumPartners.length === 0) {
     return null;
   }
 
@@ -107,12 +118,12 @@ const HeroPremiumLogos = () => {
   return (
     <div className="border-l border-primary-foreground/30 pl-3">
       <TooltipProvider delayDuration={100}>
-        <Carousel
-          opts={{
-            align: "center",
-            loop: true,
-          }}
-          plugins={[autoplayPlugin.current]}
+          <Carousel
+            opts={{
+              align: "center",
+              loop: true,
+            }}
+            plugins={[autoplayPlugin]}
           className="w-[80px]"
         >
           <CarouselContent className="-ml-1">
@@ -191,7 +202,7 @@ export const Hero = () => {
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-            className="inline-flex items-center gap-3 bg-primary-foreground/10 backdrop-blur-sm border border-primary-foreground/20 rounded-full px-4 py-2 mb-8"
+            className="inline-flex items-center gap-3 bg-primary-foreground/10 backdrop-blur-sm border border-primary-foreground/20 rounded-full px-4 py-2 mb-8 overflow-visible"
           >
             <Heart className="w-4 h-4 text-secondary" fill="currentColor" />
             <span className="text-primary-foreground text-sm font-medium">
