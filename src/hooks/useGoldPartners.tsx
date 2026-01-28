@@ -84,7 +84,15 @@ export const usePremiumAndGoldPartners = (groupCity: string | undefined) => {
           const stateEntry = Object.entries(stateMapping).find(([_, codes]) =>
             codes.includes(groupState)
           );
-          if (stateEntry && partnerCityName.toLowerCase() === stateEntry[0].toLowerCase()) {
+          const stateName = stateEntry?.[0];
+          // IMPORTANT: only treat as state-wide visibility when the partner was registered
+          // with the city EXACTLY equal to the state name (no ", UF" or "- UF").
+          // This prevents matching real cities like "São Paulo, SP" as if they were the state.
+          if (
+            stateName &&
+            !partnerState &&
+            partnerCity.trim().toLowerCase() === stateName.toLowerCase()
+          ) {
             return true;
           }
         }
