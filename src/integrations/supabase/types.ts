@@ -621,6 +621,7 @@ export type Database = {
           total_donations: number | null
           total_goals: number | null
           updated_at: string | null
+          view_count: number | null
         }
         Relationships: []
       }
@@ -851,6 +852,7 @@ export type Database = {
           total_donations: number
           total_goals: number
           updated_at: string
+          view_count: number
         }[]
       }
       get_admin_invitations: {

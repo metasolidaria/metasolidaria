@@ -22,6 +22,7 @@ export interface AdminGroup {
   member_count: number;
   total_donations: number;
   total_goals: number;
+  view_count: number;
 }
 
 export interface GroupMember {
