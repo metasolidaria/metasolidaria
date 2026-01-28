@@ -43,6 +43,9 @@ import {
   UserPlus,
   Plus,
   Link,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
 } from "lucide-react";
 import { InviteMemberModal } from "@/components/InviteMemberModal";
 import { format } from "date-fns";
@@ -63,6 +66,8 @@ const AdminGroups = () => {
   } = useAdminGroups();
 
   const [searchTerm, setSearchTerm] = useState("");
+  const [sortColumn, setSortColumn] = useState<string | null>(null);
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
   const [selectedGroup, setSelectedGroup] = useState<AdminGroup | null>(null);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [membersModalOpen, setMembersModalOpen] = useState(false);
@@ -109,6 +114,78 @@ const AdminGroups = () => {
       g.donation_type?.toLowerCase().includes(search)
     );
   });
+
+  const sortedGroups = filteredGroups?.slice().sort((a, b) => {
+    if (!sortColumn) return 0;
+
+    let aValue: string | number | boolean | null = null;
+    let bValue: string | number | boolean | null = null;
+
+    switch (sortColumn) {
+      case "name":
+        aValue = a.name?.toLowerCase() ?? "";
+        bValue = b.name?.toLowerCase() ?? "";
+        break;
+      case "city":
+        aValue = a.city?.toLowerCase() ?? "";
+        bValue = b.city?.toLowerCase() ?? "";
+        break;
+      case "donation_type":
+        aValue = a.donation_type?.toLowerCase() ?? "";
+        bValue = b.donation_type?.toLowerCase() ?? "";
+        break;
+      case "is_private":
+        aValue = a.is_private ? 1 : 0;
+        bValue = b.is_private ? 1 : 0;
+        break;
+      case "member_count":
+        aValue = a.member_count ?? 0;
+        bValue = b.member_count ?? 0;
+        break;
+      case "total_goals":
+        aValue = a.total_goals ?? 0;
+        bValue = b.total_goals ?? 0;
+        break;
+      case "created_at":
+        aValue = new Date(a.created_at).getTime();
+        bValue = new Date(b.created_at).getTime();
+        break;
+      default:
+        return 0;
+    }
+
+    if (aValue < bValue) return sortDirection === "asc" ? -1 : 1;
+    if (aValue > bValue) return sortDirection === "asc" ? 1 : -1;
+    return 0;
+  });
+
+  const handleSort = (column: string) => {
+    if (sortColumn === column) {
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+    } else {
+      setSortColumn(column);
+      setSortDirection("asc");
+    }
+  };
+
+  const SortableHeader = ({ column, children }: { column: string; children: React.ReactNode }) => (
+    <Button
+      variant="ghost"
+      onClick={() => handleSort(column)}
+      className="h-auto p-0 font-medium text-muted-foreground hover:text-foreground hover:bg-transparent"
+    >
+      {children}
+      {sortColumn === column ? (
+        sortDirection === "asc" ? (
+          <ArrowUp className="ml-1 h-3 w-3" />
+        ) : (
+          <ArrowDown className="ml-1 h-3 w-3" />
+        )
+      ) : (
+        <ArrowUpDown className="ml-1 h-3 w-3 opacity-50" />
+      )}
+    </Button>
+  );
 
   const handleEdit = (group: AdminGroup) => {
     setSelectedGroup(group);
@@ -216,25 +293,25 @@ const AdminGroups = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Nome</TableHead>
-                  <TableHead>Cidade</TableHead>
-                  <TableHead>Tipo</TableHead>
-                  <TableHead>Visibilidade</TableHead>
-                  <TableHead className="text-right">Membros</TableHead>
-                  <TableHead className="text-right">Metas</TableHead>
-                  <TableHead>Criação</TableHead>
+                  <TableHead><SortableHeader column="name">Nome</SortableHeader></TableHead>
+                  <TableHead><SortableHeader column="city">Cidade</SortableHeader></TableHead>
+                  <TableHead><SortableHeader column="donation_type">Tipo</SortableHeader></TableHead>
+                  <TableHead><SortableHeader column="is_private">Visibilidade</SortableHeader></TableHead>
+                  <TableHead className="text-right"><SortableHeader column="member_count">Membros</SortableHeader></TableHead>
+                  <TableHead className="text-right"><SortableHeader column="total_goals">Metas</SortableHeader></TableHead>
+                  <TableHead><SortableHeader column="created_at">Criação</SortableHeader></TableHead>
                   <TableHead className="w-[150px]">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredGroups?.length === 0 ? (
+                {sortedGroups?.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                       Nenhum grupo encontrado
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredGroups?.map((g) => (
+                  sortedGroups?.map((g) => (
                     <TableRow key={g.id}>
                       <TableCell className="font-medium">{g.name}</TableCell>
                       <TableCell>{g.city}</TableCell>
@@ -333,9 +410,9 @@ const AdminGroups = () => {
         )}
 
         {/* Total count */}
-        {filteredGroups && (
+        {sortedGroups && (
           <p className="text-sm text-muted-foreground mt-4">
-            {filteredGroups.length} grupo{filteredGroups.length !== 1 ? "s" : ""} encontrado{filteredGroups.length !== 1 ? "s" : ""}
+            {sortedGroups.length} grupo{sortedGroups.length !== 1 ? "s" : ""} encontrado{sortedGroups.length !== 1 ? "s" : ""}
           </p>
         )}
       </div>
