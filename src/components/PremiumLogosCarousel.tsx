@@ -63,7 +63,7 @@ export const PremiumLogosCarousel = () => {
   };
 
   return (
-    <TooltipProvider>
+    <TooltipProvider delayDuration={100}>
       <div className="flex flex-col items-center gap-1">
         <span className="text-[10px] text-primary font-bold uppercase tracking-wide">
           Parceiros Idealizadores
