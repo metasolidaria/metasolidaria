@@ -1,81 +1,77 @@
 
-# Plano: Corrigir Problema de Fuso Horário nas Datas de Expiração
+# Plano: Adicionar Botão para Habilitar/Desabilitar Parceiro
 
-## Problema Identificado
-Ao selecionar 31/01/2026, o sistema exibe 30/01/2026 devido à interpretação incorreta de timezone.
+## Objetivo
+Permitir que administradores ativem ou desativem parceiros diretamente na tabela, alternando o status `is_approved`. Isso é útil para desabilitar parceiros que expiraram sem precisar excluí-los.
 
-### Causa Raiz
-```
-Banco: "2026-01-31" (string ISO)
-    ↓
-JavaScript: new Date("2026-01-31") → 2026-01-31T00:00:00 UTC
-    ↓
-Brasil (UTC-3): 30/01/2026 às 21:00 (dia anterior!)
-```
-
-## Solução
-Criar uma função auxiliar que parse datas ISO como **horário local** em vez de UTC, evitando a conversão de timezone.
+## Comportamento Proposto
+- Parceiros **aprovados** terão um botão para **desabilitar** (ícone de toggle off)
+- Parceiros **não aprovados** terão um botão para **aprovar** (ícone de check, já existente)
+- O status será alterado inline com feedback visual imediato
 
 ## Alterações Necessárias
 
-### 1. Adicionar função auxiliar em `src/lib/utils.ts`
+### 1. Adicionar mutation `togglePartnerStatus` em `useAdminPartners.tsx`
+
+Criar uma nova mutation para alternar o status do parceiro de forma mais semântica:
 
 ```typescript
-/**
- * Parse ISO date string (YYYY-MM-DD) as local date, not UTC
- * This prevents timezone issues where "2026-01-31" becomes "30/01/2026" in BR
- */
-export function parseLocalDate(dateString: string): Date {
-  const [year, month, day] = dateString.split('-').map(Number);
-  return new Date(year, month - 1, day); // month is 0-indexed
-}
+const togglePartnerStatus = useMutation({
+  mutationFn: async ({ partnerId, isApproved }: { partnerId: string; isApproved: boolean }) => {
+    const { error } = await supabase
+      .from("partners")
+      .update({ is_approved: isApproved })
+      .eq("id", partnerId);
+    if (error) throw error;
+  },
+  onSuccess: (_, { isApproved }) => {
+    queryClient.invalidateQueries({ queryKey: ["adminPartners"] });
+    queryClient.invalidateQueries({ queryKey: ["partners"] });
+    toast({
+      title: isApproved ? "Parceiro ativado! ✅" : "Parceiro desativado",
+      description: isApproved 
+        ? "O parceiro agora está visível no guia."
+        : "O parceiro não aparecerá mais no guia.",
+    });
+  },
+});
 ```
 
-### 2. Atualizar `src/pages/AdminPartners.tsx`
+### 2. Atualizar tabela em `AdminPartners.tsx`
 
-| Local | Antes | Depois |
-|-------|-------|--------|
-| Linha 137 | `new Date(expiresAt)` | `parseLocalDate(expiresAt)` |
-| Linha 279 | `new Date(partner.expires_at)` | `parseLocalDate(partner.expires_at)` |
-| Linha 286 | `new Date(partner.expires_at)` | `parseLocalDate(partner.expires_at)` |
+Substituir a lógica de botões na coluna de ações:
 
-### 3. Atualizar `src/components/EditPartnerModal.tsx`
+| Estado Atual | Botão Mostrado | Ação |
+|--------------|----------------|------|
+| `is_approved: true` | Toggle desligar (vermelho) | Define `is_approved: false` |
+| `is_approved: false` | Toggle ligar (verde) | Define `is_approved: true` |
 
-| Local | Antes | Depois |
-|-------|-------|--------|
-| Linha 48 | `new Date(partner.expires_at)` | `parseLocalDate(partner.expires_at)` |
+**Ícones sugeridos:**
+- `ToggleRight` (Lucide) para indicar ativo/habilitar
+- `ToggleLeft` para indicar desativar
 
-### 4. Atualizar `src/components/CreatePartnerModal.tsx`
+Ou usar o componente `Switch` do shadcn/ui para uma experiência mais intuitiva.
 
-Nenhuma alteração necessária pois usa Date objects diretamente (não strings).
-
-## Explicação Técnica
+### 3. Layout da Coluna de Ações (Proposta Final)
 
 ```text
-ANTES (problema):
-┌─────────────────────────────────────────────────────────┐
-│ "2026-01-31" → new Date() → 31/01 00:00 UTC            │
-│                           → 30/01 21:00 Brasil (UTC-3) │
-│                           → Exibe "30/01/2026" ❌       │
-└─────────────────────────────────────────────────────────┘
-
-DEPOIS (correção):
-┌─────────────────────────────────────────────────────────┐
-│ "2026-01-31" → parseLocalDate() → 31/01 00:00 LOCAL    │
-│                                 → Exibe "31/01/2026" ✅ │
-└─────────────────────────────────────────────────────────┘
+┌────────────────────────────────────────────┐
+│  [Switch On/Off]  [Editar]  [Excluir]      │
+│      ↑                                     │
+│  Toggle para ativar/desativar              │
+└────────────────────────────────────────────┘
 ```
-
-## Cálculo de Dias Restantes Corrigido
-
-Com a correção, se hoje é 27/01/2026:
-- Data expiração: 31/01/2026
-- Dias restantes: 31 - 27 = **4 dias** (não mais 2)
 
 ## Arquivos a Modificar
 
 | Arquivo | Alteração |
 |---------|-----------|
-| `src/lib/utils.ts` | Adicionar função `parseLocalDate` |
-| `src/pages/AdminPartners.tsx` | Usar `parseLocalDate` em 3 locais |
-| `src/components/EditPartnerModal.tsx` | Usar `parseLocalDate` em 1 local |
+| `src/hooks/useAdminPartners.tsx` | Adicionar `togglePartnerStatus` mutation e retorná-la |
+| `src/pages/AdminPartners.tsx` | Importar `Switch`, substituir botão de aprovar por toggle interativo |
+
+## Vantagens desta Abordagem
+
+1. **Não destrutivo**: Diferente de excluir, permite reativar o parceiro facilmente
+2. **Intuitivo**: Switch é um padrão reconhecido para ativar/desativar
+3. **Histórico preservado**: Mantém todos os dados do parceiro para referência futura
+4. **Ação rápida**: Um clique para alternar status, sem confirmação necessária
