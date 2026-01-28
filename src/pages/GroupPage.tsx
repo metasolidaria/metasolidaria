@@ -15,6 +15,7 @@ import { ProgressAnalysisModal } from "@/components/ProgressAnalysisModal";
 import { InviteMemberModal } from "@/components/InviteMemberModal";
 import { JoinRequestsPanel } from "@/components/JoinRequestsPanel";
 import { useProgressAnalysis } from "@/hooks/useProgressAnalysis";
+import { GoldPartnersCarousel } from "@/components/GoldPartnersCarousel";
 import { useState } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -416,6 +417,11 @@ export default function GroupPage() {
                 </div>
               </div>
             </motion.div>
+
+            {/* Gold Partners Carousel */}
+            {group.city && (
+              <GoldPartnersCarousel groupCity={group.city} />
+            )}
 
             {/* Progress Charts - Temporariamente desabilitado
             {progressEntries && progressEntries.length > 0 && (
