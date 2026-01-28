@@ -29,7 +29,8 @@ import {
   Filter,
   ChevronDown,
   ChevronUp,
-  ArrowLeft
+  ArrowLeft,
+  Handshake
 } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Input } from "./ui/input";
@@ -484,6 +485,7 @@ export const PartnersSection = () => {
                       className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-secondary text-secondary-foreground text-xs font-medium rounded-full hover:bg-secondary/80 transition-colors shadow-sm"
                     >
                       <ArrowLeft className="w-3 h-3" />
+                      <Handshake className="w-3 h-3" />
                       Voltar para {groupOrigin.name}
                     </a>
                   )}
