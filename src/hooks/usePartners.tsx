@@ -32,9 +32,11 @@ export const usePartners = () => {
     queryKey: ["partners"],
     queryFn: async () => {
       // Use the public view that excludes sensitive data (whatsapp, referrer info)
+      // Filter only approved partners
       const { data, error } = await supabase
         .from("partners_public")
         .select("*")
+        .eq("is_approved", true)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
