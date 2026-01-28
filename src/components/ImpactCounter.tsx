@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Heart, Apple, BookOpen, Shirt, BedDouble, Soup, Gift, Package } from "lucide-react";
 import { useImpactStats, DonationsByType } from "@/hooks/useImpactStats";
 import { PremiumPartnerSlots } from "./PremiumPartnerSlots";
+import { Skeleton } from "./ui/skeleton";
 
 // Animated counter - only animates once when value first becomes available
 const AnimatedNumber = ({
@@ -61,7 +62,7 @@ const donationTypeConfig = [
 
 export const ImpactCounter = () => {
   const [isInView, setIsInView] = useState(false);
-  const { data: impactData } = useImpactStats();
+  const { data: impactData, isLoading } = useImpactStats();
 
   return (
     <section className="py-20 bg-gradient-stats relative overflow-hidden">
@@ -105,9 +106,11 @@ export const ImpactCounter = () => {
               className="text-center mb-12"
             >
               <div className="text-6xl md:text-8xl font-bold text-primary-foreground mb-2">
-                {isInView && (
+                {isLoading ? (
+                  <Skeleton className="h-20 md:h-24 w-48 md:w-64 mx-auto bg-primary-foreground/20" />
+                ) : isInView ? (
                   <AnimatedNumber value={impactData?.totalDonations || 0} suffix="" />
-                )}
+                ) : null}
               </div>
               <p className="text-primary-foreground/70 text-xl">
                 doações realizadas
@@ -127,12 +130,14 @@ export const ImpactCounter = () => {
                 >
                   <type.icon className="w-6 h-6 text-primary-foreground mx-auto mb-2" />
                   <div className="text-2xl md:text-3xl font-bold text-primary-foreground mb-1">
-                    {isInView && (
+                    {isLoading ? (
+                      <Skeleton className="h-8 w-16 mx-auto bg-primary-foreground/20" />
+                    ) : isInView ? (
                       <AnimatedNumber 
                         value={impactData?.donationsByType?.[type.key] || 0} 
                         suffix="" 
                       />
-                    )}
+                    ) : null}
                   </div>
                   <div className="text-xs text-primary-foreground/60">
                     {type.label}

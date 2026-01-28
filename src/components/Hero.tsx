@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { ArrowDown, Heart, Users, UserCheck, Target } from "lucide-react";
 import { Button } from "./ui/button";
+import { Skeleton } from "./ui/skeleton";
 import heroImage from "@/assets/hero-donation.jpg";
 import { useAuth } from "@/hooks/useAuth";
 import { AuthModal } from "./AuthModal";
@@ -45,7 +46,7 @@ const AnimatedCounter = ({ value, duration = 2000 }: { value: number; duration?:
 
 export const Hero = () => {
   const { user } = useAuth();
-  const { data: heroStats } = useHeroStats();
+  const { data: heroStats, isLoading: isLoadingStats } = useHeroStats();
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [createGroupOpen, setCreateGroupOpen] = useState(false);
 
@@ -123,27 +124,39 @@ export const Hero = () => {
             <div className="text-center">
               <div className="flex items-center justify-center gap-2 mb-1">
                 <Users className="w-5 h-5 text-secondary" />
-                <span className="text-2xl sm:text-3xl font-bold text-secondary">
-                  +<AnimatedCounter value={heroStats?.totalGroups || 0} />
-                </span>
+                {isLoadingStats ? (
+                  <Skeleton className="h-8 w-16 bg-primary-foreground/20" />
+                ) : (
+                  <span className="text-2xl sm:text-3xl font-bold text-secondary">
+                    +<AnimatedCounter value={heroStats?.totalGroups || 0} />
+                  </span>
+                )}
               </div>
               <p className="text-primary-foreground/70 text-xs sm:text-sm">Grupos Ativos</p>
             </div>
             <div className="text-center">
               <div className="flex items-center justify-center gap-2 mb-1">
                 <UserCheck className="w-5 h-5 text-secondary" />
-                <span className="text-2xl sm:text-3xl font-bold text-secondary">
-                  +<AnimatedCounter value={heroStats?.totalUsers || 0} />
-                </span>
+                {isLoadingStats ? (
+                  <Skeleton className="h-8 w-20 bg-primary-foreground/20" />
+                ) : (
+                  <span className="text-2xl sm:text-3xl font-bold text-secondary">
+                    +<AnimatedCounter value={heroStats?.totalUsers || 0} />
+                  </span>
+                )}
               </div>
               <p className="text-primary-foreground/70 text-xs sm:text-sm">Voluntários</p>
             </div>
             <div className="text-center">
               <div className="flex items-center justify-center gap-2 mb-1">
                 <Target className="w-5 h-5 text-secondary" />
-                <span className="text-2xl sm:text-3xl font-bold text-secondary">
-                  +<AnimatedCounter value={heroStats?.totalGoals || 0} />
-                </span>
+                {isLoadingStats ? (
+                  <Skeleton className="h-8 w-24 bg-primary-foreground/20" />
+                ) : (
+                  <span className="text-2xl sm:text-3xl font-bold text-secondary">
+                    +<AnimatedCounter value={heroStats?.totalGoals || 0} />
+                  </span>
+                )}
               </div>
               <p className="text-primary-foreground/70 text-xs sm:text-sm">Metas Definidas</p>
             </div>
