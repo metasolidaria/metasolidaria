@@ -274,14 +274,27 @@ export default function GroupPage() {
       {/* Header */}
       <div className="bg-gradient-to-r from-primary/10 to-secondary/10 py-8">
         <div className="container mx-auto px-4">
-          <Button 
-            variant="ghost" 
-            onClick={() => navigate("/")}
-            className="mb-4"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Voltar
-          </Button>
+          <div className="flex items-center justify-between mb-4">
+            <Button 
+              variant="ghost" 
+              onClick={() => navigate("/")}
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Voltar
+            </Button>
+            
+            {userMember && !isLeader && (
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => setLeaveDialogOpen(true)}
+                disabled={leaveGroup.isPending}
+              >
+                <LogOut className="w-4 h-4 mr-2" />
+                Sair do Grupo
+              </Button>
+            )}
+          </div>
 
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -333,22 +346,9 @@ export default function GroupPage() {
               </div>
             </div>
 
-            {/* Premium Logos Carousel and Leave Button */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 shrink-0">
+            {/* Premium Logos Carousel */}
+            <div className="shrink-0">
               <PremiumLogosCarousel />
-              
-              {userMember && !isLeader && (
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  className="whitespace-nowrap"
-                  onClick={() => setLeaveDialogOpen(true)}
-                  disabled={leaveGroup.isPending}
-                >
-                  <LogOut className="w-4 h-4 mr-2" />
-                  Sair
-                </Button>
-              )}
             </div>
           </motion.div>
 
