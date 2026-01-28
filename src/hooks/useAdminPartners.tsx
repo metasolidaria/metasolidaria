@@ -112,6 +112,7 @@ export const useAdminPartners = () => {
       description?: string;
       tier?: PartnerTier;
       is_approved?: boolean;
+      expires_at?: string | null;
     }) => {
       const { data, error } = await supabase
         .from("partners")

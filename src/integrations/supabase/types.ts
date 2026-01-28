@@ -453,6 +453,7 @@ export type Database = {
           city: string
           created_at: string
           description: string | null
+          expires_at: string | null
           id: string
           instagram: string | null
           is_approved: boolean
@@ -471,6 +472,7 @@ export type Database = {
           city: string
           created_at?: string
           description?: string | null
+          expires_at?: string | null
           id?: string
           instagram?: string | null
           is_approved?: boolean
@@ -489,6 +491,7 @@ export type Database = {
           city?: string
           created_at?: string
           description?: string | null
+          expires_at?: string | null
           id?: string
           instagram?: string | null
           is_approved?: boolean
@@ -703,6 +706,7 @@ export type Database = {
           city: string | null
           created_at: string | null
           description: string | null
+          expires_at: string | null
           id: string | null
           instagram: string | null
           is_approved: boolean | null
@@ -717,6 +721,7 @@ export type Database = {
           city?: string | null
           created_at?: string | null
           description?: string | null
+          expires_at?: string | null
           id?: string | null
           instagram?: string | null
           is_approved?: boolean | null
@@ -731,6 +736,7 @@ export type Database = {
           city?: string | null
           created_at?: string | null
           description?: string | null
+          expires_at?: string | null
           id?: string | null
           instagram?: string | null
           is_approved?: boolean | null

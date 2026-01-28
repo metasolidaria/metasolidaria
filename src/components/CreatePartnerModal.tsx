@@ -5,8 +5,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
 import { CityAutocomplete } from "@/components/CityAutocomplete";
-import { Loader2, Gem, Medal, Heart } from "lucide-react";
+import { Loader2, Gem, Medal, Heart, CalendarIcon } from "lucide-react";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { cn } from "@/lib/utils";
 import type { PartnerTier } from "@/hooks/usePartners";
 
 interface CreatePartnerModalProps {
@@ -21,6 +26,7 @@ interface CreatePartnerModalProps {
     description?: string;
     tier?: PartnerTier;
     is_approved?: boolean;
+    expires_at?: string | null;
   }) => void;
   isLoading?: boolean;
 }
@@ -45,6 +51,7 @@ export const CreatePartnerModal = ({
     instagram: "",
     description: "",
     tier: "apoiador" as PartnerTier,
+    expires_at: null as Date | null,
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -52,6 +59,7 @@ export const CreatePartnerModal = ({
     onCreate({
       ...formData,
       is_approved: true,
+      expires_at: formData.expires_at ? format(formData.expires_at, "yyyy-MM-dd") : null,
     });
   };
 
@@ -64,6 +72,7 @@ export const CreatePartnerModal = ({
       instagram: "",
       description: "",
       tier: "apoiador",
+      expires_at: null,
     });
   };
 
@@ -163,6 +172,47 @@ export const CreatePartnerModal = ({
               placeholder="Descreva o parceiro..."
               rows={3}
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Data de Expiração (opcional)</Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "w-full justify-start text-left font-normal",
+                    !formData.expires_at && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {formData.expires_at
+                    ? format(formData.expires_at, "dd/MM/yyyy", { locale: ptBR })
+                    : "Selecione uma data"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={formData.expires_at || undefined}
+                  onSelect={(date) => setFormData({ ...formData, expires_at: date || null })}
+                  initialFocus
+                  className="pointer-events-auto"
+                />
+                {formData.expires_at && (
+                  <div className="p-2 border-t">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="w-full text-muted-foreground"
+                      onClick={() => setFormData({ ...formData, expires_at: null })}
+                    >
+                      Remover data
+                    </Button>
+                  </div>
+                )}
+              </PopoverContent>
+            </Popover>
           </div>
 
           <p className="text-sm text-muted-foreground">
