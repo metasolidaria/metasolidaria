@@ -18,6 +18,7 @@ export interface Partner {
   longitude: number | null;
   tier: PartnerTier;
   instagram: string | null;
+  expires_at: string | null;
 }
 
 export const usePartners = () => {

@@ -24,6 +24,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
 import { EditPartnerModal } from "@/components/EditPartnerModal";
 import { CreatePartnerModal } from "@/components/CreatePartnerModal";
 import {
@@ -41,12 +43,14 @@ import {
   ArrowUpDown,
   ArrowUp,
   ArrowDown,
+  CalendarIcon,
 } from "lucide-react";
-import { format } from "date-fns";
+import { format, differenceInDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { cn } from "@/lib/utils";
 import type { Partner, PartnerTier } from "@/hooks/usePartners";
 
-type SortColumn = "name" | "city" | "specialty" | "tier" | "is_approved" | "created_at";
+type SortColumn = "name" | "city" | "specialty" | "tier" | "is_approved" | "created_at" | "expires_at";
 type SortDirection = "asc" | "desc";
 
 const tierOrder: Record<PartnerTier, number> = {
@@ -118,8 +122,33 @@ const AdminPartners = () => {
         case "created_at":
           comparison = new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
           break;
+        case "expires_at":
+          const dateA = a.expires_at ? new Date(a.expires_at).getTime() : Infinity;
+          const dateB = b.expires_at ? new Date(b.expires_at).getTime() : Infinity;
+          comparison = dateA - dateB;
+          break;
       }
       return sortDirection === "asc" ? comparison : -comparison;
+    });
+  };
+
+  const getDaysRemaining = (expiresAt: string | null): number | null => {
+    if (!expiresAt) return null;
+    return differenceInDays(new Date(expiresAt), new Date());
+  };
+
+  const getDaysRemainingStyle = (days: number | null) => {
+    if (days === null) return { text: "—", className: "text-muted-foreground" };
+    if (days < 0) return { text: `${days}`, className: "text-red-600 font-semibold" };
+    if (days <= 7) return { text: `${days}`, className: "text-orange-600 font-semibold" };
+    if (days <= 30) return { text: `${days}`, className: "text-yellow-600 font-medium" };
+    return { text: `${days}`, className: "text-green-600" };
+  };
+
+  const handleExpirationChange = (partner: Partner, date: Date | undefined) => {
+    updatePartner.mutate({
+      id: partner.id,
+      expires_at: date ? format(date, "yyyy-MM-dd") : null,
     });
   };
 
@@ -212,6 +241,8 @@ const AdminPartners = () => {
 
   const renderPartnerRow = (partner: Partner) => {
     const tier = tierConfig[partner.tier] || tierConfig.apoiador;
+    const daysRemaining = getDaysRemaining(partner.expires_at);
+    const daysStyle = getDaysRemainingStyle(daysRemaining);
 
     return (
       <TableRow key={partner.id}>
@@ -233,8 +264,47 @@ const AdminPartners = () => {
             <Badge variant="secondary">Pendente</Badge>
           )}
         </TableCell>
-        <TableCell className="text-muted-foreground">
-          {format(new Date(partner.created_at), "dd/MM/yyyy", { locale: ptBR })}
+        <TableCell>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="ghost"
+                className={cn(
+                  "h-8 px-2 text-left font-normal justify-start",
+                  !partner.expires_at && "text-muted-foreground"
+                )}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {partner.expires_at
+                  ? format(new Date(partner.expires_at), "dd/MM/yyyy", { locale: ptBR })
+                  : "—"}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={partner.expires_at ? new Date(partner.expires_at) : undefined}
+                onSelect={(date) => handleExpirationChange(partner, date)}
+                initialFocus
+                className="pointer-events-auto"
+              />
+              {partner.expires_at && (
+                <div className="p-2 border-t">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full text-muted-foreground"
+                    onClick={() => handleExpirationChange(partner, undefined)}
+                  >
+                    Remover data
+                  </Button>
+                </div>
+              )}
+            </PopoverContent>
+          </Popover>
+        </TableCell>
+        <TableCell className={daysStyle.className}>
+          {daysStyle.text}
         </TableCell>
         <TableCell>
           <div className="flex items-center gap-1">
@@ -272,7 +342,7 @@ const AdminPartners = () => {
   };
 
   const renderTable = (partners: Partner[]) => (
-    <div className="rounded-md border">
+    <div className="rounded-md border overflow-x-auto">
       <Table>
         <TableHeader>
           <TableRow>
@@ -291,8 +361,11 @@ const AdminPartners = () => {
             <TableHead className="cursor-pointer hover:bg-muted/50" onClick={() => handleSort("is_approved")}>
               <span className="flex items-center">Status{getSortIcon("is_approved")}</span>
             </TableHead>
-            <TableHead className="cursor-pointer hover:bg-muted/50" onClick={() => handleSort("created_at")}>
-              <span className="flex items-center">Data{getSortIcon("created_at")}</span>
+            <TableHead className="cursor-pointer hover:bg-muted/50" onClick={() => handleSort("expires_at")}>
+              <span className="flex items-center">Expiração{getSortIcon("expires_at")}</span>
+            </TableHead>
+            <TableHead className="cursor-pointer hover:bg-muted/50" onClick={() => handleSort("expires_at")}>
+              <span className="flex items-center">Dias{getSortIcon("expires_at")}</span>
             </TableHead>
             <TableHead className="w-[120px]">Ações</TableHead>
           </TableRow>
@@ -300,7 +373,7 @@ const AdminPartners = () => {
         <TableBody>
           {partners.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+              <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                 Nenhum parceiro encontrado
               </TableCell>
             </TableRow>
