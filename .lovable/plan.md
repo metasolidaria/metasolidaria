@@ -1,85 +1,70 @@
 
+# Plano: Corrigir exibição de metas no dashboard de administração de grupos
 
-## Adicionar Convites na Administração de Grupos
+## Diagnóstico
 
-### Objetivo
-Incluir botões de ação na página `/admin/grupos` para que administradores possam gerar links de convite e compartilhar via WhatsApp diretamente da tabela de grupos.
+### Problema Identificado
+Na página de Administração de Grupos (`/admin/grupos`), a coluna "Meta" está exibindo o valor incorreto:
+- **Exibindo**: `g.goal_2026` = 0 (campo legado da tabela groups)
+- **Deveria exibir**: `g.total_goals` = 22 (soma das metas individuais dos membros)
 
----
+### Evidência
+Consulta direta no banco confirmou:
+- Grupo "Gerando futuro" tem `goal_2026: 0`
+- View materializada `group_stats` tem `total_goals: 22`
+- Os membros possuem 3 blocos de compromisso com metas definidas em `member_commitments`
 
-### Funcionalidades
-
-| Ação | Descrição |
-|------|-----------|
-| Gerar Link | Cria convite do tipo `link` e copia mensagem formatada para a área de transferência |
-| WhatsApp | Cria convite e abre WhatsApp Web com mensagem pré-formatada |
-
----
-
-### Alterações Necessárias
-
-**1. Página AdminGroups.tsx**
-- Importar o componente `InviteMemberModal` já existente
-- Adicionar estado para controlar o modal de convite (`inviteModalOpen`)
-- Adicionar estado para armazenar o grupo selecionado para convite
-- Incluir botão com ícone `Link` na coluna de ações de cada grupo
-- Renderizar o modal `InviteMemberModal` passando os dados do grupo
-
-**2. Banco de Dados - Nova Política RLS**
-Criar política para permitir que administradores criem convites em nome de qualquer grupo:
-
-```sql
-CREATE POLICY "Admins can create invitations for any group"
-ON public.group_invitations FOR INSERT
-WITH CHECK (is_admin(auth.uid()));
-```
+### Causa Raiz
+O sistema de metas foi reestruturado para usar "blocos de compromisso" (`member_commitments`), mas a interface de administração ainda referencia o campo antigo `goal_2026`.
 
 ---
 
-### Detalhes da Implementação
+## Solução Proposta
 
-**Novo botão na tabela (entre UserPlus e Pencil):**
+### 1. Atualizar AdminGroups.tsx
+Modificar a exibição da coluna "Meta" para usar `total_goals`:
+
+**Arquivo**: `src/pages/AdminGroups.tsx`
+- **Linha 255**: Trocar `{g.goal_2026}` por `{g.total_goals}`
+- Adicionar indicador visual quando não houver metas definidas
+
+### 2. Melhorar o cabeçalho da coluna
+Renomear o cabeçalho para "Metas" (plural) para refletir que é a soma das metas individuais dos membros.
+
+---
+
+## Detalhes Técnicos
+
 ```text
-[ExternalLink] [Users] [UserPlus] [Link] [Pencil] [Trash2]
-                                   ↑ novo
+Antes (linha 255):
+<TableCell className="text-right">{g.goal_2026}</TableCell>
+
+Depois:
+<TableCell className="text-right">
+  {g.total_goals > 0 ? g.total_goals : (
+    <span className="text-muted-foreground">-</span>
+  )}
+</TableCell>
 ```
 
-**Props do InviteMemberModal:**
-- `open`: boolean para controlar visibilidade
-- `onOpenChange`: função para fechar modal
-- `groupId`: ID do grupo selecionado
-- `groupName`: nome do grupo para personalizar mensagem
-- `groupDescription`: descrição para enriquecer o convite
-
-**Fluxo do Usuário:**
-1. Admin clica no ícone de link (🔗) na linha do grupo
-2. Modal abre com duas opções:
-   - "Copiar Link de Convite" → gera convite e copia
-   - "Compartilhar via WhatsApp" → gera convite e abre WhatsApp
-3. Link gerado: `https://metasolidaria.com.br?invite={code}`
-4. Convite válido por 30 dias
+### Opcional: Exibir ambos os valores
+Se for útil manter visibilidade da meta global do grupo vs. metas individuais:
+- Coluna "Meta do Grupo": `goal_2026` (meta definida pelo líder)
+- Coluna "Metas Individuais": `total_goals` (soma das metas dos membros)
 
 ---
 
-### Arquivos a Modificar
+## Arquivos a Modificar
 
 | Arquivo | Alteração |
 |---------|-----------|
-| `src/pages/AdminGroups.tsx` | Adicionar botão de convite e integrar modal |
-
-### Migração de Banco
-
-```sql
--- Permitir admins criarem convites para qualquer grupo
-CREATE POLICY "Admins can create invitations for any group"
-ON public.group_invitations FOR INSERT
-WITH CHECK (is_admin(auth.uid()));
-```
+| `src/pages/AdminGroups.tsx` | Linha 223: "Meta" → "Metas" |
+| `src/pages/AdminGroups.tsx` | Linha 255: `g.goal_2026` → `g.total_goals` |
 
 ---
 
-### Segurança
-- A política RLS existente já permite líderes criarem convites para seus grupos
-- Nova política permite que administradores criem convites para qualquer grupo
-- O modal reutiliza a lógica segura existente de geração de códigos
-
+## Resultado Esperado
+Após a correção:
+- Grupo "Gerando futuro" exibirá **22** na coluna de metas
+- Grupos sem metas individuais exibirão **-** ou **0**
+- A informação ficará consistente com a página do grupo
