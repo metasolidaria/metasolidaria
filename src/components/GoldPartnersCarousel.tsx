@@ -11,9 +11,11 @@ import { useRef } from "react";
 
 interface GoldPartnersCarouselProps {
   groupCity: string;
+  groupId?: string;
+  groupName?: string;
 }
 
-export const GoldPartnersCarousel = ({ groupCity }: GoldPartnersCarouselProps) => {
+export const GoldPartnersCarousel = ({ groupCity, groupId, groupName }: GoldPartnersCarouselProps) => {
   const { data: partners, isLoading } = usePremiumAndGoldPartners(groupCity);
   
   const autoplayPlugin = useRef(
@@ -153,7 +155,7 @@ export const GoldPartnersCarousel = ({ groupCity }: GoldPartnersCarouselProps) =
           Clique em um parceiro para entrar em contato via WhatsApp
         </p>
         <Link 
-          to={`/?parceiros=true&cidade=${encodeURIComponent(groupCity)}`}
+          to={`/?parceiros=true&cidade=${encodeURIComponent(groupCity)}${groupId ? `&grupoId=${groupId}` : ""}${groupName ? `&grupoNome=${encodeURIComponent(groupName)}` : ""}`}
           className="text-xs text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 font-medium flex items-center gap-1 transition-colors"
         >
           Ver todos os parceiros

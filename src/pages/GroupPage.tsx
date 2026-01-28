@@ -384,7 +384,7 @@ export default function GroupPage() {
       <div className="container mx-auto px-4 py-8 space-y-8">
         {/* Gold Partners Carousel - Full Width */}
         {group.city && (
-          <GoldPartnersCarousel groupCity={group.city} />
+          <GoldPartnersCarousel groupCity={group.city} groupId={group.id} groupName={group.name} />
         )}
 
         <div className="grid lg:grid-cols-3 gap-8">

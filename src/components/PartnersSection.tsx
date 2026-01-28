@@ -28,7 +28,8 @@ import {
   Info,
   Filter,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  ArrowLeft
 } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Input } from "./ui/input";
@@ -181,6 +182,7 @@ export const PartnersSection = () => {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [searchCity, setSearchCity] = useState("");
   const [cityFromGroup, setCityFromGroup] = useState(false);
+  const [groupOrigin, setGroupOrigin] = useState<{ id: string; name: string } | null>(null);
   const [radiusKm, setRadiusKm] = useState(50);
   const [useProximity, setUseProximity] = useState(false);
   const [isRecommendModalOpen, setIsRecommendModalOpen] = useState(false);
@@ -194,9 +196,15 @@ export const PartnersSection = () => {
   useEffect(() => {
     const cidadeParam = searchParams.get("cidade");
     const parceirosParam = searchParams.get("parceiros");
+    const grupoIdParam = searchParams.get("grupoId");
+    const grupoNomeParam = searchParams.get("grupoNome");
+    
     if (cidadeParam && parceirosParam === "true" && !searchCity) {
       setSearchCity(cidadeParam);
       setCityFromGroup(true);
+      if (grupoIdParam && grupoNomeParam) {
+        setGroupOrigin({ id: grupoIdParam, name: grupoNomeParam });
+      }
     }
   }, [searchParams]);
 
@@ -209,6 +217,7 @@ export const PartnersSection = () => {
   const handleClearCity = () => {
     setSearchCity("");
     setCityFromGroup(false);
+    setGroupOrigin(null);
   };
 
   const handleEnableProximity = () => {
@@ -464,11 +473,20 @@ export const PartnersSection = () => {
                 )}
               </div>
               {cityFromGroup && searchCity && (
-                <div className="flex items-center gap-2 mt-2">
+                <div className="flex items-center gap-2 mt-2 flex-wrap">
                   <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-primary/10 text-primary text-xs font-medium rounded-full border border-primary/20">
                     <MapPin className="w-3 h-3" />
                     Filtrado pelo grupo
                   </span>
+                  {groupOrigin && (
+                    <a
+                      href={`/grupo/${groupOrigin.id}`}
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-secondary/10 text-secondary-foreground text-xs font-medium rounded-full border border-secondary/20 hover:bg-secondary/20 transition-colors"
+                    >
+                      <ArrowLeft className="w-3 h-3" />
+                      Voltar para {groupOrigin.name}
+                    </a>
+                  )}
                 </div>
               )}
             </div>
