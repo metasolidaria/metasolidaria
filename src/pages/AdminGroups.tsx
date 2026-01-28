@@ -220,7 +220,7 @@ const AdminGroups = () => {
                   <TableHead>Tipo</TableHead>
                   <TableHead>Visibilidade</TableHead>
                   <TableHead className="text-right">Membros</TableHead>
-                  <TableHead className="text-right">Meta</TableHead>
+                  <TableHead className="text-right">Metas</TableHead>
                   <TableHead>Criação</TableHead>
                   <TableHead className="w-[150px]">Ações</TableHead>
                 </TableRow>
@@ -252,7 +252,11 @@ const AdminGroups = () => {
                         )}
                       </TableCell>
                       <TableCell className="text-right">{g.member_count}</TableCell>
-                      <TableCell className="text-right">{g.goal_2026}</TableCell>
+                      <TableCell className="text-right">
+                        {g.total_goals && g.total_goals > 0 ? g.total_goals : (
+                          <span className="text-muted-foreground">-</span>
+                        )}
+                      </TableCell>
                       <TableCell className="text-muted-foreground">
                         {format(new Date(g.created_at), "dd/MM/yyyy", { locale: ptBR })}
                       </TableCell>
