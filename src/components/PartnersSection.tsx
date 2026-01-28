@@ -431,12 +431,22 @@ export const PartnersSection = () => {
           className="mb-10"
         >
           <div className="flex flex-col md:flex-row gap-4 mb-6">
-            <div className="flex-1 max-w-md">
+            <div className="flex-1 max-w-md relative">
               <CitySearchAutocomplete
                 value={searchCity}
                 onChange={setSearchCity}
                 placeholder="Buscar por cidade..."
               />
+              {searchCity && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setSearchCity("")}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              )}
             </div>
 
             {/* Botão de Proximidade */}
