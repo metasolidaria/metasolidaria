@@ -63,7 +63,7 @@ export const PremiumLogosCarousel = () => {
     <TooltipProvider>
       <div className="flex items-center gap-2">
         <span className="text-[10px] text-purple-600 dark:text-purple-400 font-medium uppercase tracking-wide hidden sm:block">
-          Premium
+          Parceiros Idealizadores
         </span>
         <Carousel
           opts={{
