@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Header } from "@/components/Header";
 import { Hero } from "@/components/Hero";
-import { HowItWorks } from "@/components/HowItWorks";
+import { HowItWorksModal } from "@/components/HowItWorksModal";
 import { ImpactCounter } from "@/components/ImpactCounter";
 import { GroupsSection } from "@/components/GroupsSection";
 import { EntitiesSection } from "@/components/EntitiesSection";
@@ -72,11 +72,9 @@ const Index = () => {
           </div>
         </div>
       )}
+      <HowItWorksModal />
       <main>
         <Hero />
-        <div id="como-funciona">
-          <HowItWorks />
-        </div>
         <div id="impacto">
           <ImpactCounter />
         </div>
