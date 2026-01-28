@@ -30,8 +30,6 @@ import { EditPartnerModal } from "@/components/EditPartnerModal";
 import { CreatePartnerModal } from "@/components/CreatePartnerModal";
 import {
   ArrowLeft,
-  Check,
-  X,
   Pencil,
   Trash2,
   Plus,
@@ -45,6 +43,7 @@ import {
   ArrowDown,
   CalendarIcon,
 } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 import { format, differenceInDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn, parseLocalDate } from "@/lib/utils";
@@ -86,7 +85,7 @@ const AdminPartners = () => {
     pendingPartners,
     approvedPartners,
     isLoading,
-    approvePartner,
+    togglePartnerStatus,
     rejectPartner,
     updatePartner,
     createPartner,
@@ -307,18 +306,15 @@ const AdminPartners = () => {
           {daysStyle.text}
         </TableCell>
         <TableCell>
-          <div className="flex items-center gap-1">
-            {!partner.is_approved && (
-              <Button
-                size="icon"
-                variant="ghost"
-                className="h-8 w-8 text-green-600 hover:text-green-700 hover:bg-green-50"
-                onClick={() => approvePartner.mutate(partner.id)}
-                disabled={approvePartner.isPending}
-              >
-                <Check className="h-4 w-4" />
-              </Button>
-            )}
+          <div className="flex items-center gap-2">
+            <Switch
+              checked={partner.is_approved}
+              onCheckedChange={(checked) =>
+                togglePartnerStatus.mutate({ partnerId: partner.id, isApproved: checked })
+              }
+              disabled={togglePartnerStatus.isPending}
+              aria-label={partner.is_approved ? "Desativar parceiro" : "Ativar parceiro"}
+            />
             <Button
               size="icon"
               variant="ghost"

@@ -23,26 +23,28 @@ export const useAdminPartners = () => {
   const pendingPartners = allPartners?.filter((p) => !p.is_approved) || [];
   const approvedPartners = allPartners?.filter((p) => p.is_approved) || [];
 
-  const approvePartner = useMutation({
-    mutationFn: async (partnerId: string) => {
+  const togglePartnerStatus = useMutation({
+    mutationFn: async ({ partnerId, isApproved }: { partnerId: string; isApproved: boolean }) => {
       const { error } = await supabase
         .from("partners")
-        .update({ is_approved: true })
+        .update({ is_approved: isApproved })
         .eq("id", partnerId);
 
       if (error) throw error;
     },
-    onSuccess: () => {
+    onSuccess: (_, { isApproved }) => {
       queryClient.invalidateQueries({ queryKey: ["adminPartners"] });
       queryClient.invalidateQueries({ queryKey: ["partners"] });
       toast({
-        title: "Parceiro aprovado! ✅",
-        description: "O parceiro agora está visível no guia.",
+        title: isApproved ? "Parceiro ativado! ✅" : "Parceiro desativado",
+        description: isApproved
+          ? "O parceiro agora está visível no guia."
+          : "O parceiro não aparecerá mais no guia.",
       });
     },
     onError: (error) => {
       toast({
-        title: "Erro ao aprovar parceiro",
+        title: "Erro ao alterar status do parceiro",
         description: error.message,
         variant: "destructive",
       });
@@ -145,7 +147,7 @@ export const useAdminPartners = () => {
     pendingPartners,
     approvedPartners,
     isLoading,
-    approvePartner,
+    togglePartnerStatus,
     rejectPartner,
     updatePartner,
     createPartner,
