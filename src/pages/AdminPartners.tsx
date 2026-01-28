@@ -5,6 +5,7 @@ import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { useAdminPartners } from "@/hooks/useAdminPartners";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Table,
@@ -24,6 +25,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { EditPartnerModal } from "@/components/EditPartnerModal";
@@ -42,11 +50,13 @@ import {
   ArrowUp,
   ArrowDown,
   CalendarIcon,
+  X,
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { format, differenceInDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn, parseLocalDate } from "@/lib/utils";
+import { partnerSpecialties } from "@/lib/partnerSpecialties";
 import type { Partner, PartnerTier } from "@/hooks/usePartners";
 
 type SortColumn = "name" | "city" | "specialty" | "tier" | "is_approved" | "created_at" | "expires_at";
@@ -98,6 +108,12 @@ const AdminPartners = () => {
   const [partnerToDelete, setPartnerToDelete] = useState<Partner | null>(null);
   const [sortColumn, setSortColumn] = useState<SortColumn>("created_at");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
+  
+  // Filters
+  const [cityFilter, setCityFilter] = useState("");
+  const [specialtyFilter, setSpecialtyFilter] = useState<string>("all");
+  const [tierFilter, setTierFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
 
   const sortPartners = (partners: Partner[]) => {
     return [...partners].sort((a, b) => {
@@ -151,9 +167,51 @@ const AdminPartners = () => {
     });
   };
 
-  const sortedPendingPartners = useMemo(() => sortPartners(pendingPartners), [pendingPartners, sortColumn, sortDirection]);
-  const sortedApprovedPartners = useMemo(() => sortPartners(approvedPartners), [approvedPartners, sortColumn, sortDirection]);
-  const sortedAllPartners = useMemo(() => sortPartners(allPartners || []), [allPartners, sortColumn, sortDirection]);
+  // Apply filters
+  const filterPartners = (partners: Partner[]) => {
+    return partners.filter((partner) => {
+      // City filter
+      if (cityFilter && !partner.city.toLowerCase().includes(cityFilter.toLowerCase())) {
+        return false;
+      }
+      // Specialty filter
+      if (specialtyFilter !== "all" && partner.specialty !== specialtyFilter) {
+        return false;
+      }
+      // Tier filter
+      if (tierFilter !== "all" && partner.tier !== tierFilter) {
+        return false;
+      }
+      // Status filter
+      if (statusFilter === "active" && !partner.is_approved) {
+        return false;
+      }
+      if (statusFilter === "inactive" && partner.is_approved) {
+        return false;
+      }
+      return true;
+    });
+  };
+
+  const sortedPendingPartners = useMemo(() => sortPartners(filterPartners(pendingPartners)), [pendingPartners, sortColumn, sortDirection, cityFilter, specialtyFilter, tierFilter, statusFilter]);
+  const sortedApprovedPartners = useMemo(() => sortPartners(filterPartners(approvedPartners)), [approvedPartners, sortColumn, sortDirection, cityFilter, specialtyFilter, tierFilter, statusFilter]);
+  const sortedAllPartners = useMemo(() => sortPartners(filterPartners(allPartners || [])), [allPartners, sortColumn, sortDirection, cityFilter, specialtyFilter, tierFilter, statusFilter]);
+
+  // Get unique cities for filter
+  const uniqueCities = useMemo(() => {
+    const cities = new Set<string>();
+    allPartners?.forEach((p) => cities.add(p.city));
+    return Array.from(cities).sort((a, b) => a.localeCompare(b, "pt-BR"));
+  }, [allPartners]);
+
+  const clearFilters = () => {
+    setCityFilter("");
+    setSpecialtyFilter("all");
+    setTierFilter("all");
+    setStatusFilter("all");
+  };
+
+  const hasActiveFilters = cityFilter || specialtyFilter !== "all" || tierFilter !== "all" || statusFilter !== "all";
 
   const handleSort = (column: SortColumn) => {
     if (sortColumn === column) {
@@ -413,24 +471,92 @@ const AdminPartners = () => {
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
         ) : (
-          <Tabs defaultValue="pending">
-            <TabsList className="mb-4">
-              <TabsTrigger value="pending" className="flex items-center gap-2">
-                Pendentes
-                {pendingPartners.length > 0 && (
-                  <Badge variant="secondary" className="ml-1">
-                    {pendingPartners.length}
-                  </Badge>
-                )}
-              </TabsTrigger>
-              <TabsTrigger value="approved">Aprovados ({approvedPartners.length})</TabsTrigger>
-              <TabsTrigger value="all">Todos ({allPartners?.length || 0})</TabsTrigger>
-            </TabsList>
+          <>
+            {/* Filters */}
+            <div className="mb-4 flex flex-wrap gap-3 items-end">
+              <div className="flex flex-col gap-1">
+                <label className="text-sm font-medium text-muted-foreground">Cidade</label>
+                <Input
+                  placeholder="Filtrar por cidade..."
+                  value={cityFilter}
+                  onChange={(e) => setCityFilter(e.target.value)}
+                  className="w-48"
+                />
+              </div>
+              
+              <div className="flex flex-col gap-1">
+                <label className="text-sm font-medium text-muted-foreground">Especialidade</label>
+                <Select value={specialtyFilter} onValueChange={setSpecialtyFilter}>
+                  <SelectTrigger className="w-48">
+                    <SelectValue placeholder="Todas" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todas</SelectItem>
+                    {partnerSpecialties.map((specialty) => (
+                      <SelectItem key={specialty} value={specialty}>
+                        {specialty}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="flex flex-col gap-1">
+                <label className="text-sm font-medium text-muted-foreground">Nível</label>
+                <Select value={tierFilter} onValueChange={setTierFilter}>
+                  <SelectTrigger className="w-36">
+                    <SelectValue placeholder="Todos" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos</SelectItem>
+                    <SelectItem value="diamante">Diamante</SelectItem>
+                    <SelectItem value="ouro">Ouro</SelectItem>
+                    <SelectItem value="apoiador">Apoiador</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="flex flex-col gap-1">
+                <label className="text-sm font-medium text-muted-foreground">Status</label>
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="w-36">
+                    <SelectValue placeholder="Todos" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos</SelectItem>
+                    <SelectItem value="active">Ativo</SelectItem>
+                    <SelectItem value="inactive">Inativo</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              {hasActiveFilters && (
+                <Button variant="ghost" size="sm" onClick={clearFilters} className="h-10">
+                  <X className="h-4 w-4 mr-1" />
+                  Limpar
+                </Button>
+              )}
+            </div>
+            
+            <Tabs defaultValue="pending">
+              <TabsList className="mb-4">
+                <TabsTrigger value="pending" className="flex items-center gap-2">
+                  Pendentes
+                  {sortedPendingPartners.length > 0 && (
+                    <Badge variant="secondary" className="ml-1">
+                      {sortedPendingPartners.length}
+                    </Badge>
+                  )}
+                </TabsTrigger>
+                <TabsTrigger value="approved">Aprovados ({sortedApprovedPartners.length})</TabsTrigger>
+                <TabsTrigger value="all">Todos ({sortedAllPartners.length})</TabsTrigger>
+              </TabsList>
 
-            <TabsContent value="pending">{renderTable(sortedPendingPartners)}</TabsContent>
-            <TabsContent value="approved">{renderTable(sortedApprovedPartners)}</TabsContent>
-            <TabsContent value="all">{renderTable(sortedAllPartners)}</TabsContent>
-          </Tabs>
+              <TabsContent value="pending">{renderTable(sortedPendingPartners)}</TabsContent>
+              <TabsContent value="approved">{renderTable(sortedApprovedPartners)}</TabsContent>
+              <TabsContent value="all">{renderTable(sortedAllPartners)}</TabsContent>
+            </Tabs>
+          </>
         )}
       </div>
 
