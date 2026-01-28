@@ -333,18 +333,20 @@ export default function GroupPage() {
               </div>
             </div>
 
-            {/* Premium Logos Carousel - Top Right */}
-            <div className="flex items-center gap-4">
+            {/* Premium Logos Carousel and Leave Button */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 shrink-0">
               <PremiumLogosCarousel />
               
               {userMember && !isLeader && (
                 <Button 
                   variant="outline" 
+                  size="sm"
+                  className="whitespace-nowrap"
                   onClick={() => setLeaveDialogOpen(true)}
                   disabled={leaveGroup.isPending}
                 >
                   <LogOut className="w-4 h-4 mr-2" />
-                  Sair do Grupo
+                  Sair
                 </Button>
               )}
             </div>
