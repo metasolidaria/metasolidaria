@@ -142,6 +142,87 @@ export const useAdminPartners = () => {
     },
   });
 
+  const uploadLogo = useMutation({
+    mutationFn: async ({ partnerId, file }: { partnerId: string; file: File }) => {
+      const fileExt = file.name.split(".").pop();
+      const fileName = `${partnerId}.${fileExt}`;
+      const filePath = `logos/${fileName}`;
+
+      // Upload the file
+      const { error: uploadError } = await supabase.storage
+        .from("partner-logos")
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      // Get public URL
+      const { data: urlData } = supabase.storage
+        .from("partner-logos")
+        .getPublicUrl(filePath);
+
+      // Update partner with logo URL
+      const { error: updateError } = await supabase
+        .from("partners")
+        .update({ logo_url: urlData.publicUrl })
+        .eq("id", partnerId);
+
+      if (updateError) throw updateError;
+
+      return urlData.publicUrl;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["adminPartners"] });
+      queryClient.invalidateQueries({ queryKey: ["partners"] });
+      queryClient.invalidateQueries({ queryKey: ["allPremiumPartners"] });
+      toast({
+        title: "Logo enviada! ✅",
+        description: "A logo do parceiro foi atualizada.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Erro ao enviar logo",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteLogo = useMutation({
+    mutationFn: async ({ partnerId, logoUrl }: { partnerId: string; logoUrl: string }) => {
+      // Extract file path from URL
+      const urlParts = logoUrl.split("/partner-logos/");
+      if (urlParts.length > 1) {
+        const filePath = urlParts[1];
+        await supabase.storage.from("partner-logos").remove([filePath]);
+      }
+
+      // Update partner to remove logo URL
+      const { error } = await supabase
+        .from("partners")
+        .update({ logo_url: null })
+        .eq("id", partnerId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["adminPartners"] });
+      queryClient.invalidateQueries({ queryKey: ["partners"] });
+      queryClient.invalidateQueries({ queryKey: ["allPremiumPartners"] });
+      toast({
+        title: "Logo removida",
+        description: "A logo do parceiro foi excluída.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Erro ao remover logo",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   return {
     allPartners,
     pendingPartners,
@@ -151,5 +232,7 @@ export const useAdminPartners = () => {
     rejectPartner,
     updatePartner,
     createPartner,
+    uploadLogo,
+    deleteLogo,
   };
 };

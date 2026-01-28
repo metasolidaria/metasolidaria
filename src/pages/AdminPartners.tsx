@@ -51,8 +51,12 @@ import {
   ArrowDown,
   CalendarIcon,
   X,
+  ImagePlus,
+  ImageOff,
+  Image,
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { format, differenceInDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn, parseLocalDate } from "@/lib/utils";
@@ -99,6 +103,8 @@ const AdminPartners = () => {
     rejectPartner,
     updatePartner,
     createPartner,
+    uploadLogo,
+    deleteLogo,
   } = useAdminPartners();
 
   const [selectedPartner, setSelectedPartner] = useState<Partner | null>(null);
@@ -314,6 +320,19 @@ const AdminPartners = () => {
     });
   };
 
+  const handleLogoUpload = (partner: Partner, event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      uploadLogo.mutate({ partnerId: partner.id, file });
+    }
+  };
+
+  const handleLogoDelete = (partner: Partner) => {
+    if (partner.logo_url) {
+      deleteLogo.mutate({ partnerId: partner.id, logoUrl: partner.logo_url });
+    }
+  };
+
   const renderPartnerRow = (partner: Partner) => {
     const tier = tierConfig[partner.tier] || tierConfig.apoiador;
     const daysRemaining = getDaysRemaining(partner.expires_at);
@@ -321,6 +340,55 @@ const AdminPartners = () => {
 
     return (
       <TableRow key={partner.id}>
+        <TableCell>
+          <div className="flex items-center gap-2">
+            <Avatar className="h-10 w-10 rounded-lg border">
+              {partner.logo_url ? (
+                <AvatarImage src={partner.logo_url} alt={partner.name} className="object-contain p-1" />
+              ) : null}
+              <AvatarFallback className="rounded-lg bg-muted text-muted-foreground text-xs">
+                {partner.name.charAt(0)}
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex gap-1">
+              <label className="cursor-pointer">
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => handleLogoUpload(partner, e)}
+                  disabled={uploadLogo.isPending}
+                />
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-7 w-7"
+                  asChild
+                  disabled={uploadLogo.isPending}
+                >
+                  <span>
+                    {partner.logo_url ? (
+                      <Image className="h-3.5 w-3.5 text-primary" />
+                    ) : (
+                      <ImagePlus className="h-3.5 w-3.5" />
+                    )}
+                  </span>
+                </Button>
+              </label>
+              {partner.logo_url && (
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-7 w-7 text-destructive hover:text-destructive"
+                  onClick={() => handleLogoDelete(partner)}
+                  disabled={deleteLogo.isPending}
+                >
+                  <ImageOff className="h-3.5 w-3.5" />
+                </Button>
+              )}
+            </div>
+          </div>
+        </TableCell>
         <TableCell className="font-medium">{partner.name}</TableCell>
         <TableCell>{partner.city}</TableCell>
         <TableCell>{partner.specialty || "-"}</TableCell>
@@ -420,6 +488,7 @@ const AdminPartners = () => {
       <Table>
         <TableHeader>
           <TableRow>
+            <TableHead className="w-[120px]">Logo</TableHead>
             <TableHead className="cursor-pointer hover:bg-muted/50" onClick={() => handleSort("name")}>
               <span className="flex items-center">Nome{getSortIcon("name")}</span>
             </TableHead>
@@ -449,7 +518,7 @@ const AdminPartners = () => {
         <TableBody>
           {partners.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
+              <TableCell colSpan={11} className="text-center py-8 text-muted-foreground">
                 Nenhum parceiro encontrado
               </TableCell>
             </TableRow>

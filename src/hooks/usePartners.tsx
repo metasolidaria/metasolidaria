@@ -21,6 +21,7 @@ export interface Partner {
   expires_at: string | null;
   referrer_name: string | null;
   referrer_phone: string | null;
+  logo_url: string | null;
 }
 
 export const usePartners = () => {
