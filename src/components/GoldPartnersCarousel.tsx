@@ -2,9 +2,10 @@ import { useGoldPartners } from "@/hooks/useGoldPartners";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, Star, ExternalLink } from "lucide-react";
+import { MapPin, Star, ExternalLink, ArrowRight } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
 
 interface GoldPartnersCarouselProps {
   groupCity: string;
@@ -111,9 +112,18 @@ export const GoldPartnersCarousel = ({ groupCity }: GoldPartnersCarouselProps) =
         )}
       </Carousel>
 
-      <p className="text-xs text-muted-foreground mt-3 text-center">
-        Clique em um parceiro para entrar em contato via WhatsApp
-      </p>
+      <div className="flex items-center justify-between mt-3">
+        <p className="text-xs text-muted-foreground">
+          Clique em um parceiro para entrar em contato via WhatsApp
+        </p>
+        <Link 
+          to={`/?parceiros=true&cidade=${encodeURIComponent(groupCity)}`}
+          className="text-xs text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 font-medium flex items-center gap-1 transition-colors"
+        >
+          Ver todos os parceiros
+          <ArrowRight className="w-3 h-3" />
+        </Link>
+      </div>
     </motion.div>
   );
 };
