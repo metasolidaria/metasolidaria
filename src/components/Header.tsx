@@ -45,9 +45,9 @@ export const Header = ({ onAuthClick }: HeaderProps) => {
       }`}
     >
       <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-16 md:h-20">
+        <div className="flex items-center justify-between h-16 md:h-20 relative">
           {/* Logo */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 z-10">
             <img src={logo} alt="Meta Solidária" className="w-10 h-10 rounded-xl object-cover" />
             <span
               className={`text-xl font-bold transition-colors ${
@@ -58,8 +58,8 @@ export const Header = ({ onAuthClick }: HeaderProps) => {
             </span>
           </div>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-8">
+          {/* Desktop Navigation - Centered absolutely */}
+          <nav className="hidden md:flex items-center gap-8 absolute left-1/2 -translate-x-1/2">
             {["Grupos", "Entidades", "Parceiros", "Impacto"].map((item) => (
               <button
                 key={item}
