@@ -79,7 +79,7 @@ export const PremiumLogosCarousel = () => {
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Avatar 
-                      className="w-14 h-14 sm:w-12 sm:h-12 rounded-lg border-2 border-purple-500/50 bg-white cursor-pointer hover:border-purple-500 transition-colors shadow-sm hover:shadow-md"
+                      className="w-16 h-16 sm:w-12 sm:h-12 rounded-lg border-2 border-purple-500/50 bg-white cursor-pointer hover:border-purple-500 transition-colors shadow-sm hover:shadow-md"
                       onClick={() => handleWhatsAppClick(partner)}
                     >
                       <AvatarImage 
