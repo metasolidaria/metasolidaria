@@ -65,7 +65,7 @@ export const PremiumLogosCarousel = () => {
   return (
     <TooltipProvider>
       <div className="flex items-center gap-2">
-        <span className="text-[10px] text-green-600 dark:text-green-400 font-medium uppercase tracking-wide">
+        <span className="text-[10px] text-primary font-bold uppercase tracking-wide">
           Parceiros Idealizadores
         </span>
         <Carousel
@@ -82,7 +82,7 @@ export const PremiumLogosCarousel = () => {
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Avatar 
-                      className="w-16 h-16 sm:w-12 sm:h-12 rounded-lg border-2 border-green-500/50 bg-white cursor-pointer hover:border-green-500 transition-colors shadow-sm hover:shadow-md"
+                      className="w-16 h-16 sm:w-12 sm:h-12 rounded-lg border-2 border-primary/50 bg-white cursor-pointer hover:border-primary transition-colors shadow-sm hover:shadow-md"
                       onClick={() => handleWhatsAppClick(partner)}
                     >
                       <AvatarImage 
@@ -90,14 +90,14 @@ export const PremiumLogosCarousel = () => {
                         alt={partner.name || "Parceiro Premium"}
                         className="object-contain p-1"
                       />
-                      <AvatarFallback className="rounded-lg bg-green-100 text-green-700 font-semibold text-sm">
+                      <AvatarFallback className="rounded-lg bg-primary/10 text-primary font-semibold text-sm">
                         {partner.name?.charAt(0) || "P"}
                       </AvatarFallback>
                     </Avatar>
                   </TooltipTrigger>
-                  <TooltipContent side="bottom" className="bg-green-900 text-white border-green-700">
+                  <TooltipContent side="bottom" className="bg-primary text-primary-foreground border-primary">
                     <p className="font-medium">{partner.name}</p>
-                    <p className="text-xs text-green-200">{partner.specialty}</p>
+                    <p className="text-xs text-primary-foreground/80">{partner.specialty}</p>
                   </TooltipContent>
                 </Tooltip>
               </CarouselItem>
