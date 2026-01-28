@@ -1,67 +1,86 @@
 
 
-# Plano: Corrigir Constraint de Tier no Banco de Dados
+# Plano: Corrigir Carrossel de Parceiros Premium no Hero
 
 ## Problema Identificado
-O frontend foi atualizado para usar "premium" em vez de "diamante", mas o banco de dados ainda tem uma constraint que valida apenas os valores antigos.
 
-**Erro no banco:**
-```
-new row for relation "partners" violates check constraint "partners_tier_check"
-```
+A caixa do carrossel está desaparecendo porque:
+1. A div container com a borda (`border-l`) é sempre renderizada
+2. Quando o componente `HeroPremiumLogos` retorna `null` (durante loading ou sem parceiros), a div fica vazia mas ainda ocupa espaço
+3. O carrossel pode estar "cortando" o conteúdo visualmente devido ao `overflow-hidden`
 
-**Constraint atual:**
-```sql
-CHECK (tier = ANY (ARRAY['diamante', 'ouro', 'apoiador']))
-```
+## Solucao Proposta
 
-## Solução
-Atualizar a constraint do banco de dados para aceitar o novo valor "premium".
+Mover a logica de renderizacao condicional para fora do componente, de forma que toda a secao do carrossel (incluindo a borda) so apareca quando houver parceiros para exibir.
 
-## Alterações Necessárias
+## Alteracoes
 
-### 1. Migration para atualizar a constraint
+### 1. Modificar `src/components/Hero.tsx`
 
-```sql
--- Remover constraint antiga
-ALTER TABLE public.partners DROP CONSTRAINT partners_tier_check;
+**Atualizar o componente HeroPremiumLogos:**
+- Exportar uma funcao auxiliar para verificar se ha parceiros
+- Ou incluir a div container dentro do componente para que tudo seja renderizado ou nada
 
--- Adicionar nova constraint com "premium" no lugar de "diamante"
-ALTER TABLE public.partners 
-ADD CONSTRAINT partners_tier_check 
-CHECK (tier = ANY (ARRAY['premium', 'ouro', 'apoiador']));
+**Opcao escolhida - Incluir container no componente:**
 
--- Atualizar registros existentes que usam "diamante" para "premium"
-UPDATE public.partners SET tier = 'premium' WHERE tier = 'diamante';
+```tsx
+// Antes (problema)
+<div className="border-l border-primary-foreground/30 pl-3">
+  <HeroPremiumLogos />  {/* Pode retornar null */}
+</div>
+
+// Depois (solucao)
+<HeroPremiumLogos />  {/* Componente ja inclui o container com borda */}
 ```
 
-## Fluxo da Correção
+O componente `HeroPremiumLogos` passara a renderizar a div com borda internamente, garantindo que:
+- Se nao houver parceiros, nada e exibido (nem a borda)
+- Se houver parceiros, a borda e o carrossel aparecem juntos
 
-```text
-ANTES:
-┌─────────────────────────────────────────────────────┐
-│ Frontend envia: tier = "premium"                    │
-│ Banco valida: ['diamante', 'ouro', 'apoiador']     │
-│ Resultado: ❌ ERRO - valor não permitido            │
-└─────────────────────────────────────────────────────┘
+## Detalhes Tecnicos
 
-DEPOIS:
-┌─────────────────────────────────────────────────────┐
-│ Frontend envia: tier = "premium"                    │
-│ Banco valida: ['premium', 'ouro', 'apoiador']      │
-│ Resultado: ✅ Sucesso                               │
-└─────────────────────────────────────────────────────┘
+```tsx
+const HeroPremiumLogos = () => {
+  const { data: premiumPartners, isLoading } = usePremiumPartnersHero();
+  
+  const autoplayPlugin = useRef(
+    Autoplay({ delay: 2500, stopOnInteraction: false, stopOnMouseEnter: true })
+  );
+
+  // Retorna null se nao houver parceiros (nao exibe nada)
+  if (isLoading || !premiumPartners || premiumPartners.length === 0) {
+    return null;
+  }
+
+  // ... resto do codigo ...
+
+  return (
+    // Container com borda agora esta DENTRO do componente
+    <div className="border-l border-primary-foreground/30 pl-3">
+      <TooltipProvider delayDuration={100}>
+        <Carousel ...>
+          ...
+        </Carousel>
+      </TooltipProvider>
+    </div>
+  );
+};
 ```
 
-## Arquivos/Recursos a Modificar
+E no JSX do Hero, remover a div container:
+```tsx
+<motion.div className="inline-flex items-center gap-3 ...">
+  <Heart className="w-4 h-4 text-secondary" fill="currentColor" />
+  <span className="text-primary-foreground text-sm font-medium">
+    Transforme suas metas em solidariedade
+  </span>
+  <HeroPremiumLogos />  {/* Sem div wrapper */}
+</motion.div>
+```
 
-| Recurso | Alteração |
-|---------|-----------|
-| Banco de dados | Atualizar constraint `partners_tier_check` via migration |
-| Dados existentes | Converter `tier = 'diamante'` para `tier = 'premium'` |
+## Resultado Esperado
 
-## Impacto
-- Nenhuma mudança de código necessária (já foi alterado)
-- Parceiros existentes com tier "diamante" serão migrados para "premium"
-- Após a migration, será possível alterar o nível dos parceiros normalmente
+- Quando houver parceiros premium: a caixa com borda e carrossel aparece
+- Quando nao houver parceiros ou durante o loading: nada extra e exibido
+- A animacao do carrossel continuara funcionando normalmente
 
