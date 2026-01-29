@@ -34,29 +34,29 @@ export const CitySearchAutocomplete = ({
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
+  const [hasFetched, setHasFetched] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Fetch all cities once on mount
-  useEffect(() => {
-    const fetchCities = async () => {
-      setIsLoading(true);
-      try {
-        const response = await fetch(
-          "https://servicodados.ibge.gov.br/api/v1/localidades/municipios?orderBy=nome"
-        );
-        if (response.ok) {
-          const data: City[] = await response.json();
-          setCities(data);
-        }
-      } catch (error) {
-        console.error("Error fetching cities:", error);
-      } finally {
-        setIsLoading(false);
+  // Fetch cities only when user focuses on input (deferred loading)
+  const fetchCities = useCallback(async () => {
+    if (hasFetched || isLoading) return;
+    setIsLoading(true);
+    try {
+      const response = await fetch(
+        "https://servicodados.ibge.gov.br/api/v1/localidades/municipios?orderBy=nome"
+      );
+      if (response.ok) {
+        const data: City[] = await response.json();
+        setCities(data);
+        setHasFetched(true);
       }
-    };
-    fetchCities();
-  }, []);
+    } catch (error) {
+      console.error("Error fetching cities:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [hasFetched, isLoading]);
 
   // Sync query with external value
   useEffect(() => {
@@ -162,7 +162,10 @@ export const CitySearchAutocomplete = ({
         ref={inputRef}
         value={query}
         onChange={handleInputChange}
-        onFocus={() => query.length >= 2 && setIsOpen(true)}
+        onFocus={() => {
+          fetchCities();
+          if (query.length >= 2) setIsOpen(true);
+        }}
         onKeyDown={handleKeyDown}
         placeholder={placeholder}
         className={cn("pl-10 pr-10", className)}
