@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import { X, Users, Lock, Globe, User, Phone, FileText, CalendarIcon, Camera, Loader2 } from "lucide-react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
@@ -241,306 +240,302 @@ export const CreateGroupModal = ({ open, onOpenChange, onRequireAuth }: CreateGr
 
   if (!user) return null;
 
-  return (
-    <AnimatePresence>
-      {open && (
-        <>
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => onOpenChange(false)}
-            className="fixed inset-0 bg-foreground/60 backdrop-blur-sm z-50"
-          />
+  if (!open) return null;
 
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            transition={{ type: "spring", duration: 0.5 }}
-            className="fixed inset-0 z-50 flex items-start justify-center p-4 pt-8 overflow-y-auto"
-          >
-            <div className="bg-card rounded-2xl shadow-xl w-full max-w-md my-auto max-h-[calc(100vh-4rem)] overflow-y-auto flex flex-col">
-              <div className="bg-gradient-stats p-6 relative rounded-t-2xl">
-                <button
-                  onClick={() => onOpenChange(false)}
-                  className="absolute top-4 right-4 w-8 h-8 rounded-full bg-primary-foreground/20 flex items-center justify-center hover:bg-primary-foreground/30 transition-colors"
-                >
-                  <X className="w-4 h-4 text-primary-foreground" />
-                </button>
-                <div className="w-14 h-14 bg-primary-foreground/20 rounded-xl flex items-center justify-center mb-4">
-                  <Users className="w-7 h-7 text-primary-foreground" />
+  return (
+    <>
+      <div
+        onClick={() => onOpenChange(false)}
+        className="fixed inset-0 bg-foreground/60 backdrop-blur-sm z-50 animate-in fade-in duration-200"
+      />
+
+      <div
+        className="fixed inset-0 z-50 flex items-start justify-center p-4 pt-8 overflow-y-auto animate-in fade-in zoom-in-95 duration-300"
+      >
+        <div className="bg-card rounded-2xl shadow-xl w-full max-w-md my-auto max-h-[calc(100vh-4rem)] overflow-y-auto flex flex-col">
+          <div className="bg-gradient-stats p-6 relative rounded-t-2xl">
+            <button
+              onClick={() => onOpenChange(false)}
+              className="absolute top-4 right-4 w-8 h-8 rounded-full bg-primary-foreground/20 flex items-center justify-center hover:bg-primary-foreground/30 transition-colors"
+            >
+              <X className="w-4 h-4 text-primary-foreground" />
+            </button>
+            <div className="w-14 h-14 bg-primary-foreground/20 rounded-xl flex items-center justify-center mb-4">
+              <Users className="w-7 h-7 text-primary-foreground" />
+            </div>
+            <h2 className="text-2xl font-bold text-primary-foreground">
+              Criar Novo Grupo
+            </h2>
+            <p className="text-primary-foreground/80 mt-1">
+              Inicie uma jornada de transformação coletiva
+            </p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="p-6 space-y-5">
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="leaderName" className="text-foreground font-medium">
+                  Nome do Líder
+                </Label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <Input
+                    id="leaderName"
+                    placeholder="Seu nome completo"
+                    value={formData.leaderName}
+                    onChange={(e) =>
+                      setFormData({ ...formData, leaderName: e.target.value })
+                    }
+                    className="pl-11"
+                    required
+                  />
                 </div>
-                <h2 className="text-2xl font-bold text-primary-foreground">
-                  Criar Novo Grupo
-                </h2>
-                <p className="text-primary-foreground/80 mt-1">
-                  Inicie uma jornada de transformação coletiva
-                </p>
               </div>
 
-              <form onSubmit={handleSubmit} className="p-6 space-y-5">
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="leaderName" className="text-foreground font-medium">
-                      Nome do Líder
-                    </Label>
-                    <div className="relative">
-                      <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                      <Input
-                        id="leaderName"
-                        placeholder="Seu nome completo"
-                        value={formData.leaderName}
-                        onChange={(e) =>
-                          setFormData({ ...formData, leaderName: e.target.value })
-                        }
-                        className="pl-11"
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="leaderWhatsapp" className="text-foreground font-medium">
-                      WhatsApp do Líder
-                    </Label>
-                    <div className="relative">
-                      <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                      <Input
-                        id="leaderWhatsapp"
-                        placeholder="(11) 99999-9999"
-                        value={formData.leaderWhatsapp}
-                        onChange={(e) =>
-                          setFormData({ ...formData, leaderWhatsapp: e.target.value })
-                        }
-                        className="pl-11"
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="groupName" className="text-foreground font-medium">
-                      Nome do Grupo
-                    </Label>
-                    <div className="relative">
-                      <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                      <Input
-                        id="groupName"
-                        placeholder="Ex: Equipe Solidária"
-                        value={formData.groupName}
-                        onChange={(e) =>
-                          setFormData({ ...formData, groupName: e.target.value })
-                        }
-                        className="pl-11"
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="description" className="text-foreground font-medium">
-                      Descrição do Grupo
-                    </Label>
-                    <div className="relative">
-                      <FileText className="absolute left-3 top-3 w-5 h-5 text-muted-foreground" />
-                      <Textarea
-                        id="description"
-                        placeholder="Descreva o propósito e objetivo do seu grupo..."
-                        value={formData.description}
-                        onChange={(e) =>
-                          setFormData({ ...formData, description: e.target.value })
-                        }
-                        className="pl-11 min-h-[80px]"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Image Upload */}
-                  <div className="space-y-2">
-                    <Label className="text-foreground font-medium">
-                      Foto do Grupo (opcional)
-                    </Label>
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept="image/jpeg,image/png,image/webp"
-                      onChange={handleImageSelect}
-                      className="hidden"
-                    />
-                    
-                    {imagePreview ? (
-                      <div className="relative">
-                        <img 
-                          src={imagePreview} 
-                          alt="Preview" 
-                          className="w-full h-32 object-cover rounded-xl border border-border"
-                        />
-                        <Button
-                          type="button"
-                          variant="destructive"
-                          size="sm"
-                          className="absolute top-2 right-2"
-                          onClick={() => {
-                            setImageFile(null);
-                            setImagePreview(null);
-                            if (fileInputRef.current) {
-                              fileInputRef.current.value = '';
-                            }
-                          }}
-                        >
-                          <X className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    ) : (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className="w-full h-24 border-dashed flex flex-col gap-2"
-                        onClick={() => fileInputRef.current?.click()}
-                      >
-                        <Camera className="w-6 h-6 text-muted-foreground" />
-                        <span className="text-sm text-muted-foreground">Adicionar foto</span>
-                      </Button>
-                    )}
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="city" className="text-foreground font-medium">
-                      Cidade
-                    </Label>
-                    <CityAutocomplete
-                      value={formData.city}
-                      onChange={(value) => setFormData({ ...formData, city: value })}
-                      placeholder="Digite o nome da cidade"
-                      required
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label className="text-foreground font-medium">
-                      Data de Finalização das Metas
-                    </Label>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          className={cn(
-                            "w-full justify-start text-left font-normal",
-                            !formData.endDate && "text-muted-foreground"
-                          )}
-                        >
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {formData.endDate ? (
-                            format(formData.endDate, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })
-                          ) : (
-                            <span>Selecione uma data</span>
-                          )}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={formData.endDate}
-                          onSelect={(date) => date && setFormData({ ...formData, endDate: date })}
-                          disabled={(date) => date < new Date()}
-                          initialFocus
-                          className={cn("p-3 pointer-events-auto")}
-                        />
-                      </PopoverContent>
-                    </Popover>
-                    <p className="text-xs text-muted-foreground">
-                      Até quando os membros devem cumprir suas metas
-                    </p>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label className="text-foreground font-medium">
-                      Tipo de Doação
-                    </Label>
-                    <div className="grid grid-cols-2 gap-2">
-                      {donationTypes.map((type) => (
-                        <button
-                          key={type.id}
-                          type="button"
-                          onClick={() =>
-                            setFormData({ ...formData, donationType: type.id })
-                          }
-                          className={`flex items-center gap-2 p-3 rounded-xl border-2 transition-all text-left ${
-                            formData.donationType === type.id
-                              ? "border-primary bg-primary/10"
-                              : "border-border hover:border-primary/50"
-                          }`}
-                        >
-                          <span className="text-xl">{type.icon}</span>
-                          <span className="text-sm font-medium text-foreground">
-                            {type.label.split(" ")[0]}
-                          </span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <EntitySelect
-                    value={formData.entityId}
-                    onChange={(entityId) => setFormData({ ...formData, entityId })}
+              <div className="space-y-2">
+                <Label htmlFor="leaderWhatsapp" className="text-foreground font-medium">
+                  WhatsApp do Líder
+                </Label>
+                <div className="relative">
+                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <Input
+                    id="leaderWhatsapp"
+                    placeholder="(11) 99999-9999"
+                    value={formData.leaderWhatsapp}
+                    onChange={(e) =>
+                      setFormData({ ...formData, leaderWhatsapp: e.target.value })
+                    }
+                    className="pl-11"
+                    required
                   />
-
-                  <div className="flex items-center justify-between p-4 rounded-xl border border-border bg-muted/30">
-                    <div className="flex items-center gap-3">
-                      {formData.isPrivate ? (
-                        <Lock className="w-5 h-5 text-secondary" />
-                      ) : (
-                        <Globe className="w-5 h-5 text-primary" />
-                      )}
-                      <div>
-                        <Label className="text-foreground font-medium">
-                          {formData.isPrivate ? "Grupo Privado" : "Grupo Público"}
-                        </Label>
-                        <p className="text-xs text-muted-foreground">
-                          {formData.isPrivate 
-                            ? "Apenas convidados podem participar" 
-                            : "Qualquer pessoa pode participar"}
-                        </p>
-                      </div>
-                    </div>
-                    <Switch
-                      checked={formData.isPrivate}
-                      onCheckedChange={(checked) =>
-                        setFormData({ ...formData, isPrivate: checked })
-                      }
-                    />
-                  </div>
                 </div>
+              </div>
 
-                <div className="flex gap-3 pt-2">
+              <div className="space-y-2">
+                <Label htmlFor="groupName" className="text-foreground font-medium">
+                  Nome do Grupo
+                </Label>
+                <div className="relative">
+                  <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <Input
+                    id="groupName"
+                    placeholder="Ex: Equipe Solidária"
+                    value={formData.groupName}
+                    onChange={(e) =>
+                      setFormData({ ...formData, groupName: e.target.value })
+                    }
+                    className="pl-11"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="description" className="text-foreground font-medium">
+                  Descrição do Grupo
+                </Label>
+                <div className="relative">
+                  <FileText className="absolute left-3 top-3 w-5 h-5 text-muted-foreground" />
+                  <Textarea
+                    id="description"
+                    placeholder="Descreva o propósito e objetivo do seu grupo..."
+                    value={formData.description}
+                    onChange={(e) =>
+                      setFormData({ ...formData, description: e.target.value })
+                    }
+                    className="pl-11 min-h-[80px]"
+                  />
+                </div>
+              </div>
+
+              {/* Image Upload */}
+              <div className="space-y-2">
+                <Label className="text-foreground font-medium">
+                  Foto do Grupo (opcional)
+                </Label>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  onChange={handleImageSelect}
+                  className="hidden"
+                />
+                
+                {imagePreview ? (
+                  <div className="relative">
+                    <img 
+                      src={imagePreview} 
+                      alt="Preview" 
+                      className="w-full h-32 object-cover rounded-xl border border-border"
+                    />
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="sm"
+                      className="absolute top-2 right-2"
+                      onClick={() => {
+                        setImageFile(null);
+                        setImagePreview(null);
+                        if (fileInputRef.current) {
+                          fileInputRef.current.value = '';
+                        }
+                      }}
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </div>
+                ) : (
                   <Button
                     type="button"
                     variant="outline"
-                    className="flex-1"
-                    onClick={() => onOpenChange(false)}
+                    className="w-full h-24 border-dashed flex flex-col gap-2"
+                    onClick={() => fileInputRef.current?.click()}
                   >
-                    Cancelar
+                    <Camera className="w-6 h-6 text-muted-foreground" />
+                    <span className="text-sm text-muted-foreground">Adicionar foto</span>
                   </Button>
-                  <Button 
-                    type="submit" 
-                    variant="hero" 
-                    className="flex-1"
-                    disabled={!formData.donationType || createGroup.isPending || isUploadingImage}
-                  >
-                    {(createGroup.isPending || isUploadingImage) ? (
-                      <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        {isUploadingImage ? "Enviando foto..." : "Criando..."}
-                      </>
-                    ) : "Criar Grupo"}
-                  </Button>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="city" className="text-foreground font-medium">
+                  Cidade
+                </Label>
+                <CityAutocomplete
+                  value={formData.city}
+                  onChange={(value) => setFormData({ ...formData, city: value })}
+                  placeholder="Digite o nome da cidade"
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-foreground font-medium">
+                  Data de Finalização das Metas
+                </Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !formData.endDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {formData.endDate ? (
+                        format(formData.endDate, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })
+                      ) : (
+                        <span>Selecione uma data</span>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={formData.endDate}
+                      onSelect={(date) => date && setFormData({ ...formData, endDate: date })}
+                      disabled={(date) => date < new Date()}
+                      initialFocus
+                      className={cn("p-3 pointer-events-auto")}
+                    />
+                  </PopoverContent>
+                </Popover>
+                <p className="text-xs text-muted-foreground">
+                  Até quando os membros devem cumprir suas metas
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-foreground font-medium">
+                  Tipo de Doação
+                </Label>
+                <div className="grid grid-cols-2 gap-2">
+                  {donationTypes.map((type) => (
+                    <button
+                      key={type.id}
+                      type="button"
+                      onClick={() =>
+                        setFormData({ ...formData, donationType: type.id })
+                      }
+                      className={`flex items-center gap-2 p-3 rounded-xl border-2 transition-all text-left ${
+                        formData.donationType === type.id
+                          ? "border-primary bg-primary/10"
+                          : "border-border hover:border-primary/50"
+                      }`}
+                    >
+                      <span className="text-xl">{type.icon}</span>
+                      <span className="text-sm font-medium text-foreground">
+                        {type.label.split(" ")[0]}
+                      </span>
+                    </button>
+                  ))}
                 </div>
-              </form>
+              </div>
+
+              <EntitySelect
+                value={formData.entityId}
+                onChange={(entityId) => setFormData({ ...formData, entityId })}
+              />
+
+              <div className="flex items-center justify-between p-4 rounded-xl border border-border bg-muted/30">
+                <div className="flex items-center gap-3">
+                  {formData.isPrivate ? (
+                    <Lock className="w-5 h-5 text-secondary" />
+                  ) : (
+                    <Globe className="w-5 h-5 text-primary" />
+                  )}
+                  <div>
+                    <Label className="text-foreground font-medium">
+                      {formData.isPrivate ? "Grupo Privado" : "Grupo Público"}
+                    </Label>
+                    <p className="text-xs text-muted-foreground">
+                      {formData.isPrivate 
+                        ? "Apenas convidados podem participar" 
+                        : "Qualquer pessoa pode participar"}
+                    </p>
+                  </div>
+                </div>
+                <Switch
+                  checked={formData.isPrivate}
+                  onCheckedChange={(checked) =>
+                    setFormData({ ...formData, isPrivate: checked })
+                  }
+                />
+              </div>
             </div>
-          </motion.div>
-        </>
-      )}
-    </AnimatePresence>
+
+            <div className="flex gap-3 pt-2">
+              <Button
+                type="button"
+                variant="outline"
+                className="flex-1"
+                onClick={() => onOpenChange(false)}
+              >
+                Cancelar
+              </Button>
+              <Button 
+                type="submit" 
+                variant="hero" 
+                className="flex-1"
+                disabled={createGroup.isPending || isUploadingImage}
+              >
+                {createGroup.isPending || isUploadingImage ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    {isUploadingImage ? "Enviando..." : "Criando..."}
+                  </>
+                ) : (
+                  <>
+                    <Users className="w-4 h-4 mr-2" />
+                    Criar Grupo
+                  </>
+                )}
+              </Button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </>
   );
 };

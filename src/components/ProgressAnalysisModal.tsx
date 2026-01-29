@@ -2,7 +2,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { CheckCircle2, AlertTriangle, Info, Lightbulb, Target, Loader2, Sparkles } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
 import type { ProgressAnalysis } from "@/hooks/useProgressAnalysis";
 
 interface ProgressAnalysisModalProps {
@@ -47,124 +46,108 @@ export const ProgressAnalysisModal = ({
           </DialogTitle>
         </DialogHeader>
 
-        <AnimatePresence mode="wait">
-          {isLoading ? (
-            <motion.div
-              key="loading"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="py-12 text-center"
-            >
-              <Loader2 className="w-12 h-12 mx-auto mb-4 animate-spin text-primary" />
-              <p className="text-muted-foreground">Analisando dados do grupo...</p>
-              <p className="text-sm text-muted-foreground mt-1">Isso pode levar alguns segundos</p>
-            </motion.div>
-          ) : analysis ? (
-            <motion.div
-              key="analysis"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              className="space-y-6"
-            >
-              {/* Summary */}
-              <div className="bg-gradient-to-r from-primary/10 to-secondary/10 rounded-xl p-4">
-                <h3 className="font-semibold text-foreground mb-2">Resumo</h3>
-                <p className="text-muted-foreground">{analysis.summary}</p>
-              </div>
+        {isLoading ? (
+          <div
+            className="py-12 text-center animate-in fade-in duration-200"
+          >
+            <Loader2 className="w-12 h-12 mx-auto mb-4 animate-spin text-primary" />
+            <p className="text-muted-foreground">Analisando dados do grupo...</p>
+            <p className="text-sm text-muted-foreground mt-1">Isso pode levar alguns segundos</p>
+          </div>
+        ) : analysis ? (
+          <div
+            className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300"
+          >
+            {/* Summary */}
+            <div className="bg-gradient-to-r from-primary/10 to-secondary/10 rounded-xl p-4">
+              <h3 className="font-semibold text-foreground mb-2">Resumo</h3>
+              <p className="text-muted-foreground">{analysis.summary}</p>
+            </div>
 
-              {/* Insights */}
-              <div>
-                <h3 className="font-semibold text-foreground mb-3 flex items-center gap-2">
-                  <Lightbulb className="w-4 h-4 text-primary" />
-                  Insights
-                </h3>
-                <div className="space-y-3">
-                  {analysis.insights.map((insight, index) => (
-                    <motion.div
-                      key={index}
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: index * 0.1 }}
-                      className={`border rounded-lg p-4 ${insightStyles[insight.type]}`}
-                    >
-                      <div className="flex items-start gap-3">
-                        <InsightIcon type={insight.type} />
-                        <div>
-                          <h4 className="font-medium text-foreground">{insight.title}</h4>
-                          <p className="text-sm text-muted-foreground mt-1">{insight.description}</p>
-                        </div>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Recommendations */}
-              <div>
-                <h3 className="font-semibold text-foreground mb-3">Recomendações</h3>
-                <ul className="space-y-2">
-                  {analysis.recommendations.map((rec, index) => (
-                    <motion.li
-                      key={index}
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.3 + index * 0.1 }}
-                      className="flex items-start gap-2 text-muted-foreground"
-                    >
-                      <span className="text-primary font-bold">•</span>
-                      <span>{rec}</span>
-                    </motion.li>
-                  ))}
-                </ul>
-              </div>
-
-              {/* Prediction */}
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5 }}
-                className={`rounded-xl p-4 ${
-                  analysis.prediction.willReachGoal
-                    ? "bg-green-50 border border-green-200 dark:bg-green-950/30 dark:border-green-900"
-                    : "bg-amber-50 border border-amber-200 dark:bg-amber-950/30 dark:border-amber-900"
-                }`}
-              >
-                <div className="flex items-center gap-2 mb-3">
-                  <Target className="w-5 h-5 text-primary" />
-                  <h3 className="font-semibold text-foreground">Previsão de Meta</h3>
-                  <Badge
-                    variant={analysis.prediction.willReachGoal ? "default" : "secondary"}
-                    className="ml-auto"
+            {/* Insights */}
+            <div>
+              <h3 className="font-semibold text-foreground mb-3 flex items-center gap-2">
+                <Lightbulb className="w-4 h-4 text-primary" />
+                Insights
+              </h3>
+              <div className="space-y-3">
+                {analysis.insights.map((insight, index) => (
+                  <div
+                    key={index}
+                    className={`border rounded-lg p-4 ${insightStyles[insight.type]} animate-in fade-in slide-in-from-left-2 duration-300`}
+                    style={{ animationDelay: `${index * 100}ms` }}
                   >
-                    {Math.round(analysis.prediction.confidence * 100)}% confiança
-                  </Badge>
-                </div>
-                
-                <div className="mb-3">
-                  <div className="flex justify-between text-sm mb-1">
-                    <span className="text-muted-foreground">Probabilidade de sucesso</span>
-                    <span className="font-medium">
-                      {analysis.prediction.willReachGoal ? "Alta" : "Moderada"}
-                    </span>
+                    <div className="flex items-start gap-3">
+                      <InsightIcon type={insight.type} />
+                      <div>
+                        <h4 className="font-medium text-foreground">{insight.title}</h4>
+                        <p className="text-sm text-muted-foreground mt-1">{insight.description}</p>
+                      </div>
+                    </div>
                   </div>
-                  <Progress 
-                    value={analysis.prediction.confidence * 100} 
-                    className="h-2"
-                  />
-                </div>
+                ))}
+              </div>
+            </div>
 
-                <p className="text-sm text-muted-foreground mb-2">
-                  <strong>Previsão:</strong> {analysis.prediction.estimatedCompletion}
-                </p>
-                <p className="text-sm text-foreground italic">
-                  "{analysis.prediction.message}"
-                </p>
-              </motion.div>
-            </motion.div>
-          ) : null}
-        </AnimatePresence>
+            {/* Recommendations */}
+            <div>
+              <h3 className="font-semibold text-foreground mb-3">Recomendações</h3>
+              <ul className="space-y-2">
+                {analysis.recommendations.map((rec, index) => (
+                  <li
+                    key={index}
+                    className="flex items-start gap-2 text-muted-foreground animate-in fade-in slide-in-from-left-2 duration-300"
+                    style={{ animationDelay: `${300 + index * 100}ms` }}
+                  >
+                    <span className="text-primary font-bold">•</span>
+                    <span>{rec}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Prediction */}
+            <div
+              className={`rounded-xl p-4 animate-in fade-in slide-in-from-bottom-2 duration-300 ${
+                analysis.prediction.willReachGoal
+                  ? "bg-green-50 border border-green-200 dark:bg-green-950/30 dark:border-green-900"
+                  : "bg-amber-50 border border-amber-200 dark:bg-amber-950/30 dark:border-amber-900"
+              }`}
+              style={{ animationDelay: "500ms" }}
+            >
+              <div className="flex items-center gap-2 mb-3">
+                <Target className="w-5 h-5 text-primary" />
+                <h3 className="font-semibold text-foreground">Previsão de Meta</h3>
+                <Badge
+                  variant={analysis.prediction.willReachGoal ? "default" : "secondary"}
+                  className="ml-auto"
+                >
+                  {Math.round(analysis.prediction.confidence * 100)}% confiança
+                </Badge>
+              </div>
+              
+              <div className="mb-3">
+                <div className="flex justify-between text-sm mb-1">
+                  <span className="text-muted-foreground">Probabilidade de sucesso</span>
+                  <span className="font-medium">
+                    {analysis.prediction.willReachGoal ? "Alta" : "Moderada"}
+                  </span>
+                </div>
+                <Progress 
+                  value={analysis.prediction.confidence * 100} 
+                  className="h-2"
+                />
+              </div>
+
+              <p className="text-sm text-muted-foreground mb-2">
+                <strong>Previsão:</strong> {analysis.prediction.estimatedCompletion}
+              </p>
+              <p className="text-sm text-foreground italic">
+                "{analysis.prediction.message}"
+              </p>
+            </div>
+          </div>
+        ) : null}
       </DialogContent>
     </Dialog>
   );

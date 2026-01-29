@@ -98,8 +98,8 @@ const allCategories = [
   { id: "Outros", label: "Outros", icon: MoreHorizontal },
 ];
 
-import logoImage from "@/assets/logo.jpg";
-import naturuaiLogo from "@/assets/naturuai-logo.jpg";
+const logoImage = "/logo.jpg";
+const naturuaiLogo = "/naturuai-logo.jpg";
 
 const ITEMS_PER_PAGE = 10;
 
