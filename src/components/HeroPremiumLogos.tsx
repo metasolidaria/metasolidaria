@@ -6,8 +6,10 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 import { Skeleton } from "@/components/ui/skeleton";
 import Autoplay from "embla-carousel-autoplay";
-import logoImage from "@/assets/logo.jpg";
-import naturuaiLogo from "@/assets/naturuai-logo.jpg";
+
+// Use static paths from public folder for better caching
+const logoImage = "/logo.jpg";
+const naturuaiLogo = "/naturuai-logo.jpg";
 
 // Hook to fetch premium partners for Hero
 const usePremiumPartnersHero = () => {
