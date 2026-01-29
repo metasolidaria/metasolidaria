@@ -1,45 +1,161 @@
 
-# Plano de Otimizacao Mobile - 64% para 80%+
+
+# Plano de Configuracao de Cache Eficiente
 
 ## Diagnostico do Problema
 
-A diferenca significativa entre desktop (93%) e mobile (64%) indica problemas especificos para dispositivos moveis:
+O PageSpeed identificou que **todos os assets estaticos** estao sendo servidos **sem headers de cache (TTL: None)**, resultando em:
 
-| Metrica | Desktop | Mobile | Diferenca |
-|---------|---------|--------|-----------|
-| Performance | 93% | 64% | -29% |
+| Metrica | Valor |
+|---------|-------|
+| Economia Potencial | 1.896 KiB |
+| Hero Image | 1.461 KiB sem cache |
+| JS Bundle | 155 KiB sem cache |
+| Logos | 95 KiB sem cache |
 
-### Causas Identificadas
+---
 
-1. **Imagem Hero muito grande para mobile**
-   - A mesma imagem `hero-donation.webp` e usada em todas as resolucoes
-   - Em mobile, uma imagem de 1920px e baixada, mas exibida em ~400px
-   - Desperdicio de banda e tempo de download
+## Causa Raiz
 
-2. **Falta de lazy loading em imagens abaixo da dobra**
-   - Imagens de grupos (Unsplash) carregam imediatamente
-   - Imagens de parceiros carregam sem `loading="lazy"`
-
-3. **LCP (Largest Contentful Paint) lento em mobile**
-   - A imagem hero e o elemento LCP
-   - Mobile tem banda mais lenta que desktop
-
-4. **JavaScript bloqueando renderizacao**
-   - Carousel autoplay carrega em multiplos componentes
-   - Hooks de animacao executam mesmo antes de ser visivel
+A hospedagem do Lovable nao esta configurando headers `Cache-Control` automaticamente para os assets estaticos. Diferente de CDNs como Vercel/Netlify que detectam arquivos com hash (ex: `index-C-ik6uaT.js`) e aplicam cache imutavel, a infraestrutura atual nao faz isso.
 
 ---
 
 ## Solucao Proposta
 
-### Fase 1: Imagens Responsivas para Hero (Maior Impacto)
+### Fase 1: Criar arquivo `_headers` (Netlify-style)
 
-Usar o atributo `srcSet` para servir imagens de tamanhos diferentes:
+Criar arquivo `public/_headers` com regras de cache agressivo:
 
-**Hero.tsx - Adicionar srcSet:**
+```text
+# Cache imutavel para assets com hash (1 ano)
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Cache longo para imagens estaticas (1 ano)
+/*.webp
+  Cache-Control: public, max-age=31536000, immutable
+
+/*.jpg
+  Cache-Control: public, max-age=31536000, immutable
+
+/*.png
+  Cache-Control: public, max-age=31536000, immutable
+
+# Cache medio para favicon e icons (1 semana)
+/favicon.*
+  Cache-Control: public, max-age=604800
+
+/icon-*.png
+  Cache-Control: public, max-age=604800
+
+# Sem cache para service worker (sempre atualizado)
+/sw.js
+  Cache-Control: no-cache, no-store, must-revalidate
+
+# Sem cache para manifest (pode mudar)
+/manifest.webmanifest
+  Cache-Control: no-cache
+```
+
+**Nota:** Este arquivo funciona em Netlify e algumas outras hospedagens. Se a hospedagem do Lovable nao suportar, a Fase 2 sera a solucao principal.
+
+### Fase 2: Expandir Service Worker Cache
+
+Atualizar `vite.config.ts` para incluir todos os assets estaticos no cache do Service Worker:
+
+**Mudancas:**
+
+1. Adicionar todas as imagens ao `includeAssets`
+2. Adicionar regra de `runtimeCaching` para assets locais com estrategia `CacheFirst`
+3. Incluir pattern para imagens `.webp` e `.jpg`
+
+```typescript
+// vite.config.ts - VitePWA config
+includeAssets: [
+  "favicon.jpg", 
+  "robots.txt",
+  "logo.jpg",
+  "naturuai-logo.jpg",
+  "hero-donation.webp",
+  "hero-donation-mobile.webp",
+  "hero-donation-tablet.webp",
+  "og-image.png",
+  "icon-192x192.png",
+  "icon-512x512.png"
+],
+
+workbox: {
+  globPatterns: ["**/*.{js,css,html,ico,png,jpg,webp,svg,woff,woff2}"],
+  runtimeCaching: [
+    // Cache local para imagens estaticas
+    {
+      urlPattern: /\.(webp|jpg|jpeg|png|svg)$/i,
+      handler: "CacheFirst",
+      options: {
+        cacheName: "static-images-cache",
+        expiration: {
+          maxEntries: 50,
+          maxAgeSeconds: 60 * 60 * 24 * 365, // 1 ano
+        },
+        cacheableResponse: {
+          statuses: [0, 200],
+        },
+      },
+    },
+    // Cache para chunks JS com hash
+    {
+      urlPattern: /\/assets\/.*\.js$/i,
+      handler: "CacheFirst",
+      options: {
+        cacheName: "js-cache",
+        expiration: {
+          maxEntries: 100,
+          maxAgeSeconds: 60 * 60 * 24 * 365, // 1 ano
+        },
+        cacheableResponse: {
+          statuses: [0, 200],
+        },
+      },
+    },
+    // Cache para CSS
+    {
+      urlPattern: /\/assets\/.*\.css$/i,
+      handler: "CacheFirst",
+      options: {
+        cacheName: "css-cache",
+        expiration: {
+          maxEntries: 20,
+          maxAgeSeconds: 60 * 60 * 24 * 365, // 1 ano
+        },
+        cacheableResponse: {
+          statuses: [0, 200],
+        },
+      },
+    },
+    // Manter cache de Google Fonts existente
+    {
+      urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
+      handler: "CacheFirst",
+      options: { ... }
+    },
+    {
+      urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
+      handler: "CacheFirst",
+      options: { ... }
+    },
+  ],
+}
+```
+
+### Fase 3: Restaurar Imagem Hero
+
+Agora que o cache estara configurado, restaurar a imagem hero com `srcSet` responsivo:
+
 ```tsx
+// src/components/Hero.tsx
 <img
-  src={heroImage}
+  src="/hero-donation.webp"
   srcSet="/hero-donation-mobile.webp 640w, /hero-donation-tablet.webp 1024w, /hero-donation.webp 1920w"
   sizes="100vw"
   alt="Comunidade unida"
@@ -49,173 +165,54 @@ Usar o atributo `srcSet` para servir imagens de tamanhos diferentes:
 />
 ```
 
-**Criar versoes otimizadas:**
-- `hero-donation-mobile.webp` - 640px de largura, ~50-80KB
-- `hero-donation-tablet.webp` - 1024px de largura, ~100-150KB  
-- `hero-donation.webp` - 1920px (manter atual ou comprimir)
-
-**index.html - Preload responsivo:**
-```html
-<link rel="preload" as="image" type="image/webp" href="/hero-donation-mobile.webp" media="(max-width: 640px)" fetchpriority="high" />
-<link rel="preload" as="image" type="image/webp" href="/hero-donation-tablet.webp" media="(min-width: 641px) and (max-width: 1024px)" fetchpriority="high" />
-<link rel="preload" as="image" type="image/webp" href="/hero-donation.webp" media="(min-width: 1025px)" fetchpriority="high" />
-```
-
-### Fase 2: Lazy Loading para Imagens Abaixo da Dobra
-
-**GroupsSection.tsx - Adicionar loading lazy:**
-```tsx
-<img 
-  src={group.image_url || placeholderImages[index % placeholderImages.length]} 
-  alt={group.name} 
-  loading="lazy"
-  decoding="async"
-  className="w-full h-full object-cover ..." 
-/>
-```
-
-**PartnersSection.tsx - Adicionar loading lazy em logos:**
-```tsx
-<img
-  src={partnerLogo}
-  alt={partner.name}
-  loading="lazy"
-  decoding="async"
-  className="..."
-/>
-```
-
-### Fase 3: Otimizar Carrosséis e Autoplay
-
-**Problema:** O plugin `embla-carousel-autoplay` e importado em varios componentes e inicia imediatamente.
-
-**Solucao:** Lazy load do plugin apenas quando visivel:
-
-```tsx
-// Antes
-import Autoplay from "embla-carousel-autoplay";
-const autoplayPlugin = useRef(Autoplay({ delay: 3000 }));
-
-// Depois - carrega apenas quando necessario
-const [autoplayPlugin, setAutoplayPlugin] = useState<any>(null);
-
-useEffect(() => {
-  // Importar dinamicamente apenas quando componente monta
-  import("embla-carousel-autoplay").then((module) => {
-    setAutoplayPlugin(module.default({ delay: 3000 }));
-  });
-}, []);
-```
-
-### Fase 4: Reduzir CSS Critico
-
-**index.html - Inline CSS critico:**
-```html
-<style>
-  /* CSS critico inline para primeiro render */
-  body { margin: 0; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
-  #root { min-height: 100vh; }
-  .hero-skeleton { background: linear-gradient(135deg, #1a7d3c 0%, #2e9e57 100%); min-height: 100vh; }
-</style>
-```
-
-### Fase 5: Defer Third-Party Scripts
-
-**Garantir que scripts de terceiros nao bloqueiam:**
-- Google Fonts ja usa preload com onload
-- Verificar se nao ha scripts bloqueantes
-
 ---
 
-## Arquivos a Modificar
+## Arquivos a Criar/Modificar
 
-### Prioridade Alta (Fase 1-2):
-1. `src/components/Hero.tsx` - Adicionar srcSet responsivo
-2. `index.html` - Preload condicional por media query
-3. `src/components/GroupsSection.tsx` - loading="lazy" nas imagens
-4. `src/components/PartnersSection.tsx` - loading="lazy" nas imagens
+### Criar:
+1. `public/_headers` - Regras de cache HTTP
 
-### Prioridade Media (Fase 3):
-5. `src/components/HeroPremiumLogos.tsx` - Lazy load do Autoplay
-6. `src/components/GoldPartnersCarousel.tsx` - Lazy load do Autoplay
-7. `src/components/PremiumLogosCarousel.tsx` - Lazy load do Autoplay
-
-### Prioridade Baixa (Fase 4):
-8. `index.html` - CSS critico inline
-
----
-
-## Imagens a Criar (Manual)
-
-O usuario precisara criar versoes otimizadas da imagem hero:
-
-| Arquivo | Largura | Tamanho Alvo | Uso |
-|---------|---------|--------------|-----|
-| `hero-donation-mobile.webp` | 640px | 50-80 KB | Smartphones |
-| `hero-donation-tablet.webp` | 1024px | 100-150 KB | Tablets |
-| `hero-donation.webp` | 1920px | 200-300 KB | Desktop |
-
-**Ferramentas recomendadas:**
-- [Squoosh.app](https://squoosh.app/) - Compressao WebP online
-- [TinyPNG](https://tinypng.com/) - Compressao automatica
+### Modificar:
+2. `vite.config.ts` - Expandir PWA config
+3. `src/components/Hero.tsx` - Restaurar imagem
 
 ---
 
 ## Impacto Esperado
 
-| Metrica | Atual Mobile | Esperado | Melhoria |
-|---------|--------------|----------|----------|
-| LCP | ~4-5s | ~2-3s | -50% |
-| FCP | ~2-3s | ~1.5-2s | -30% |
-| Performance Score | 64% | 75-85% | +11-21% |
-
-### Por que essas mudancas funcionam?
-
-1. **Imagens responsivas**: Mobile baixa imagem 5-10x menor
-2. **Lazy loading**: Imagens abaixo da dobra nao bloqueiam render inicial
-3. **Autoplay lazy**: Reduz JS executado no carregamento inicial
-4. **CSS inline**: Primeiro paint mais rapido
+| Metrica | Antes | Depois |
+|---------|-------|--------|
+| Cache TTL | None | 1 ano (assets) |
+| Visitas Repetidas | Re-download 1.9MB | Cache hit 95%+ |
+| FCP (repeat visit) | Lento | Instantaneo |
 
 ---
 
 ## Secao Tecnica
 
-### Como srcSet funciona?
+### Por que Cache-Control e importante?
 
-O atributo `srcSet` permite ao browser escolher a imagem mais apropriada:
+O header `Cache-Control` diz ao browser por quanto tempo manter um arquivo em cache:
 
-```html
-<img 
-  src="/hero-desktop.webp"
-  srcSet="/hero-mobile.webp 640w, /hero-tablet.webp 1024w, /hero-desktop.webp 1920w"
-  sizes="100vw"
-/>
+```text
+Cache-Control: public, max-age=31536000, immutable
 ```
 
-- `640w` = imagem de 640px de largura
-- `sizes="100vw"` = imagem ocupa 100% da viewport
-- Browser calcula: `device width * DPR` e escolhe a menor imagem suficiente
+- `public`: Pode ser cacheado por proxies/CDNs
+- `max-age=31536000`: Valido por 1 ano (em segundos)
+- `immutable`: Nunca revalidar - o arquivo nao vai mudar
 
-### loading="lazy" vs fetchPriority="high"
+### Por que arquivos com hash podem ser imutaveis?
 
-- `loading="lazy"`: Adia carregamento ate proximo da viewport
-- `fetchPriority="high"`: Prioriza download imediato (so para LCP)
+O Vite gera arquivos como `index-C-ik6uaT.js`. O hash `C-ik6uaT` e derivado do conteudo. Se o codigo mudar, o hash muda e o browser busca o novo arquivo. Por isso e seguro cachear por 1 ano.
 
-**Regra:**
-- Hero image: `fetchPriority="high"` (e LCP)
-- Tudo abaixo da dobra: `loading="lazy"`
+### Service Worker como fallback
 
-### Por que mobile e mais lento?
+Se a hospedagem nao suportar o arquivo `_headers`, o Service Worker do PWA funcionara como cache secundario. Quando o usuario visitar pela primeira vez, o SW cacheara todos os assets. Nas visitas seguintes, servira do cache local.
 
-1. **Conexao**: 3G/4G mais lenta que cabo/WiFi
-2. **CPU**: Dispositivos moveis tem menos poder de processamento
-3. **Memoria**: Menos RAM disponivel para parsing de JS
-4. **DPR**: Retina displays precisam de imagens maiores
+### Limitacoes
 
----
+- **Primeiro load**: O usuario ainda precisa baixar 1.9MB na primeira visita
+- **Suporte _headers**: Depende da hospedagem do Lovable suportar este formato
+- **Service Worker**: So funciona apos registro (3s apos load inicial)
 
-## Limitacoes
-
-- **Criacao das imagens**: O usuario precisara criar as versoes otimizadas manualmente
-- **Cache CDN**: A configuracao de cache esta no servidor, nao no codigo
-- **Conexao 3G**: Mesmo com otimizacoes, conexoes muito lentas terao impacto
