@@ -1,7 +1,7 @@
 import { Heart, Settings, Instagram, Facebook, ChevronDown } from "lucide-react";
 import { Link } from "react-router-dom";
 import { lazy, Suspense, useState, useEffect } from "react";
-import logo from "@/assets/logo.jpg";
+const logo = "/logo.jpg";
 
 // TikTok icon component (not available in Lucide)
 const TikTokIcon = ({ className }: { className?: string }) => (

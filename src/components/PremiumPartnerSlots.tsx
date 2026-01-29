@@ -1,5 +1,5 @@
 import { Star, Phone } from "lucide-react";
-import naturuaiLogo from "@/assets/naturuai-logo.jpg";
+const naturuaiLogo = "/naturuai-logo.jpg";
 
 interface PremiumSlot {
   id: number;

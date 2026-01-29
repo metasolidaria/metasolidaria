@@ -1,4 +1,3 @@
-import { motion } from "framer-motion";
 import { UserPlus, Check, X, Clock, Loader2 } from "lucide-react";
 import { Button } from "./ui/button";
 import { useJoinRequests } from "@/hooks/useJoinRequests";
@@ -25,10 +24,8 @@ export const JoinRequestsPanel = ({ groupId }: JoinRequestsPanelProps) => {
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="bg-card rounded-2xl p-6 shadow-soft border-2 border-primary/20"
+    <div
+      className="bg-card rounded-2xl p-6 shadow-soft border-2 border-primary/20 animate-in fade-in slide-in-from-bottom-4 duration-300"
     >
       <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
         <UserPlus className="w-5 h-5 text-primary" />
@@ -93,6 +90,6 @@ export const JoinRequestsPanel = ({ groupId }: JoinRequestsPanelProps) => {
           </div>
         ))}
       </div>
-    </motion.div>
+    </div>
   );
 };

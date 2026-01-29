@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Menu, X, User, LogOut, Settings } from "lucide-react";
 import { Button } from "./ui/button";
 import { useAuth } from "@/hooks/useAuth";
-import logo from "@/assets/logo.jpg";
+const logo = "/logo.jpg";
 
 interface HeaderProps {
   onAuthClick: () => void;
