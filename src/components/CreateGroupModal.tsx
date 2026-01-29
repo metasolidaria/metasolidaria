@@ -309,6 +309,9 @@ export const CreateGroupModal = ({ open, onOpenChange, onRequireAuth }: CreateGr
                     required
                   />
                 </div>
+                <p className="text-xs text-muted-foreground">
+                  Ao cadastrar o grupo, você aceita receber informações e atualizações via WhatsApp
+                </p>
               </div>
 
               <div className="space-y-2">
