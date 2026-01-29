@@ -2,7 +2,7 @@ import { useState, Suspense, lazy } from "react";
 import { ArrowDown, Heart, Users } from "lucide-react";
 import { Button } from "./ui/button";
 import { Skeleton } from "./ui/skeleton";
-import heroImage from "@/assets/hero-donation.jpg";
+import heroImage from "@/assets/hero-donation.webp";
 import { useAuth } from "@/hooks/useAuth";
 import { AuthModal } from "./AuthModal";
 import { CreateGroupModal } from "./CreateGroupModal";
