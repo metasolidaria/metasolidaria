@@ -19,7 +19,18 @@ export default defineConfig(({ mode }) => ({
     VitePWA({
       registerType: "autoUpdate",
       injectRegister: null, // Don't inject register script - we'll do it manually after page load
-      includeAssets: ["favicon.jpg", "robots.txt"],
+      includeAssets: [
+        "favicon.jpg",
+        "robots.txt",
+        "logo.jpg",
+        "naturuai-logo.jpg",
+        "hero-donation.webp",
+        "hero-donation-mobile.webp",
+        "hero-donation-tablet.webp",
+        "og-image.png",
+        "icon-192x192.png",
+        "icon-512x512.png",
+      ],
       manifest: {
         name: "Meta Solidária",
         short_name: "Meta Solidária",
@@ -53,11 +64,57 @@ export default defineConfig(({ mode }) => ({
         ],
       },
       workbox: {
-        globPatterns: ["**/*.{js,css,html,ico,png,jpg,svg,woff,woff2}"],
+        globPatterns: ["**/*.{js,css,html,ico,png,jpg,webp,svg,woff,woff2}"],
         // Force immediate activation of new service worker
         skipWaiting: true,
         clientsClaim: true,
         runtimeCaching: [
+          // Cache local para imagens estaticas
+          {
+            urlPattern: /\.(webp|jpg|jpeg|png|svg)$/i,
+            handler: "CacheFirst",
+            options: {
+              cacheName: "static-images-cache",
+              expiration: {
+                maxEntries: 50,
+                maxAgeSeconds: 60 * 60 * 24 * 365, // 1 ano
+              },
+              cacheableResponse: {
+                statuses: [0, 200],
+              },
+            },
+          },
+          // Cache para chunks JS com hash
+          {
+            urlPattern: /\/assets\/.*\.js$/i,
+            handler: "CacheFirst",
+            options: {
+              cacheName: "js-cache",
+              expiration: {
+                maxEntries: 100,
+                maxAgeSeconds: 60 * 60 * 24 * 365, // 1 ano
+              },
+              cacheableResponse: {
+                statuses: [0, 200],
+              },
+            },
+          },
+          // Cache para CSS
+          {
+            urlPattern: /\/assets\/.*\.css$/i,
+            handler: "CacheFirst",
+            options: {
+              cacheName: "css-cache",
+              expiration: {
+                maxEntries: 20,
+                maxAgeSeconds: 60 * 60 * 24 * 365, // 1 ano
+              },
+              cacheableResponse: {
+                statuses: [0, 200],
+              },
+            },
+          },
+          // Cache de Google Fonts
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
             handler: "CacheFirst",

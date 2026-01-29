@@ -1,0 +1,28 @@
+# Cache imutavel para assets com hash (1 ano)
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Cache longo para imagens estaticas (1 ano)
+/*.webp
+  Cache-Control: public, max-age=31536000, immutable
+
+/*.jpg
+  Cache-Control: public, max-age=31536000, immutable
+
+/*.png
+  Cache-Control: public, max-age=31536000, immutable
+
+# Cache medio para favicon e icons (1 semana)
+/favicon.*
+  Cache-Control: public, max-age=604800
+
+/icon-*.png
+  Cache-Control: public, max-age=604800
+
+# Sem cache para service worker (sempre atualizado)
+/sw.js
+  Cache-Control: no-cache, no-store, must-revalidate
+
+# Sem cache para manifest (pode mudar)
+/manifest.webmanifest
+  Cache-Control: no-cache
