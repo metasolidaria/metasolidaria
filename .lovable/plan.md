@@ -1,93 +1,56 @@
 
 
-# Script de Seed para Dados de Exemplo
+# Plano: Popular Tabela de Progresso para o Doadômetro
 
-## Resumo
-Criar um script SQL de seed que popula o banco de dados com dados de exemplo realistas para a plataforma Meta Solidária, incluindo entidades, grupos, membros, parceiros e registros de progresso.
+## Diagnóstico
+O doadômetro (ImpactCounter) está zerado porque a view `impact_stats_public` consulta a tabela `goal_progress`, que está **vazia**. 
 
----
+A distinção é:
+- **`member_commitments`**: Metas e compromissos planejados (já populados com 1.540 unidades)
+- **`goal_progress`**: Doações efetivamente registradas (está vazia)
 
-## Dados a Serem Criados
+O doadômetro exibe o **impacto real** (doações feitas), não as metas futuras.
 
-### 1. Entidades (5 registros)
-Organizações beneficiárias que receberão as doações:
-- Lar dos Idosos Esperança - São Paulo
-- Casa da Criança Feliz - Campinas
-- Centro Comunitário União - Ribeirão Preto
-- Abrigo Vida Nova - Santos
-- ONG Mãos que Ajudam - Sorocaba
-
-### 2. Parceiros (10 registros)
-Empresas e profissionais que apoiam a causa:
-- Supermercado Bom Preço (tier: gold)
-- Farmácia Saúde Total (tier: gold)
-- Academia Corpo em Forma (tier: silver)
-- Restaurante Sabor da Terra (tier: silver)
-- Pet Shop Amigo Fiel (tier: bronze)
-- Padaria Pão Quente
-- Loja de Roupas Elegância
-- Clínica Dr. Carlos
-- Hamburgueria Artesanal
-- Loja de Móveis Casa Nova
-
-### 3. Grupos (5 registros)
-Grupos solidários com diferentes tipos de doação:
-- Amigos do Bem (alimentos) - São Paulo
-- Leitores Solidários (livros) - Campinas
-- Aquecendo Corações (cobertores) - Ribeirão Preto
-- Moda Solidária (roupas) - Santos
-- Brinquedos da Alegria (brinquedos) - Sorocaba
-
-### 4. Membros por Grupo (20 registros total)
-4 membros por grupo com metas pessoais e compromissos
-
-### 5. Progresso de Metas (30 registros)
-Registros de doações realizadas pelos membros
-
----
-
-## Detalhes Técnicos
-
-### Dependências e Ordem de Inserção
-```text
-1. entities (sem dependências)
-2. partners (sem dependências)  
-3. groups (requer entities para entity_id)
-4. group_members (requer groups)
-5. goal_progress (requer groups e group_members)
-```
-
-### Tratamento de Foreign Keys
-- `groups.entity_id` → referencia `entities.id`
-- `groups.leader_id` → será um UUID fixo de demonstração (não vinculado a usuário real)
-- `group_members.group_id` → referencia `groups.id`
-- `goal_progress.group_id` e `goal_progress.member_id` → referências corretas
-
-### Valores Configurados
-- Parceiros: diferentes tiers (gold, silver, bronze, null)
-- Grupos: diferentes tipos de doação (alimentos, livros, cobertores, roupas, brinquedos)
-- Membros: metas pessoais de 50 a 200 unidades
-- Progresso: valores de 5 a 50 unidades por registro
-
----
+## Solução
+Inserir registros de progresso de doações na tabela `goal_progress` para simular doações já realizadas pelos membros.
 
 ## Implementação
 
-Será criada uma migração SQL que:
+### Passo 1: Inserir registros de progresso
+Criar entradas de doações em `goal_progress` vinculadas aos membros existentes, distribuindo quantidades realistas por categoria:
 
-1. **Insere entidades** com cidades do interior paulista
-2. **Insere parceiros** com especialidades variadas da lista definida
-3. **Insere grupos** vinculados às entidades, com datas de término em 2026
-4. **Insere membros** para cada grupo com metas diversificadas
-5. **Insere registros de progresso** simulando doações ao longo do tempo
+| Categoria    | Quantidade | Membros envolvidos |
+|--------------|------------|-------------------|
+| Alimentos    | ~400 kg    | 4 membros         |
+| Livros       | ~150 un    | 4 membros         |
+| Cobertores   | ~100 un    | 4 membros         |
+| Roupas       | ~200 peças | 4 membros         |
+| Brinquedos   | ~80 un     | 4 membros         |
 
-### Resultado Esperado
-Após executar o seed:
-- ~5 entidades beneficiárias
-- ~10 parceiros aprovados (2 gold, 2 silver, 1 bronze, 5 sem tier)
-- ~5 grupos ativos com diferentes tipos de doação
-- ~20 membros distribuídos nos grupos
-- ~30 registros de progresso/doações
+**Total esperado**: ~930 doações registradas
 
-Os contadores do Hero (total_groups, total_users, total_goals) serão atualizados automaticamente pelas views existentes.
+### Detalhes Técnicos
+
+A tabela `goal_progress` tem a seguinte estrutura:
+- `group_id`: UUID do grupo (já temos 5 grupos)
+- `member_id`: UUID do membro (já temos 20 membros)
+- `user_id`: UUID do usuário (usaremos o líder admin: `094b97b9-3b1b-4b0e-9e5f-d42b1953c704`)
+- `amount`: Quantidade doada
+- `description`: Descrição opcional
+
+### SQL de Seed
+
+```sql
+INSERT INTO goal_progress (group_id, member_id, user_id, amount, description) VALUES
+-- Grupo Alimentos (11111111...)
+('11111111-1111-1111-1111-111111111111', 'b1111111-1111-1111-1111-111111111111', '094b97b9...', 120, 'Campanha de arrecadação'),
+('11111111-1111-1111-1111-111111111111', 'b1111111-1111-1111-1111-111111111112', '094b97b9...', 80, 'Doação da feira'),
+-- ... mais registros para cada categoria
+```
+
+## Resultado Esperado
+Após a execução:
+- O doadômetro exibirá ~930 doações totais
+- Cada categoria (alimentos, livros, etc.) mostrará seus respectivos totais
+- A animação de contagem funcionará normalmente
 
