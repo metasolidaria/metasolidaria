@@ -15,7 +15,7 @@ const useAllPremiumPartners = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("partners_public")
-        .select("*")
+        .select("id, name, logo_url, specialty, instagram")
         .eq("is_approved", true)
         .eq("tier", "premium")
         .order("name", { ascending: true });
@@ -59,11 +59,11 @@ export const PremiumLogosCarousel = () => {
     return logoImage;
   };
 
-  const handleWhatsAppClick = (partner: { name: string; whatsapp?: string | null }) => {
-    if (!partner.whatsapp) return;
-    const cleanNumber = partner.whatsapp.replace(/\D/g, "");
-    const message = encodeURIComponent(`Olá ${partner.name}! Encontrei seu contato no Meta Solidária.`);
-    window.open(`https://wa.me/55${cleanNumber}?text=${message}`, "_blank");
+  const handleInstagramClick = (partner: { instagram?: string | null }) => {
+    if (!partner.instagram) return;
+    // Clean Instagram handle (remove @ if present)
+    const handle = partner.instagram.replace(/^@/, "").trim();
+    window.open(`https://instagram.com/${handle}`, "_blank");
   };
 
   return (
@@ -86,8 +86,8 @@ export const PremiumLogosCarousel = () => {
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Avatar 
-                      className="w-16 h-16 sm:w-12 sm:h-12 rounded-lg border-2 border-primary/50 bg-white cursor-pointer hover:border-primary transition-colors shadow-sm hover:shadow-md"
-                      onClick={() => handleWhatsAppClick(partner)}
+                      className={`w-16 h-16 sm:w-12 sm:h-12 rounded-lg border-2 border-primary/50 bg-white transition-colors shadow-sm hover:shadow-md ${partner.instagram ? "cursor-pointer hover:border-primary" : ""}`}
+                      onClick={() => handleInstagramClick(partner)}
                     >
                       <AvatarImage 
                         src={getPartnerLogo(partner)}
