@@ -4,13 +4,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { MapPin, Star, ExternalLink, ArrowRight, Crown } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import Autoplay from "embla-carousel-autoplay";
 import { useRef } from "react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import logoImage from "@/assets/logo.jpg";
-import naturuaiLogo from "@/assets/naturuai-logo.jpg";
+
+// Use static paths from public folder for better caching
+const logoImage = "/logo.jpg";
+const naturuaiLogo = "/naturuai-logo.jpg";
 
 interface GoldPartnersCarouselProps {
   groupCity: string;
@@ -60,11 +61,8 @@ export const GoldPartnersCarousel = ({ groupCity, groupId, groupName }: GoldPart
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.2 }}
-      className="bg-gradient-to-r from-amber-500/10 via-purple-500/5 to-amber-600/10 rounded-2xl p-6 shadow-soft border border-amber-500/20"
+    <div
+      className="animate-in fade-in slide-in-from-bottom-4 duration-300 bg-gradient-to-r from-amber-500/10 via-purple-500/5 to-amber-600/10 rounded-2xl p-6 shadow-soft border border-amber-500/20"
     >
       <div className="flex items-center gap-2 mb-4">
         <div className="flex items-center gap-1">
@@ -184,6 +182,6 @@ export const GoldPartnersCarousel = ({ groupCity, groupId, groupName }: GoldPart
           <ArrowRight className="w-3 h-3" />
         </Link>
       </div>
-    </motion.div>
+    </div>
   );
 };

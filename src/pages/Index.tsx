@@ -3,8 +3,10 @@ import { useSearchParams } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { Hero } from "@/components/Hero";
 import { Footer } from "@/components/Footer";
-import { AuthModal } from "@/components/AuthModal";
 import { useInviteLink } from "@/hooks/useInviteLink";
+
+// Lazy load AuthModal to reduce initial bundle size
+const AuthModal = lazy(() => import("@/components/AuthModal").then(m => ({ default: m.AuthModal })));
 
 // Lazy load below-the-fold sections to improve FCP and LCP
 const HowItWorksModal = lazy(() => import("@/components/HowItWorksModal").then(m => ({ default: m.HowItWorksModal })));
@@ -123,7 +125,9 @@ const Index = () => {
         </Suspense>
       </main>
       <Footer />
-      <AuthModal open={isAuthModalOpen} onOpenChange={setIsAuthModalOpen} />
+      <Suspense fallback={null}>
+        <AuthModal open={isAuthModalOpen} onOpenChange={setIsAuthModalOpen} />
+      </Suspense>
     </div>
   );
 };

@@ -1,4 +1,3 @@
-import { motion } from "framer-motion";
 import { Users, Scale, Apple, Heart } from "lucide-react";
 
 const steps = [
@@ -32,13 +31,7 @@ export const HowItWorks = () => {
   return (
     <section className="py-24 bg-muted">
       <div className="container mx-auto px-4">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-          className="text-center mb-16"
-        >
+        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
             Como Funciona
           </h2>
@@ -46,17 +39,14 @@ export const HowItWorks = () => {
             Um processo simples para transformar suas metas pessoais em impacto
             coletivo
           </p>
-        </motion.div>
+        </div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
           {steps.map((step, index) => (
-            <motion.div
+            <div
               key={step.title}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: index * 0.1 }}
-              className="relative"
+              className="animate-in fade-in slide-in-from-bottom-4 duration-500 relative"
+              style={{ animationDelay: `${index * 100}ms` }}
             >
               {/* Connector Line */}
               {index < steps.length - 1 && (
@@ -79,7 +69,7 @@ export const HowItWorks = () => {
                   {step.description}
                 </p>
               </div>
-            </motion.div>
+            </div>
           ))}
         </div>
       </div>
