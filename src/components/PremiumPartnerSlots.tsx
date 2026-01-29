@@ -1,4 +1,3 @@
-import { motion } from "framer-motion";
 import { Star, Phone } from "lucide-react";
 import naturuaiLogo from "@/assets/naturuai-logo.jpg";
 
@@ -27,13 +26,10 @@ export const PremiumPartnerSlots = () => {
       
       <div className="flex justify-center">
         {premiumSlots.map((slot, index) => (
-          <motion.div
+          <div
             key={slot.id}
-            initial={{ opacity: 0, scale: 0.9 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.3, delay: index * 0.1 }}
-            className="relative rounded-xl p-4 bg-primary-foreground/15 min-w-[180px]"
+            className="relative rounded-xl p-4 bg-primary-foreground/15 min-w-[180px] animate-in fade-in zoom-in-95 duration-300"
+            style={{ animationDelay: `${index * 100}ms` }}
           >
             <div className="flex flex-col items-center text-center gap-2">
               <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-yellow-400/50 bg-white flex items-center justify-center">
@@ -58,7 +54,7 @@ export const PremiumPartnerSlots = () => {
                 </a>
               )}
             </div>
-          </motion.div>
+          </div>
         ))}
       </div>
       

@@ -1,5 +1,4 @@
-import { motion } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Heart, Apple, BookOpen, Shirt, BedDouble, Soup, Gift, Package } from "lucide-react";
 import { useImpactStats, DonationsByType } from "@/hooks/useImpactStats";
 import { PremiumPartnerSlots } from "./PremiumPartnerSlots";
@@ -60,8 +59,34 @@ const donationTypeConfig = [
   { key: "brinquedos" as keyof DonationsByType, label: "Brinquedos", icon: Gift, unit: "un" },
 ];
 
-export const ImpactCounter = () => {
+// Hook for intersection observer
+const useInView = () => {
   const [isInView, setIsInView] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsInView(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (ref.current) {
+      observer.observe(ref.current);
+    }
+
+    return () => observer.disconnect();
+  }, []);
+
+  return { ref, isInView };
+};
+
+export const ImpactCounter = () => {
+  const { ref, isInView } = useInView();
   const { data: impactData, isLoading } = useImpactStats();
 
   return (
@@ -76,15 +101,10 @@ export const ImpactCounter = () => {
         {/* Main Layout: Vertical Stack */}
         <div className="flex flex-col items-center">
           {/* Doadômetro Section */}
-          <div className="w-full max-w-5xl">
+          <div className="w-full max-w-5xl" ref={ref}>
             {/* Header */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6 }}
-              onViewportEnter={() => setIsInView(true)}
-              className="text-center mb-8"
+            <div
+              className={`text-center mb-8 ${isInView ? 'animate-in fade-in slide-in-from-bottom-4 duration-500' : 'opacity-0'}`}
             >
               <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary-foreground/20 mb-4">
                 <Heart className="w-8 h-8 text-primary-foreground" />
@@ -95,15 +115,12 @@ export const ImpactCounter = () => {
               <p className="text-primary-foreground/80 text-lg max-w-2xl mx-auto">
                 Impacto social gerado até o momento
               </p>
-            </motion.div>
+            </div>
 
             {/* Central Counter */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-              className="text-center mb-12"
+            <div
+              className={`text-center mb-12 ${isInView ? 'animate-in fade-in zoom-in-95 duration-500' : 'opacity-0'}`}
+              style={{ animationDelay: '200ms' }}
             >
               <div className="text-6xl md:text-8xl font-bold text-primary-foreground mb-2">
                 {isLoading ? (
@@ -115,18 +132,15 @@ export const ImpactCounter = () => {
               <p className="text-primary-foreground/70 text-xl">
                 doações realizadas
               </p>
-            </motion.div>
+            </div>
 
             {/* Breakdown by Type */}
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-4">
               {donationTypeConfig.map((type, index) => (
-                <motion.div
+                <div
                   key={type.key}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.4, delay: 0.3 + index * 0.05 }}
-                  className="bg-primary-foreground/10 backdrop-blur-sm rounded-xl p-4 text-center border border-primary-foreground/20"
+                  className={`bg-primary-foreground/10 backdrop-blur-sm rounded-xl p-4 text-center border border-primary-foreground/20 ${isInView ? 'animate-in fade-in slide-in-from-bottom-4 duration-400' : 'opacity-0'}`}
+                  style={{ animationDelay: `${300 + index * 50}ms` }}
                 >
                   <type.icon className="w-6 h-6 text-primary-foreground mx-auto mb-2" />
                   <div className="text-2xl md:text-3xl font-bold text-primary-foreground mb-1">
@@ -142,21 +156,18 @@ export const ImpactCounter = () => {
                   <div className="text-xs text-primary-foreground/60">
                     {type.label}
                   </div>
-                </motion.div>
+                </div>
               ))}
             </div>
           </div>
 
           {/* Premium Partners Section - Centered below */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: 0.4 }}
-            className="mt-12"
+          <div
+            className={`mt-12 ${isInView ? 'animate-in fade-in slide-in-from-bottom-4 duration-500' : 'opacity-0'}`}
+            style={{ animationDelay: '400ms' }}
           >
             <PremiumPartnerSlots />
-          </motion.div>
+          </div>
         </div>
       </div>
     </section>
