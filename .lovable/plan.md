@@ -1,46 +1,93 @@
 
 
-# Plano de Otimizacao: Paginacao Server-Side
+# Script de Seed para Dados de Exemplo
 
-## Status: ✅ IMPLEMENTADO
-
-A paginação server-side foi implementada para Grupos e Parceiros.
-
----
-
-## O que foi feito
-
-### Hooks criados:
-- `src/hooks/usePaginatedGroups.tsx` - Paginação server-side com `.range()`
-- `src/hooks/usePaginatedPartners.tsx` - Paginação server-side com `.range()`
-
-### Componentes atualizados:
-- `src/components/GroupsSection.tsx` - Usa `usePaginatedGroups`
-- `src/components/PartnersSection.tsx` - Usa `usePaginatedPartners`
-
-### Impacto:
-
-| Recurso | Antes | Depois | Economia |
-|---------|-------|--------|----------|
-| Grupos | 555 itens (~63KB) | 10 itens (~3KB) | -95% |
-| Parceiros | 1.178 itens (~76KB) | 10 itens (~4KB) | -95% |
+## Resumo
+Criar um script SQL de seed que popula o banco de dados com dados de exemplo realistas para a plataforma Meta Solidária, incluindo entidades, grupos, membros, parceiros e registros de progresso.
 
 ---
 
-## Observações Técnicas
+## Dados a Serem Criados
 
-### Parceiros com Proximidade
-O filtro de proximidade ainda usa dados client-side porque precisa calcular distâncias com lat/lng. Quando o usuário ativa "Buscar próximos a mim", o hook `useAllPartnersForProximity` carrega apenas parceiros com coordenadas para o cálculo.
+### 1. Entidades (5 registros)
+Organizações beneficiárias que receberão as doações:
+- Lar dos Idosos Esperança - São Paulo
+- Casa da Criança Feliz - Campinas
+- Centro Comunitário União - Ribeirão Preto
+- Abrigo Vida Nova - Santos
+- ONG Mãos que Ajudam - Sorocaba
 
-### Hooks antigos mantidos
-Os hooks originais (`useGroups`, `usePartners`) foram mantidos porque são usados em outros lugares do app (admin panels, etc).
+### 2. Parceiros (10 registros)
+Empresas e profissionais que apoiam a causa:
+- Supermercado Bom Preço (tier: gold)
+- Farmácia Saúde Total (tier: gold)
+- Academia Corpo em Forma (tier: silver)
+- Restaurante Sabor da Terra (tier: silver)
+- Pet Shop Amigo Fiel (tier: bronze)
+- Padaria Pão Quente
+- Loja de Roupas Elegância
+- Clínica Dr. Carlos
+- Hamburgueria Artesanal
+- Loja de Móveis Casa Nova
+
+### 3. Grupos (5 registros)
+Grupos solidários com diferentes tipos de doação:
+- Amigos do Bem (alimentos) - São Paulo
+- Leitores Solidários (livros) - Campinas
+- Aquecendo Corações (cobertores) - Ribeirão Preto
+- Moda Solidária (roupas) - Santos
+- Brinquedos da Alegria (brinquedos) - Sorocaba
+
+### 4. Membros por Grupo (20 registros total)
+4 membros por grupo com metas pessoais e compromissos
+
+### 5. Progresso de Metas (30 registros)
+Registros de doações realizadas pelos membros
 
 ---
 
-## Próximos Passos
+## Detalhes Técnicos
 
-1. ✅ ~~Paginação server-side para Grupos~~
-2. ✅ ~~Paginação server-side para Parceiros~~
-3. ⏳ Otimizar AnimatedCounter (reduzir frequência)
-4. ⏳ Lazy load da API IBGE (5570 municípios)
-5. ⏳ Eliminar chamadas duplicadas de API
+### Dependências e Ordem de Inserção
+```text
+1. entities (sem dependências)
+2. partners (sem dependências)  
+3. groups (requer entities para entity_id)
+4. group_members (requer groups)
+5. goal_progress (requer groups e group_members)
+```
+
+### Tratamento de Foreign Keys
+- `groups.entity_id` → referencia `entities.id`
+- `groups.leader_id` → será um UUID fixo de demonstração (não vinculado a usuário real)
+- `group_members.group_id` → referencia `groups.id`
+- `goal_progress.group_id` e `goal_progress.member_id` → referências corretas
+
+### Valores Configurados
+- Parceiros: diferentes tiers (gold, silver, bronze, null)
+- Grupos: diferentes tipos de doação (alimentos, livros, cobertores, roupas, brinquedos)
+- Membros: metas pessoais de 50 a 200 unidades
+- Progresso: valores de 5 a 50 unidades por registro
+
+---
+
+## Implementação
+
+Será criada uma migração SQL que:
+
+1. **Insere entidades** com cidades do interior paulista
+2. **Insere parceiros** com especialidades variadas da lista definida
+3. **Insere grupos** vinculados às entidades, com datas de término em 2026
+4. **Insere membros** para cada grupo com metas diversificadas
+5. **Insere registros de progresso** simulando doações ao longo do tempo
+
+### Resultado Esperado
+Após executar o seed:
+- ~5 entidades beneficiárias
+- ~10 parceiros aprovados (2 gold, 2 silver, 1 bronze, 5 sem tier)
+- ~5 grupos ativos com diferentes tipos de doação
+- ~20 membros distribuídos nos grupos
+- ~30 registros de progresso/doações
+
+Os contadores do Hero (total_groups, total_users, total_goals) serão atualizados automaticamente pelas views existentes.
+
