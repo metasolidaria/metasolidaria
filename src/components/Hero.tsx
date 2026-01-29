@@ -2,8 +2,10 @@ import { useState, Suspense, lazy } from "react";
 import { ArrowDown, Heart, Users } from "lucide-react";
 import { Button } from "./ui/button";
 import { Skeleton } from "./ui/skeleton";
-import heroImage from "@/assets/hero-donation-optimized.webp";
 import { useAuth } from "@/hooks/useAuth";
+
+// Direct path to public folder - enables preload in index.html
+const heroImage = "/hero-donation.webp";
 
 // Lazy load non-critical components to improve FCP
 const HeroPremiumLogos = lazy(() => import("./HeroPremiumLogos").then(m => ({ default: m.HeroPremiumLogos })));

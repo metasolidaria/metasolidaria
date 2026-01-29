@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { motion } from "framer-motion";
 import { HelpCircle, Users, Scale, Apple, Heart } from "lucide-react";
 import {
   Dialog,
@@ -66,12 +65,10 @@ export const HowItWorksModal = () => {
 
           <div className="grid gap-4 mt-4">
             {steps.map((step, index) => (
-              <motion.div
+              <div
                 key={step.title}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.3, delay: index * 0.1 }}
-                className="flex items-start gap-4 p-4 bg-muted rounded-xl"
+                className="flex items-start gap-4 p-4 bg-muted rounded-xl animate-in fade-in slide-in-from-left-4 duration-300"
+                style={{ animationDelay: `${index * 100}ms` }}
               >
                 <div className="bg-gradient-stats w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0">
                   <step.icon className="w-6 h-6 text-primary-foreground" />
@@ -88,7 +85,7 @@ export const HowItWorksModal = () => {
                     {step.description}
                   </p>
                 </div>
-              </motion.div>
+              </div>
             ))}
           </div>
         </DialogContent>
