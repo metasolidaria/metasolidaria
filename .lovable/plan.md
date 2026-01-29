@@ -1,82 +1,113 @@
 
-# Plano: Corrigir Sobreposição no Header em Telas Tablet
+# Plano de Otimizacao de Performance Mobile - Meta 90%
 
-## Problema Identificado
+## Analise da Queda de Performance (74% -> 64%)
 
-Na visualização tablet (834px), o nome do usuário está sobrepondo os botões de navegação (Parceiros, Impacto). Isso ocorre porque:
+### Causas Identificadas
 
-1. O menu de navegação está centralizado com posição absoluta
-2. O nome de usuário pode ser muito longo (ex: "dbmetasolidaria")
-3. Não há limite de largura ou truncamento no nome do usuário
-4. Os elementos colidem quando o espaço horizontal é limitado
+1. **Font blocking via CSS @import (CRITICO)**
+   - O arquivo `src/index.css` linha 1 tem `@import url('https://fonts.googleapis.com/...')` que bloqueia a renderizacao
+   - Isso anula completamente a otimizacao feita no `index.html` com preload
 
-## Solução Proposta
+2. **Imagem hero-donation.jpg nao otimizada**
+   - Imagem JPG grande (~250KB) carregada como LCP element
+   - Deveria ser WebP e ter tamanhos responsivos
 
-### 1. Limitar a largura máxima do nome de usuário
+3. **framer-motion carregado no bundle inicial**
+   - Hero.tsx e Header.tsx usam `motion` diretamente
+   - Biblioteca pesada (~45KB gzipped) carregada antes do FCP
 
-Adicionar `max-w-[120px]` e `truncate` no botão do nome do usuário para que nomes longos sejam cortados com "..." e não invadam o menu central.
+4. **Footer importa useIsAdmin mesmo na homepage**
+   - Hook carrega logica de admin desnecessariamente
 
-### 2. Adicionar z-index ao menu de autenticação
+5. **InstallPWAPrompt movido para App.tsx**
+   - Na ultima alteracao, o componente foi removido do Index mas adicionado ao App.tsx
+   - Continua carregando no bundle principal
 
-Garantir que os botões de auth tenham `z-10` igual ao logo para manter hierarquia visual consistente.
+---
 
-### 3. Reduzir gap do menu de navegação em tablets
+## Plano de Implementacao
 
-Mudar o `gap-8` para `gap-4 lg:gap-8` para dar mais espaço em telas menores.
+### Fase 1: Remover @import blocking (Impacto Alto)
 
-## Alterações Técnicas
+**Arquivo:** `src/index.css`
 
-**Arquivo: `src/components/Header.tsx`**
+**Alteracao:** Remover a linha 1 com `@import` da fonte. A fonte ja esta sendo carregada de forma otimizada no `index.html` com preload/onload.
 
-```tsx
-// Antes (linha 62)
-<nav className="hidden md:flex items-center gap-8 absolute left-1/2 -translate-x-1/2">
-
-// Depois
-<nav className="hidden md:flex items-center gap-4 lg:gap-8 absolute left-1/2 -translate-x-1/2">
+```text
+Remover:
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 ```
 
-```tsx
-// Antes (linha 79)
-<div className="hidden md:flex items-center gap-3">
+### Fase 2: Lazy load framer-motion no Hero (Impacto Medio)
 
-// Depois
-<div className="hidden md:flex items-center gap-3 z-10">
-```
+**Arquivo:** `src/components/Hero.tsx`
 
-```tsx
-// Antes (linhas 82-90)
-<Button
-  variant="ghost"
-  size="sm"
-  onClick={() => navigate("/perfil")}
-  className={isScrolled ? "text-foreground" : "text-primary-foreground hover:text-primary-foreground/80"}
->
-  <Settings className="w-4 h-4 mr-1" />
-  {user.user_metadata?.full_name || user.email?.split("@")[0]}
-</Button>
+**Alteracao:** Substituir animacoes `motion.div` por CSS animations para elementos criticos (titulo, badge, botoes). Manter `motion` apenas para elementos abaixo da dobra (scroll indicator).
 
-// Depois
-<Button
-  variant="ghost"
-  size="sm"
-  onClick={() => navigate("/perfil")}
-  className={`max-w-[140px] ${isScrolled ? "text-foreground" : "text-primary-foreground hover:text-primary-foreground/80"}`}
->
-  <Settings className="w-4 h-4 mr-1 shrink-0" />
-  <span className="truncate">
-    {user.user_metadata?.full_name || user.email?.split("@")[0]}
-  </span>
-</Button>
-```
+A abordagem sera:
+- Usar CSS `@keyframes` para fade-in do conteudo principal
+- Remover `initial/animate` de `motion.div` nos elementos acima da dobra
+- Scroll indicator pode manter framer-motion (nao afeta FCP)
 
-## Resultado Esperado
+### Fase 3: Lazy load Header motion (Impacto Baixo-Medio)
 
-- Nome de usuário limitado a ~140px com truncamento (ex: "dbmetasoli...")
-- Menu de navegação com espaçamento menor em tablets (gap-4) e maior em desktop (gap-8)
-- Sem sobreposição entre elementos do header
-- Layout consistente em todas as dimensões de tela
+**Arquivo:** `src/components/Header.tsx`
 
-## Arquivo a Modificar
+**Alteracao:** Substituir `motion.header` por header normal com CSS transition. A animacao de entrada do header nao e critica para UX.
 
-- `src/components/Header.tsx`
+### Fase 4: Lazy load Footer useIsAdmin (Impacto Baixo)
+
+**Arquivo:** `src/components/Footer.tsx`
+
+**Alteracao:** Carregar o DropdownMenu e useIsAdmin de forma lazy, ja que o menu admin so aparece para admins.
+
+### Fase 5: Lazy load InstallPWAPrompt (Impacto Baixo)
+
+**Arquivo:** `src/App.tsx`
+
+**Alteracao:** O `InstallPWAPrompt` deve ser carregado com delay, nao no bundle inicial.
+
+---
+
+## Resumo de Arquivos a Modificar
+
+| Arquivo | Alteracao |
+|---------|-----------|
+| `src/index.css` | Remover @import da fonte |
+| `src/components/Hero.tsx` | Substituir motion.div criticos por CSS animations |
+| `src/components/Header.tsx` | Substituir motion.header por CSS transition |
+| `src/App.tsx` | Lazy load InstallPWAPrompt com delay |
+
+---
+
+## Impacto Esperado
+
+- **FCP**: Reducao de ~1-2s (remocao do @import blocking + menos JS)
+- **LCP**: Reducao de ~0.5-1s (menos JS blocking)
+- **Total Blocking Time**: Reducao significativa (menos framer-motion no bundle inicial)
+
+---
+
+## Secao Tecnica
+
+### Por que o @import causa blocking?
+
+O `@import` no CSS e render-blocking porque o navegador precisa:
+1. Baixar o CSS principal
+2. Parsear e encontrar o @import
+3. Fazer uma nova requisicao para a fonte
+4. Esperar a fonte carregar
+
+Com `<link rel="preload">` no HTML, o navegador ja inicia o download em paralelo.
+
+### Por que framer-motion afeta performance?
+
+A biblioteca adiciona ~45KB (gzipped) ao bundle. No mobile com conexao lenta, isso pode adicionar 500ms+ ao tempo de parse/execute do JavaScript, atrasando o FCP.
+
+### CSS Animations vs framer-motion
+
+Para animacoes simples (fade-in, slide-in), CSS nativo e:
+- 0KB de JavaScript adicional
+- Executado pela GPU
+- Nao bloqueia o thread principal
