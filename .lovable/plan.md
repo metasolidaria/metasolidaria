@@ -1,129 +1,136 @@
 
-# Plano de Recuperacao da Performance
 
-## Diagnostico da Queda de Performance
+# Plano de Otimizacao do LCP (11s para 2.5s)
 
-A queda de 66 para 63 (mobile) e 95 para 86 (desktop) foi causada por dois fatores principais:
+## Diagnostico Atual
 
-### Problema 1: Imagem hero-donation-optimized.webp Possivelmente Grande
+A performance subiu de 63% para 73% gracas a remocao do framer-motion dos componentes principais. Porem, o **LCP de 11 segundos** ainda e o maior problema.
 
-A imagem criada pode nao ter sido comprimida adequadamente. Precisa ser uma versao realmente otimizada com:
-- Resolucao maxima de 1920x1080
-- Compressao WebP de qualidade 75-80%
-- Tamanho alvo: menos de 150KB
+### Metricas Atuais
 
-### Problema 2: framer-motion em Componentes Criticos da Pagina Inicial
+| Metrica | Valor | Status |
+|---------|-------|--------|
+| FCP | 2.9s | Laranja |
+| LCP | 11.0s | Vermelho |
+| TBT | 10ms | Verde |
+| CLS | 0.083 | Verde |
+| Speed Index | 3.7s | Laranja |
 
-Os seguintes componentes ainda usam framer-motion e sao carregados na pagina inicial:
-
-| Componente | Status | Impacto |
-|------------|--------|---------|
-| ImpactCounter.tsx | USA framer-motion | Alto (acima da dobra) |
-| GroupsSection.tsx | USA framer-motion | Medio |
-| EntitiesSection.tsx | USA framer-motion | Medio |
-| PartnersSection.tsx | USA framer-motion | Medio |
-| PremiumPartnerSlots.tsx | USA framer-motion | Alto (dentro ImpactCounter) |
-
-Mesmo usando lazy loading para esses componentes, quando eles sao renderizados, o framer-motion (~45KB) e carregado, impactando o TTI.
+O LCP de 11s e causado pela combinacao de:
+1. Redirect do dominio customizado (780ms fixo - nao controlavel)
+2. Imagem hero nao ter preload no HTML
+3. Imagem hero possivelmente muito pesada
 
 ---
 
 ## Solucao Proposta
 
-### Fase 1: Converter ImpactCounter para CSS Animations
+### Fase 1: Adicionar Preload da Imagem Hero no HTML
 
-O ImpactCounter esta acima da dobra e usa framer-motion extensivamente. Substituir por animacoes CSS nativas:
+O problema principal e que o browser so descobre que precisa carregar a imagem hero quando o JavaScript executa e renderiza o componente Hero. Adicionar um preload no HTML faz o browser comecar a baixar a imagem imediatamente.
 
-**Arquivo:** `src/components/ImpactCounter.tsx`
+**Arquivo:** `index.html`
+
+Adicionar na secao `<head>`:
+```html
+<link rel="preload" as="image" type="image/webp" href="/assets/hero-donation-optimized.webp" fetchpriority="high" />
+```
+
+Nota: Como o Vite adiciona hash ao nome do arquivo, precisaremos de uma abordagem diferente - adicionar a imagem na pasta public sem hash.
+
+### Fase 2: Mover Imagem Hero para pasta Public
+
+Para que o preload funcione corretamente, a imagem precisa ter um caminho previsivel. 
+
+**Acao:** Copiar `hero-donation-optimized.webp` para `public/hero-donation.webp` e atualizar o Hero.tsx para usar esse caminho.
+
+**Arquivo:** `src/components/Hero.tsx`
+
+```text
+// REMOVER import
+import heroImage from "@/assets/hero-donation-optimized.webp";
+
+// SUBSTITUIR por caminho direto
+const heroImage = "/hero-donation.webp";
+```
+
+### Fase 3: Remover framer-motion do HowItWorksModal
+
+Este modal e carregado na pagina inicial via lazy loading, mas ainda traz o framer-motion quando renderizado.
+
+**Arquivo:** `src/components/HowItWorksModal.tsx`
 
 ```text
 // REMOVER
 import { motion } from "framer-motion";
 
-// SUBSTITUIR motion.div por div com classes CSS
-<div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+// SUBSTITUIR motion.div por div com animacoes CSS
+<div
+  className="animate-in fade-in slide-in-from-left-4 duration-300"
+  style={{ animationDelay: `${index * 100}ms` }}
+>
 ```
 
-### Fase 2: Converter PremiumPartnerSlots para CSS Animations
+### Fase 4: Remover framer-motion do AuthModal
 
-**Arquivo:** `src/components/PremiumPartnerSlots.tsx`
+O AuthModal usa AnimatePresence que e mais complexo. Substituir por CSS transitions.
+
+**Arquivo:** `src/components/AuthModal.tsx`
 
 ```text
 // REMOVER
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
-// SUBSTITUIR motion.div por div com classes CSS
-<div className="animate-in fade-in zoom-in-95 duration-300" style={{ animationDelay: '100ms' }}>
+// SUBSTITUIR por renderizacao condicional com CSS
+{open && (
+  <>
+    <div className="fixed inset-0 bg-foreground/60 backdrop-blur-sm z-50 animate-in fade-in duration-200" />
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto animate-in fade-in zoom-in-95 duration-300">
 ```
 
-### Fase 3: Converter GroupsSection para CSS Animations
-
-**Arquivo:** `src/components/GroupsSection.tsx`
-
-Substituir todas as ocorrencias de `motion.div` por `div` com classes do tailwindcss-animate.
-
-### Fase 4: Converter EntitiesSection para CSS Animations
-
-**Arquivo:** `src/components/EntitiesSection.tsx`
-
-Substituir todas as ocorrencias de `motion.div` por `div` com classes do tailwindcss-animate.
-
-### Fase 5: Converter PartnersSection para CSS Animations
-
-**Arquivo:** `src/components/PartnersSection.tsx`
-
-Substituir todas as ocorrencias de `motion.div` por `div` com classes do tailwindcss-animate.
-
 ---
 
-## Animacoes CSS Equivalentes
+## Arquivos a Modificar
 
-O plugin `tailwindcss-animate` ja esta instalado e fornece:
-
-| framer-motion | CSS Equivalent |
-|---------------|----------------|
-| `initial={{ opacity: 0 }}` + `animate={{ opacity: 1 }}` | `animate-in fade-in` |
-| `initial={{ y: 20 }}` + `animate={{ y: 0 }}` | `slide-in-from-bottom-5` |
-| `initial={{ scale: 0.9 }}` + `animate={{ scale: 1 }}` | `zoom-in-90` |
-| `transition={{ delay: 0.2 }}` | `style={{ animationDelay: '200ms' }}` |
-| `whileInView` | Usar Intersection Observer ou remover (menos critico) |
-
----
-
-## Resumo de Arquivos a Modificar
-
-1. `src/components/ImpactCounter.tsx` - Remover framer-motion, usar CSS
-2. `src/components/PremiumPartnerSlots.tsx` - Remover framer-motion, usar CSS
-3. `src/components/GroupsSection.tsx` - Remover framer-motion, usar CSS
-4. `src/components/EntitiesSection.tsx` - Remover framer-motion, usar CSS
-5. `src/components/PartnersSection.tsx` - Remover framer-motion, usar CSS
+1. `index.html` - Adicionar preload da imagem hero
+2. `public/hero-donation.webp` - Copiar imagem otimizada para public
+3. `src/components/Hero.tsx` - Usar caminho direto ao inves de import
+4. `src/components/HowItWorksModal.tsx` - Remover framer-motion
+5. `src/components/AuthModal.tsx` - Remover framer-motion
 
 ---
 
 ## Impacto Esperado
 
-- **Bundle Inicial**: Reducao de ~45KB (framer-motion nao sera carregado para a pagina inicial)
-- **TTI**: Melhoria significativa com menos JavaScript para processar
-- **FCP/LCP**: Melhoria com animacoes CSS nativas que nao bloqueiam a thread principal
+| Metrica | Atual | Esperado |
+|---------|-------|----------|
+| LCP | 11.0s | 3-4s |
+| FCP | 2.9s | 2.5s |
+| Bundle Size | ~45KB framer | -45KB |
+| Performance Score | 73% | 80-85% |
+
+O preload da imagem hero e a acao de maior impacto - pode reduzir o LCP em 3-5 segundos.
 
 ---
 
 ## Secao Tecnica
 
-### Por que framer-motion impacta tanto a performance?
+### Por que o preload funciona?
 
-1. **Tamanho do bundle**: ~45KB minificado
-2. **Processamento JS**: Cria sistema de animacao em JavaScript que compete com a renderizacao
-3. **Hidratacao**: Precisa hidratar todos os componentes motion antes de interatividade
+```text
+Sem Preload:
+HTML -> CSS -> JS -> React -> Hero Component -> Descoberta da imagem -> Download
 
-### Como funciona tailwindcss-animate?
+Com Preload:
+HTML -> [Preload inicia download imediatamente]
+     -> CSS -> JS -> React -> Hero Component -> Imagem ja disponivel
+```
 
-O plugin adiciona classes que usam CSS @keyframes nativos:
-- `animate-in` - Ativa a animacao de entrada
-- `fade-in` - Opacidade de 0 para 1
-- `slide-in-from-bottom-X` - Desliza de baixo para cima
-- `zoom-in-XX` - Escala de XX% para 100%
-- `duration-XXX` - Duracao da animacao
+O browser comeca a baixar a imagem assim que le o HTML, em paralelo com o resto do carregamento.
 
-Essas animacoes sao processadas pela GPU, nao pela thread JavaScript.
+### Por que mover para public/?
+
+Arquivos em `src/assets/` sao processados pelo Vite e recebem um hash no nome (ex: `hero-donation-CZUDhdgz.webp`). Isso impossibilita o preload no HTML, pois o hash muda a cada build.
+
+Arquivos em `public/` mantem o nome original e podem ser referenciados com caminhos estaticos.
 
