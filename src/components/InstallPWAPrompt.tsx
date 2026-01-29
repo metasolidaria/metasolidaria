@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, forwardRef } from 'react';
 import { Download, X, Share, MoreVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { usePWAInstall } from '@/hooks/usePWAInstall';
@@ -18,7 +18,7 @@ const isSafari = () => {
   return /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent);
 };
 
-export const InstallPWAPrompt = () => {
+export const InstallPWAPrompt = forwardRef<HTMLDivElement>((_, ref) => {
   const { isInstallable, isInstalled, installApp } = usePWAInstall();
   const [isDismissed, setIsDismissed] = useState(true);
   const [showManualInstructions, setShowManualInstructions] = useState(false);
@@ -61,7 +61,7 @@ export const InstallPWAPrompt = () => {
   const isAndroidDevice = isAndroid();
 
   return (
-    <div className="fixed bottom-4 left-4 right-4 z-50 mx-auto max-w-md animate-in slide-in-from-bottom-4 duration-300">
+    <div ref={ref} className="fixed bottom-4 left-4 right-4 z-50 mx-auto max-w-md animate-in slide-in-from-bottom-4 duration-300">
       <div className="bg-card border border-border rounded-2xl p-4 shadow-xl">
         <div className="flex items-start gap-3">
           <div className="flex-shrink-0 w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center">
@@ -123,4 +123,6 @@ export const InstallPWAPrompt = () => {
       </div>
     </div>
   );
-};
+});
+
+InstallPWAPrompt.displayName = 'InstallPWAPrompt';

@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
 import { Users, UserCheck, Target } from "lucide-react";
 import { Skeleton } from "./ui/skeleton";
 import { useHeroStats } from "@/hooks/useHeroStats";
@@ -47,12 +46,7 @@ export const HeroStats = () => {
   const { data: heroStats, isLoading: isLoadingStats } = useHeroStats();
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.6, duration: 0.5 }}
-      className="flex flex-wrap justify-center gap-6 sm:gap-12"
-    >
+    <div className="flex flex-wrap justify-center gap-6 sm:gap-12 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-600">
       <div className="text-center">
         <div className="flex items-center justify-center gap-2 mb-1">
           <Users className="w-5 h-5 text-secondary" />
@@ -92,6 +86,6 @@ export const HeroStats = () => {
         </div>
         <p className="text-primary-foreground/70 text-xs sm:text-sm">Metas Definidas</p>
       </div>
-    </motion.div>
+    </div>
   );
 };
