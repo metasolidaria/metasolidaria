@@ -1,179 +1,233 @@
 
+# Plano de Otimizacao de Performance - 63% para 80%+
 
-# Plano de Correcao - Regressao de Performance (62% -> 80%+)
+## Analise do Diagnostico
 
-## Diagnostico da Queda
+Com base na imagem do PageSpeed, identificamos os principais gargalos:
 
-A performance caiu de 73% para 62% (PageSpeed) e 56% (Google) devido a varios problemas identificados:
+| Issue | Economia | Prioridade |
+|-------|----------|------------|
+| Ciclos de vida de cache | 1.940 KiB | Media (infra) |
+| Entrega de imagens | 1.478 KiB | Alta |
+| Solicitacoes de bloqueio | 250 ms | Alta |
+| JavaScript nao usado | 112 KiB | Media |
+| CSS nao usado | 11 KiB | Baixa |
 
-### Problemas Principais Identificados no Screenshot
+---
 
-| Issue | Economia Estimada |
-|-------|-------------------|
-| Use ciclos de vida eficientes de cache | 1.835 KiB |
-| Melhorar a entrega de imagens | 1.385 KiB |
-| Reduza o JavaScript nao usado | 125 KiB |
-| Renderizar solicitacoes de bloqueio | 160 ms |
-| Reduza o CSS nao usado | 11 KiB |
+## Problemas Identificados no Codigo
 
-### Causas Tecnicas da Regressao
+### 1. Imagens ainda importadas de src/assets
 
-1. **AuthModal importado diretamente no Index.tsx (linha 6)** - O AuthModal foi migrado de framer-motion, mas continua sendo importado diretamente (nao lazy) no Index.tsx, trazendo todo o codigo para o bundle inicial
+Varios componentes ainda importam imagens de `@/assets` ao inves de usar caminhos publicos:
 
-2. **framer-motion ainda presente em componentes criticos** - Encontrei 15 arquivos ainda usando framer-motion, incluindo:
-   - `HowItWorks.tsx` - Componente com framer-motion (embora nao usado na pagina principal)
-   - `GoldPartnersCarousel.tsx` - Usa framer-motion em motion.div
+- **Header.tsx** - `import logo from "@/assets/logo.jpg"`
+- **Footer.tsx** - `import logo from "@/assets/logo.jpg"`
+- **PremiumPartnerSlots.tsx** - `import naturuaiLogo from "@/assets/naturuai-logo.jpg"`
+- **PremiumLogosCarousel.tsx** - `import logoImage, naturuaiLogo from "@/assets/..."`
+- **PartnersSection.tsx** - `import logoImage, naturuaiLogo from "@/assets/..."`
 
-3. **Imagens de logos sendo importadas como modulos** - Em HeroPremiumLogos.tsx e GoldPartnersCarousel.tsx, as imagens logo.jpg e naturuai-logo.jpg sao importadas diretamente, adicionando peso ao bundle
+Essas imagens ja existem em `/public` e devem usar caminhos estaticos.
 
-4. **Carousel Autoplay carregado no Hero** - O embla-carousel-autoplay e carregado mesmo para componentes lazy loaded
+### 2. framer-motion ainda presente em modais
+
+Embora os modais sejam lazy loaded, o framer-motion ainda e carregado quando eles sao abertos. Componentes afetados:
+
+- `CreateGroupModal.tsx`
+- `EditGroupModal.tsx`
+- `EditMemberGoalModal.tsx`
+- `AddMemberModal.tsx`
+- `InviteMemberModal.tsx`
+- `RecommendPartnerModal.tsx`
+- `ProgressAnalysisModal.tsx`
+- `JoinRequestsPanel.tsx`
+
+### 3. Fonte Google Fonts como render-blocking
+
+A fonte "Plus Jakarta Sans" esta sendo carregada via preload, mas o script de fallback noscript ainda pode causar bloqueio.
 
 ---
 
 ## Solucao Proposta
 
-### Fase 1: Tornar AuthModal lazy no Index.tsx
+### Fase 1: Unificar caminhos de imagens (5 arquivos)
 
-O AuthModal esta sendo importado diretamente no Index.tsx (linha 6), mas deveria ser lazy loaded como os outros modais.
+Substituir todos os imports de `@/assets` por caminhos estaticos de `/public`:
 
-**Arquivo:** `src/pages/Index.tsx`
-
+**Header.tsx:**
 ```text
-// LINHA 6 - REMOVER import direto
-import { AuthModal } from "@/components/AuthModal";
+// REMOVER
+import logo from "@/assets/logo.jpg";
 
-// SUBSTITUIR por lazy import (adicionar na secao de lazy imports)
-const AuthModal = lazy(() => import("@/components/AuthModal").then(m => ({ default: m.AuthModal })));
-
-// LINHA 126 - Envolver em Suspense
-<Suspense fallback={null}>
-  <AuthModal open={isAuthModalOpen} onOpenChange={setIsAuthModalOpen} />
-</Suspense>
+// SUBSTITUIR por
+const logo = "/logo.jpg";
 ```
 
-### Fase 2: Mover logos para pasta public
+**Footer.tsx:**
+```text
+// REMOVER
+import logo from "@/assets/logo.jpg";
 
-As imagens logo.jpg e naturuai-logo.jpg estao em src/assets e sao processadas pelo Vite. Mover para public permite caching melhor e reduz o bundle inicial.
+// SUBSTITUIR por
+const logo = "/logo.jpg";
+```
 
-**Acoes:**
-1. Copiar `src/assets/logo.jpg` para `public/logo.jpg`
-2. Copiar `src/assets/naturuai-logo.jpg` para `public/naturuai-logo.jpg`
-3. Atualizar imports para caminhos diretos
+**PremiumPartnerSlots.tsx:**
+```text
+// REMOVER
+import naturuaiLogo from "@/assets/naturuai-logo.jpg";
 
-**Arquivo:** `src/components/HeroPremiumLogos.tsx`
+// SUBSTITUIR por
+const naturuaiLogo = "/naturuai-logo.jpg";
+```
 
+**PremiumLogosCarousel.tsx:**
 ```text
 // REMOVER
 import logoImage from "@/assets/logo.jpg";
 import naturuaiLogo from "@/assets/naturuai-logo.jpg";
 
-// SUBSTITUIR por caminhos diretos
+// SUBSTITUIR por
 const logoImage = "/logo.jpg";
 const naturuaiLogo = "/naturuai-logo.jpg";
 ```
 
-**Arquivo:** `src/components/GoldPartnersCarousel.tsx`
-
+**PartnersSection.tsx:**
 ```text
-// REMOVER
+// REMOVER (linha 101-102)
 import logoImage from "@/assets/logo.jpg";
 import naturuaiLogo from "@/assets/naturuai-logo.jpg";
 
-// SUBSTITUIR por caminhos diretos
+// SUBSTITUIR por
 const logoImage = "/logo.jpg";
 const naturuaiLogo = "/naturuai-logo.jpg";
 ```
 
-### Fase 3: Converter HowItWorks.tsx para CSS (precaucao)
+### Fase 2: Remover framer-motion dos modais (8 arquivos)
 
-Embora esse componente nao seja usado diretamente na pagina inicial, ele ainda usa framer-motion. Converter para CSS para evitar que o bundle seja carregado se algum componente o importar.
+Converter animacoes de `motion.div` e `AnimatePresence` para classes CSS do Tailwind:
 
-**Arquivo:** `src/components/HowItWorks.tsx`
-
-```text
-// REMOVER
-import { motion } from "framer-motion";
-
-// SUBSTITUIR motion.div por div com CSS
-<div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-```
-
-### Fase 4: Converter GoldPartnersCarousel.tsx para CSS
-
-Este componente usa motion.div mas e lazy loaded. Ainda assim, converte-lo remove a dependencia do framer-motion.
-
-**Arquivo:** `src/components/GoldPartnersCarousel.tsx`
+**Padrao de conversao:**
 
 ```text
-// REMOVER
-import { motion } from "framer-motion";
+// ANTES (framer-motion)
+import { motion, AnimatePresence } from "framer-motion";
 
-// SUBSTITUIR motion.div (linha 63) por div com CSS
-<div className="animate-in fade-in slide-in-from-bottom-4 duration-300 bg-gradient-to-r ...">
+<AnimatePresence>
+  {open && (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+    >
+      ...
+    </motion.div>
+  )}
+</AnimatePresence>
+
+// DEPOIS (CSS)
+{open && (
+  <div className="animate-in fade-in duration-200">
+    ...
+  </div>
+)}
 ```
 
-### Fase 5: Otimizar carregamento de fontes
+**Arquivos a converter:**
 
-Verificar se a fonte esta sendo carregada de forma otimizada no index.html.
+1. `CreateGroupModal.tsx`
+2. `EditGroupModal.tsx`
+3. `EditMemberGoalModal.tsx`
+4. `AddMemberModal.tsx`
+5. `InviteMemberModal.tsx`
+6. `RecommendPartnerModal.tsx`
+7. `ProgressAnalysisModal.tsx`
+8. `JoinRequestsPanel.tsx`
 
-**Arquivo:** `index.html`
+### Fase 3: Otimizar carregamento de fonte
 
-O preload da fonte ja existe, mas verificar se esta correto:
+Adicionar `font-display: swap` inline e usar estrategia de preload mais agressiva:
+
+**index.html:**
 ```html
-<link rel="preload" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'" />
+<!-- Preload apenas o subset critico -->
+<link 
+  rel="preload" 
+  href="https://fonts.gstatic.com/s/plusjakartasans/v8/LDIoaomQNQcsA88c7O9yZ4KMCoOg4Ko20yygg_vb.woff2" 
+  as="font" 
+  type="font/woff2" 
+  crossorigin 
+/>
 ```
+
+### Fase 4: Limpar assets duplicados em src/assets
+
+Apos a Fase 1, os seguintes arquivos em `src/assets` podem ser removidos pois ja existem em `public/`:
+
+- `src/assets/logo.jpg` (duplicado de `public/logo.jpg`)
+- `src/assets/naturuai-logo.jpg` (duplicado de `public/naturuai-logo.jpg`)
 
 ---
 
 ## Arquivos a Modificar
 
-1. `src/pages/Index.tsx` - Tornar AuthModal lazy loaded
-2. `public/logo.jpg` - Copiar de src/assets
-3. `public/naturuai-logo.jpg` - Copiar de src/assets
-4. `src/components/HeroPremiumLogos.tsx` - Usar caminhos diretos
-5. `src/components/GoldPartnersCarousel.tsx` - Remover framer-motion e usar caminhos diretos
-6. `src/components/HowItWorks.tsx` - Remover framer-motion
+### Prioridade Alta (Fase 1):
+1. `src/components/Header.tsx` - Usar caminho publico
+2. `src/components/Footer.tsx` - Usar caminho publico
+3. `src/components/PremiumPartnerSlots.tsx` - Usar caminho publico
+4. `src/components/PremiumLogosCarousel.tsx` - Usar caminho publico
+5. `src/components/PartnersSection.tsx` - Usar caminho publico
+
+### Prioridade Media (Fase 2):
+6. `src/components/CreateGroupModal.tsx` - Remover framer-motion
+7. `src/components/EditGroupModal.tsx` - Remover framer-motion
+8. `src/components/EditMemberGoalModal.tsx` - Remover framer-motion
+9. `src/components/AddMemberModal.tsx` - Remover framer-motion
+10. `src/components/InviteMemberModal.tsx` - Remover framer-motion
+11. `src/components/RecommendPartnerModal.tsx` - Remover framer-motion
+12. `src/components/ProgressAnalysisModal.tsx` - Remover framer-motion
+13. `src/components/JoinRequestsPanel.tsx` - Remover framer-motion
+
+### Prioridade Baixa (Fase 3):
+14. `index.html` - Otimizar preload de fonte
 
 ---
 
 ## Impacto Esperado
 
-| Metrica | Atual | Esperado |
-|---------|-------|----------|
-| JavaScript nao usado | 125 KiB | -80 KiB |
-| Bundle inicial | ~350 KB | ~280 KB |
-| Performance Score | 62% | 75-80% |
+| Metrica | Atual | Esperado | Economia |
+|---------|-------|----------|----------|
+| JavaScript nao usado | 112 KiB | 30 KiB | ~80 KiB |
+| Entrega de imagens | 1.478 KiB | Melhor cache | - |
+| Render-blocking | 250 ms | 100 ms | 150 ms |
+| Performance Score | 63% | 75-80% | +12-17% |
 
 ---
 
 ## Secao Tecnica
 
-### Por que o AuthModal importado diretamente causa problema?
+### Por que substituir imports de assets por caminhos publicos?
 
-Quando um componente e importado diretamente (sem lazy), ele e incluido no bundle principal junto com todas as suas dependencias. Mesmo que o modal so seja aberto quando o usuario clica em "Entrar", todo o codigo ja esta carregado.
+Quando voce usa `import logo from "@/assets/logo.jpg"`, o Vite processa a imagem e:
+1. Adiciona um hash ao nome do arquivo (ex: `logo-abc123.jpg`)
+2. Inclui a referencia no bundle JavaScript
+3. O cache do browser nao funciona bem entre deploys
 
-```text
-Bundle Principal (sem lazy):
-- Index.tsx
-- AuthModal.tsx (incluido no bundle inicial)
-- CityAutocomplete.tsx
-- PasswordStrengthIndicator.tsx
-- validations.ts
-... todas as dependencias
+Usando caminhos estaticos (`const logo = "/logo.jpg"`):
+1. O arquivo permanece com nome fixo
+2. Headers de cache funcionam melhor
+3. O bundle JavaScript fica menor
 
-Bundle Principal (com lazy):
-- Index.tsx
-- Suspense placeholder
+### Por que remover framer-motion?
 
-Bundle Separado (carregado sob demanda):
-- AuthModal.tsx
-- CityAutocomplete.tsx
-...
-```
+O framer-motion adiciona aproximadamente 30-50KB ao bundle. Mesmo com lazy loading, quando o usuario abre um modal, ele precisa baixar essa biblioteca.
 
-### Por que mover imagens para public?
+Classes CSS como `animate-in fade-in` do Tailwind CSS Animate sao:
+1. Ja incluidas no CSS
+2. Nao requerem JavaScript adicional
+3. Tem performance nativa do browser
 
-Imagens em src/assets sao processadas pelo Vite e incluidas como data URLs ou modulos JS se forem pequenas. Isso aumenta o tamanho do bundle JavaScript.
+### Limitacoes
 
-Imagens em public sao servidas como arquivos estaticos e podem ter cache headers otimizados pelo servidor.
-
+- **Cache headers**: O problema "ciclos de vida de cache" (1.940 KiB) e configuracao de servidor/CDN, nao codigo
+- **Imagem hero**: O problema "entrega de imagens" (1.478 KiB) provavelmente e a hero-donation.webp - pode precisar comprimir mais
