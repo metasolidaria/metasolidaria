@@ -4,6 +4,8 @@ import { useToast } from "@/hooks/use-toast";
 
 export type AppRole = "admin" | "moderator" | "user";
 
+export type RegistrationSource = "self_signup" | "admin_added" | "leader_added";
+
 export interface AdminUser {
   profile_id: string;
   user_id: string;
@@ -16,6 +18,7 @@ export interface AdminUser {
   user_created_at: string;
   last_sign_in_at: string | null;
   roles: AppRole[] | null;
+  registration_source: RegistrationSource | null;
 }
 
 export interface UserGroup {
