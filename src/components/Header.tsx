@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
 import { Menu, X, User, LogOut, Settings } from "lucide-react";
 import { Button } from "./ui/button";
 import { useAuth } from "@/hooks/useAuth";
@@ -35,10 +34,8 @@ export const Header = ({ onAuthClick }: HeaderProps) => {
   };
 
   return (
-    <motion.header
-      initial={{ y: -100 }}
-      animate={{ y: 0 }}
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+    <header
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 animate-fade-in ${
         isScrolled
           ? "bg-card/95 backdrop-blur-md shadow-soft"
           : "bg-transparent"
@@ -133,13 +130,9 @@ export const Header = ({ onAuthClick }: HeaderProps) => {
           </button>
         </div>
 
-        {/* Mobile Menu */}
+        {/* Mobile Menu - CSS animation instead of framer-motion */}
         {isMobileMenuOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="md:hidden bg-card rounded-xl shadow-soft p-4 mb-4"
-          >
+          <div className="md:hidden bg-card rounded-xl shadow-soft p-4 mb-4 animate-fade-in">
             <nav className="flex flex-col gap-2">
               {["Grupos", "Entidades", "Parceiros", "Impacto"].map((item) => (
                 <button
@@ -190,9 +183,9 @@ export const Header = ({ onAuthClick }: HeaderProps) => {
                 </Button>
               )}
             </nav>
-          </motion.div>
+          </div>
         )}
       </div>
-    </motion.header>
+    </header>
   );
 };

@@ -3,10 +3,9 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import Index from "./pages/Index";
-import { InstallPWAPrompt } from "./components/InstallPWAPrompt";
 
 // Lazy load non-critical routes to reduce initial bundle size
 const GroupPage = lazy(() => import("./pages/GroupPage"));
@@ -19,12 +18,34 @@ const AdminEntities = lazy(() => import("./pages/AdminEntities"));
 const Profile = lazy(() => import("./pages/Profile"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
+// Lazy load PWA prompt - not critical for initial render
+const InstallPWAPrompt = lazy(() => import("./components/InstallPWAPrompt").then(m => ({ default: m.InstallPWAPrompt })));
+
 // Loading fallback for lazy-loaded routes
 const PageLoader = () => (
   <div className="min-h-screen flex items-center justify-center">
     <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />
   </div>
 );
+
+// Delayed PWA prompt wrapper - only loads after initial render
+const DelayedPWAPrompt = () => {
+  const [shouldLoad, setShouldLoad] = useState(false);
+
+  useEffect(() => {
+    // Delay loading PWA prompt by 3 seconds to not impact FCP/LCP
+    const timer = setTimeout(() => setShouldLoad(true), 3000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (!shouldLoad) return null;
+
+  return (
+    <Suspense fallback={null}>
+      <InstallPWAPrompt />
+    </Suspense>
+  );
+};
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -111,7 +132,7 @@ const App = () => (
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<Suspense fallback={<PageLoader />}><NotFound /></Suspense>} />
         </Routes>
-        <InstallPWAPrompt />
+        <DelayedPWAPrompt />
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

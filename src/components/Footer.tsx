@@ -1,13 +1,8 @@
 import { Heart, Settings, Instagram, Facebook, ChevronDown } from "lucide-react";
 import { Link } from "react-router-dom";
+import { lazy, Suspense } from "react";
 import logo from "@/assets/logo.jpg";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 
 // TikTok icon component (not available in Lucide)
 const TikTokIcon = ({ className }: { className?: string }) => (
@@ -58,6 +53,49 @@ const socialLinks = [
   }
 ];
 
+// Lazy load admin dropdown since it's only shown for admins
+const AdminDropdown = lazy(() => import("@/components/ui/dropdown-menu").then(module => ({
+  default: () => {
+    const { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } = module;
+    return (
+      <DropdownMenu>
+        <DropdownMenuTrigger className="flex items-center gap-1 text-primary-foreground/40 hover:text-primary-foreground/60 text-xs transition-colors outline-none">
+          <Settings className="w-3 h-3" />
+          Admin
+          <ChevronDown className="w-3 h-3" />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="bg-background">
+          <DropdownMenuItem asChild>
+            <Link to="/admin/grupos" className="cursor-pointer">
+              Grupos
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link to="/admin/usuarios" className="cursor-pointer">
+              Usuários
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link to="/admin/parceiros" className="cursor-pointer">
+              Parceiros
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link to="/admin/convites" className="cursor-pointer">
+              Convites
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link to="/admin/entidades" className="cursor-pointer">
+              Entidades
+            </Link>
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    );
+  }
+})));
+
 export const Footer = () => {
   const { isAdmin } = useIsAdmin();
 
@@ -103,40 +141,9 @@ export const Footer = () => {
             </span>
             
             {isAdmin && (
-              <DropdownMenu>
-                <DropdownMenuTrigger className="flex items-center gap-1 text-primary-foreground/40 hover:text-primary-foreground/60 text-xs transition-colors outline-none">
-                  <Settings className="w-3 h-3" />
-                  Admin
-                  <ChevronDown className="w-3 h-3" />
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="bg-background">
-                  <DropdownMenuItem asChild>
-                    <Link to="/admin/grupos" className="cursor-pointer">
-                      Grupos
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link to="/admin/usuarios" className="cursor-pointer">
-                      Usuários
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link to="/admin/parceiros" className="cursor-pointer">
-                      Parceiros
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link to="/admin/convites" className="cursor-pointer">
-                      Convites
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link to="/admin/entidades" className="cursor-pointer">
-                      Entidades
-                    </Link>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <Suspense fallback={null}>
+                <AdminDropdown />
+              </Suspense>
             )}
           </div>
         </div>

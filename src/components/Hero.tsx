@@ -1,5 +1,4 @@
 import { useState, Suspense, lazy } from "react";
-import { motion } from "framer-motion";
 import { ArrowDown, Heart, Users } from "lucide-react";
 import { Button } from "./ui/button";
 import { Skeleton } from "./ui/skeleton";
@@ -61,20 +60,10 @@ export const Hero = () => {
         <div className="absolute inset-0 bg-gradient-to-b from-foreground/70 via-foreground/50 to-foreground/80" />
       </div>
 
-      {/* Content */}
+      {/* Content - Using CSS animations instead of framer-motion */}
       <div className="relative z-10 container mx-auto px-4 py-20 text-center">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-          className="max-w-4xl mx-auto"
-        >
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-            className="inline-flex items-center gap-3 bg-primary-foreground/10 backdrop-blur-sm border border-primary-foreground/20 rounded-full px-4 py-2 mb-8 overflow-visible"
-          >
+        <div className="max-w-4xl mx-auto animate-fade-in">
+          <div className="inline-flex items-center gap-3 bg-primary-foreground/10 backdrop-blur-sm border border-primary-foreground/20 rounded-full px-4 py-2 mb-8 overflow-visible animate-scale-in">
             <Heart className="w-4 h-4 text-secondary" fill="currentColor" />
             <span className="text-primary-foreground text-base font-medium">
               Transforme suas metas em solidariedade
@@ -82,7 +71,7 @@ export const Hero = () => {
             <Suspense fallback={<LogoPlaceholder />}>
               <HeroPremiumLogos />
             </Suspense>
-          </motion.div>
+          </div>
 
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold text-primary-foreground mb-6 leading-tight">
             Cada meta alcançada,{" "}
@@ -109,22 +98,14 @@ export const Hero = () => {
           <Suspense fallback={<StatsPlaceholder />}>
             <HeroStats />
           </Suspense>
-        </motion.div>
+        </div>
 
-        {/* Scroll Indicator */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1, duration: 0.5 }}
-          className="absolute bottom-8 left-1/2 -translate-x-1/2"
-        >
-          <motion.div
-            animate={{ y: [0, 10, 0] }}
-            transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
-          >
+        {/* Scroll Indicator - CSS animation */}
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-fade-in" style={{ animationDelay: '1s' }}>
+          <div className="animate-bounce">
             <ArrowDown className="w-6 h-6 text-primary-foreground/50" />
-          </motion.div>
-        </motion.div>
+          </div>
+        </div>
       </div>
 
       {/* Modals */}
