@@ -4,12 +4,14 @@ import { Button } from "./ui/button";
 import { Skeleton } from "./ui/skeleton";
 import heroImage from "@/assets/hero-donation.webp";
 import { useAuth } from "@/hooks/useAuth";
-import { AuthModal } from "./AuthModal";
-import { CreateGroupModal } from "./CreateGroupModal";
 
 // Lazy load non-critical components to improve FCP
 const HeroPremiumLogos = lazy(() => import("./HeroPremiumLogos").then(m => ({ default: m.HeroPremiumLogos })));
 const HeroStats = lazy(() => import("./HeroStats").then(m => ({ default: m.HeroStats })));
+
+// Lazy load modals - only needed on user interaction
+const AuthModal = lazy(() => import("./AuthModal").then(m => ({ default: m.AuthModal })));
+const CreateGroupModal = lazy(() => import("./CreateGroupModal").then(m => ({ default: m.CreateGroupModal })));
 
 // Lightweight placeholder for lazy components
 const LogoPlaceholder = () => (
@@ -108,25 +110,29 @@ export const Hero = () => {
         </div>
       </div>
 
-      {/* Modals */}
-      <AuthModal
-        open={authModalOpen}
-        onOpenChange={open => {
-          setAuthModalOpen(open);
-          // Se fechou o modal de auth e agora está logado, abrir criação de grupo
-          if (!open && user) {
-            setCreateGroupOpen(true);
-          }
-        }}
-      />
-      <CreateGroupModal
-        open={createGroupOpen}
-        onOpenChange={setCreateGroupOpen}
-        onRequireAuth={() => {
-          setCreateGroupOpen(false);
-          setAuthModalOpen(true);
-        }}
-      />
+      {/* Modals - Lazy loaded */}
+      <Suspense fallback={null}>
+        <AuthModal
+          open={authModalOpen}
+          onOpenChange={open => {
+            setAuthModalOpen(open);
+            // Se fechou o modal de auth e agora está logado, abrir criação de grupo
+            if (!open && user) {
+              setCreateGroupOpen(true);
+            }
+          }}
+        />
+      </Suspense>
+      <Suspense fallback={null}>
+        <CreateGroupModal
+          open={createGroupOpen}
+          onOpenChange={setCreateGroupOpen}
+          onRequireAuth={() => {
+            setCreateGroupOpen(false);
+            setAuthModalOpen(true);
+          }}
+        />
+      </Suspense>
     </section>
   );
 };
