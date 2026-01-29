@@ -4,9 +4,9 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 const logoImage = "/logo.jpg";
 const naturuaiLogo = "/naturuai-logo.jpg";
-import Autoplay from "embla-carousel-autoplay";
-import { useRef } from "react";
+import { useState, useEffect } from "react";
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
+import type { AutoplayType } from "embla-carousel-autoplay";
 
 // Hook to fetch ALL premium partners (national scope)
 const useAllPremiumPartners = () => {
@@ -38,10 +38,14 @@ const useAllPremiumPartners = () => {
 
 export const PremiumLogosCarousel = () => {
   const { data: premiumPartners, isLoading } = useAllPremiumPartners();
+  const [autoplayPlugin, setAutoplayPlugin] = useState<AutoplayType | null>(null);
   
-  const autoplayPlugin = useRef(
-    Autoplay({ delay: 2000, stopOnInteraction: false, stopOnMouseEnter: true })
-  );
+  // Dynamic import for autoplay plugin to reduce initial JS
+  useEffect(() => {
+    import("embla-carousel-autoplay").then((module) => {
+      setAutoplayPlugin(module.default({ delay: 2000, stopOnInteraction: false, stopOnMouseEnter: true }));
+    });
+  }, []);
 
   if (isLoading || !premiumPartners || premiumPartners.length === 0) {
     return null;
@@ -73,7 +77,7 @@ export const PremiumLogosCarousel = () => {
             align: "start",
             loop: true,
           }}
-          plugins={[autoplayPlugin.current]}
+          plugins={autoplayPlugin ? [autoplayPlugin] : []}
           className="w-auto max-w-[200px]"
         >
           <CarouselContent className="-ml-1">

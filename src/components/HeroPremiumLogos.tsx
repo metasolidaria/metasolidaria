@@ -1,11 +1,11 @@
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 import { Skeleton } from "@/components/ui/skeleton";
-import Autoplay from "embla-carousel-autoplay";
+import type { AutoplayType } from "embla-carousel-autoplay";
 
 // Use static paths from public folder for better caching
 const logoImage = "/logo.jpg";
@@ -39,12 +39,18 @@ const usePremiumPartnersHero = () => {
 
 export const HeroPremiumLogos = () => {
   const { data: premiumPartners, isLoading } = usePremiumPartnersHero();
+  const [autoplayPlugin, setAutoplayPlugin] = useState<AutoplayType | null>(null);
   
-  const autoplayPlugin = useMemo(() => Autoplay({
-    delay: 2500,
-    stopOnInteraction: false,
-    stopOnMouseEnter: true
-  }), []);
+  // Dynamic import for autoplay plugin to reduce initial JS
+  useEffect(() => {
+    import("embla-carousel-autoplay").then((module) => {
+      setAutoplayPlugin(module.default({
+        delay: 2500,
+        stopOnInteraction: false,
+        stopOnMouseEnter: true
+      }));
+    });
+  }, []);
 
   // Show skeleton while loading
   if (isLoading) {
@@ -78,7 +84,7 @@ export const HeroPremiumLogos = () => {
       <TooltipProvider delayDuration={100}>
         <Carousel
           opts={{ align: "center", loop: true }}
-          plugins={[autoplayPlugin]}
+          plugins={autoplayPlugin ? [autoplayPlugin] : []}
           className="w-[90px]"
         >
           <CarouselContent className="-ml-1">
