@@ -300,6 +300,20 @@ export const AuthModal = ({ open, onOpenChange, defaultMode = "login" }: AuthMod
                 )}
               </p>
             )}
+
+            {mode === "signup" && (
+              <p className="text-center text-xs text-muted-foreground">
+                Ao criar sua conta, você concorda com nossa{" "}
+                <a
+                  href="/privacidade"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline"
+                >
+                  Política de Privacidade
+                </a>
+              </p>
+            )}
           </form>
         </div>
       </div>
