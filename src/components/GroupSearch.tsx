@@ -444,6 +444,7 @@ export const GroupSearch = ({ onRequireAuth, userMemberships }: GroupSearchProps
             size="sm"
             onClick={() => handleSearch()}
             disabled={isSearching || isCitiesLoading}
+            aria-label="Buscar grupos"
           >
             {isSearching ? (
               <Loader2 className="w-4 h-4 animate-spin" />
