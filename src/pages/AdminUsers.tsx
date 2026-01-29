@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
-import { useAdminUsers, type AdminUser, type AppRole, type RegistrationSource } from "@/hooks/useAdminUsers";
+import { useAdminUsers, type AdminUser, type AppRole, type RegistrationSource, type Volunteer } from "@/hooks/useAdminUsers";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -14,6 +14,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -40,6 +41,7 @@ import {
   Search,
   ShieldCheck,
   User,
+  UserX,
 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -85,6 +87,8 @@ const AdminUsers = () => {
   const {
     users,
     isLoading,
+    volunteers,
+    volunteersLoading,
     fetchUserGroups,
     updateUser,
     deleteUser,
@@ -93,6 +97,7 @@ const AdminUsers = () => {
     createUser,
   } = useAdminUsers();
 
+  const [activeTab, setActiveTab] = useState("users");
   const [searchTerm, setSearchTerm] = useState("");
   const [sortColumn, setSortColumn] = useState<string | null>(null);
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
@@ -138,6 +143,16 @@ const AdminUsers = () => {
       u.email?.toLowerCase().includes(search) ||
       u.city?.toLowerCase().includes(search) ||
       u.whatsapp?.includes(search)
+    );
+  });
+
+  // Filter volunteers
+  const filteredVolunteers = volunteers?.filter((v) => {
+    const search = searchTerm.toLowerCase();
+    return (
+      v.name?.toLowerCase().includes(search) ||
+      v.group_name?.toLowerCase().includes(search) ||
+      v.whatsapp?.includes(search)
     );
   });
 
@@ -304,12 +319,25 @@ const AdminUsers = () => {
           </div>
         </div>
 
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
+          <TabsList>
+            <TabsTrigger value="users" className="flex items-center gap-2">
+              <User className="h-4 w-4" />
+              Usuários ({users?.length || 0})
+            </TabsTrigger>
+            <TabsTrigger value="volunteers" className="flex items-center gap-2">
+              <UserX className="h-4 w-4" />
+              Voluntários sem conta ({volunteers?.length || 0})
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
+
         {/* Search */}
         <div className="mb-4">
           <div className="relative max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Buscar por nome, email, cidade..."
+              placeholder={activeTab === "users" ? "Buscar por nome, email, cidade..." : "Buscar por nome, grupo, WhatsApp..."}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10"
@@ -317,129 +345,187 @@ const AdminUsers = () => {
           </div>
         </div>
 
-        {isLoading ? (
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          </div>
-        ) : (
-          <div className="rounded-md border overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead><SortableHeader column="full_name">Nome</SortableHeader></TableHead>
-                  <TableHead><SortableHeader column="email">Email</SortableHeader></TableHead>
-                  <TableHead><SortableHeader column="city">Cidade</SortableHeader></TableHead>
-                  <TableHead><SortableHeader column="registration_source">Origem</SortableHeader></TableHead>
-                  <TableHead><SortableHeader column="roles">Papéis</SortableHeader></TableHead>
-                  <TableHead><SortableHeader column="created_at">Cadastro</SortableHeader></TableHead>
-                  <TableHead><SortableHeader column="last_sign_in_at">Último Login</SortableHeader></TableHead>
-                  <TableHead className="w-[180px]">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {sortedUsers?.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
-                      Nenhum usuário encontrado
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  sortedUsers?.map((u) => (
-                    <TableRow key={u.user_id}>
-                      <TableCell className="font-medium">{u.full_name}</TableCell>
-                      <TableCell>{u.email}</TableCell>
-                      <TableCell>{u.city || "-"}</TableCell>
-                      <TableCell>
-                        {u.registration_source ? (
-                          <Badge variant="outline" className={registrationSourceConfig[u.registration_source]?.className}>
-                            {registrationSourceConfig[u.registration_source]?.label}
-                          </Badge>
-                        ) : (
-                          <Badge variant="outline" className={registrationSourceConfig.self_signup.className}>
-                            {registrationSourceConfig.self_signup.label}
-                          </Badge>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex flex-wrap gap-1">
-                          {u.roles && u.roles.length > 0 ? (
-                            u.roles.map((role) => {
-                              const config = roleConfig[role];
-                              return (
-                                <Badge key={role} variant="outline" className={config.className}>
-                                  <span className="flex items-center gap-1">
-                                    {config.icon}
-                                    {config.label}
-                                  </span>
-                                </Badge>
-                              );
-                            })
-                          ) : (
-                            <span className="text-muted-foreground text-sm">-</span>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {format(new Date(u.created_at), "dd/MM/yyyy", { locale: ptBR })}
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {u.last_sign_in_at 
-                          ? format(new Date(u.last_sign_in_at), "dd/MM/yyyy HH:mm", { locale: ptBR })
-                          : "-"}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-1">
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            className="h-8 w-8"
-                            onClick={() => handleViewGroups(u)}
-                            title="Ver grupos"
-                          >
-                            <Users className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            className="h-8 w-8"
-                            onClick={() => handleManageRoles(u)}
-                            title="Gerenciar papéis"
-                          >
-                            <Shield className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            className="h-8 w-8"
-                            onClick={() => handleEdit(u)}
-                            title="Editar"
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            className="h-8 w-8 text-destructive hover:text-destructive"
-                            onClick={() => handleDelete(u)}
-                            title="Excluir"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
+        {activeTab === "users" ? (
+          <>
+            {isLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : (
+              <div className="rounded-md border overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead><SortableHeader column="full_name">Nome</SortableHeader></TableHead>
+                      <TableHead><SortableHeader column="email">Email</SortableHeader></TableHead>
+                      <TableHead><SortableHeader column="city">Cidade</SortableHeader></TableHead>
+                      <TableHead><SortableHeader column="registration_source">Origem</SortableHeader></TableHead>
+                      <TableHead><SortableHeader column="roles">Papéis</SortableHeader></TableHead>
+                      <TableHead><SortableHeader column="created_at">Cadastro</SortableHeader></TableHead>
+                      <TableHead><SortableHeader column="last_sign_in_at">Último Login</SortableHeader></TableHead>
+                      <TableHead className="w-[180px]">Ações</TableHead>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
-        )}
+                  </TableHeader>
+                  <TableBody>
+                    {sortedUsers?.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                          Nenhum usuário encontrado
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      sortedUsers?.map((u) => (
+                        <TableRow key={u.user_id}>
+                          <TableCell className="font-medium">{u.full_name}</TableCell>
+                          <TableCell>{u.email}</TableCell>
+                          <TableCell>{u.city || "-"}</TableCell>
+                          <TableCell>
+                            {u.registration_source ? (
+                              <Badge variant="outline" className={registrationSourceConfig[u.registration_source]?.className}>
+                                {registrationSourceConfig[u.registration_source]?.label}
+                              </Badge>
+                            ) : (
+                              <Badge variant="outline" className={registrationSourceConfig.self_signup.className}>
+                                {registrationSourceConfig.self_signup.label}
+                              </Badge>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex flex-wrap gap-1">
+                              {u.roles && u.roles.length > 0 ? (
+                                u.roles.map((role) => {
+                                  const config = roleConfig[role];
+                                  return (
+                                    <Badge key={role} variant="outline" className={config.className}>
+                                      <span className="flex items-center gap-1">
+                                        {config.icon}
+                                        {config.label}
+                                      </span>
+                                    </Badge>
+                                  );
+                                })
+                              ) : (
+                                <span className="text-muted-foreground text-sm">-</span>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-muted-foreground">
+                            {format(new Date(u.created_at), "dd/MM/yyyy", { locale: ptBR })}
+                          </TableCell>
+                          <TableCell className="text-muted-foreground">
+                            {u.last_sign_in_at 
+                              ? format(new Date(u.last_sign_in_at), "dd/MM/yyyy HH:mm", { locale: ptBR })
+                              : "-"}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-1">
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-8 w-8"
+                                onClick={() => handleViewGroups(u)}
+                                title="Ver grupos"
+                              >
+                                <Users className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-8 w-8"
+                                onClick={() => handleManageRoles(u)}
+                                title="Gerenciar papéis"
+                              >
+                                <Shield className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-8 w-8"
+                                onClick={() => handleEdit(u)}
+                                title="Editar"
+                              >
+                                <Pencil className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-8 w-8 text-destructive hover:text-destructive"
+                                onClick={() => handleDelete(u)}
+                                title="Excluir"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
 
-        {/* Total count */}
-        {sortedUsers && (
-          <p className="text-sm text-muted-foreground mt-4">
-            {sortedUsers.length} usuário{sortedUsers.length !== 1 ? "s" : ""} encontrado{sortedUsers.length !== 1 ? "s" : ""}
-          </p>
+            {/* Total count */}
+            {sortedUsers && (
+              <p className="text-sm text-muted-foreground mt-4">
+                {sortedUsers.length} usuário{sortedUsers.length !== 1 ? "s" : ""} encontrado{sortedUsers.length !== 1 ? "s" : ""}
+              </p>
+            )}
+          </>
+        ) : (
+          <>
+            {volunteersLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : (
+              <div className="rounded-md border overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Nome</TableHead>
+                      <TableHead>Grupo</TableHead>
+                      <TableHead>WhatsApp</TableHead>
+                      <TableHead>Meta Pessoal</TableHead>
+                      <TableHead>Metas Atingidas</TableHead>
+                      <TableHead>Entrada</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredVolunteers?.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                          Nenhum voluntário sem conta encontrado
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      filteredVolunteers?.map((v) => (
+                        <TableRow key={v.id}>
+                          <TableCell className="font-medium">{v.name}</TableCell>
+                          <TableCell>
+                            <Badge variant="outline">{v.group_name}</Badge>
+                          </TableCell>
+                          <TableCell>{v.whatsapp || "-"}</TableCell>
+                          <TableCell>{v.personal_goal || 0}</TableCell>
+                          <TableCell>{v.goals_reached}</TableCell>
+                          <TableCell className="text-muted-foreground">
+                            {format(new Date(v.created_at), "dd/MM/yyyy", { locale: ptBR })}
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+
+            {/* Total count */}
+            {filteredVolunteers && (
+              <p className="text-sm text-muted-foreground mt-4">
+                {filteredVolunteers.length} voluntário{filteredVolunteers.length !== 1 ? "s" : ""} sem conta encontrado{filteredVolunteers.length !== 1 ? "s" : ""}
+              </p>
+            )}
+          </>
         )}
       </div>
 

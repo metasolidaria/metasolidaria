@@ -21,6 +21,17 @@ export interface AdminUser {
   registration_source: RegistrationSource | null;
 }
 
+export interface Volunteer {
+  id: string;
+  name: string;
+  whatsapp: string | null;
+  group_id: string;
+  group_name: string;
+  created_at: string;
+  personal_goal: number | null;
+  goals_reached: number;
+}
+
 export interface UserGroup {
   group_id: string;
   group_name: string;
@@ -43,6 +54,39 @@ export const useAdminUsers = () => {
 
       if (error) throw error;
       return data as AdminUser[];
+    },
+  });
+
+  // Fetch volunteers without accounts (admin only)
+  const { data: volunteers, isLoading: volunteersLoading } = useQuery({
+    queryKey: ["admin-volunteers"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("group_members")
+        .select(`
+          id,
+          name,
+          whatsapp,
+          group_id,
+          created_at,
+          personal_goal,
+          goals_reached,
+          groups!inner(name)
+        `)
+        .is("user_id", null)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      return (data || []).map((item: any) => ({
+        id: item.id,
+        name: item.name,
+        whatsapp: item.whatsapp,
+        group_id: item.group_id,
+        group_name: item.groups.name,
+        created_at: item.created_at,
+        personal_goal: item.personal_goal,
+        goals_reached: item.goals_reached,
+      })) as Volunteer[];
     },
   });
 
@@ -222,6 +266,8 @@ export const useAdminUsers = () => {
   return {
     users,
     isLoading,
+    volunteers,
+    volunteersLoading,
     fetchUserGroups,
     updateUser,
     deleteUser,
