@@ -1,233 +1,221 @@
 
-# Plano de Otimizacao de Performance - 63% para 80%+
+# Plano de Otimizacao Mobile - 64% para 80%+
 
-## Analise do Diagnostico
+## Diagnostico do Problema
 
-Com base na imagem do PageSpeed, identificamos os principais gargalos:
+A diferenca significativa entre desktop (93%) e mobile (64%) indica problemas especificos para dispositivos moveis:
 
-| Issue | Economia | Prioridade |
-|-------|----------|------------|
-| Ciclos de vida de cache | 1.940 KiB | Media (infra) |
-| Entrega de imagens | 1.478 KiB | Alta |
-| Solicitacoes de bloqueio | 250 ms | Alta |
-| JavaScript nao usado | 112 KiB | Media |
-| CSS nao usado | 11 KiB | Baixa |
+| Metrica | Desktop | Mobile | Diferenca |
+|---------|---------|--------|-----------|
+| Performance | 93% | 64% | -29% |
 
----
+### Causas Identificadas
 
-## Problemas Identificados no Codigo
+1. **Imagem Hero muito grande para mobile**
+   - A mesma imagem `hero-donation.webp` e usada em todas as resolucoes
+   - Em mobile, uma imagem de 1920px e baixada, mas exibida em ~400px
+   - Desperdicio de banda e tempo de download
 
-### 1. Imagens ainda importadas de src/assets
+2. **Falta de lazy loading em imagens abaixo da dobra**
+   - Imagens de grupos (Unsplash) carregam imediatamente
+   - Imagens de parceiros carregam sem `loading="lazy"`
 
-Varios componentes ainda importam imagens de `@/assets` ao inves de usar caminhos publicos:
+3. **LCP (Largest Contentful Paint) lento em mobile**
+   - A imagem hero e o elemento LCP
+   - Mobile tem banda mais lenta que desktop
 
-- **Header.tsx** - `import logo from "@/assets/logo.jpg"`
-- **Footer.tsx** - `import logo from "@/assets/logo.jpg"`
-- **PremiumPartnerSlots.tsx** - `import naturuaiLogo from "@/assets/naturuai-logo.jpg"`
-- **PremiumLogosCarousel.tsx** - `import logoImage, naturuaiLogo from "@/assets/..."`
-- **PartnersSection.tsx** - `import logoImage, naturuaiLogo from "@/assets/..."`
-
-Essas imagens ja existem em `/public` e devem usar caminhos estaticos.
-
-### 2. framer-motion ainda presente em modais
-
-Embora os modais sejam lazy loaded, o framer-motion ainda e carregado quando eles sao abertos. Componentes afetados:
-
-- `CreateGroupModal.tsx`
-- `EditGroupModal.tsx`
-- `EditMemberGoalModal.tsx`
-- `AddMemberModal.tsx`
-- `InviteMemberModal.tsx`
-- `RecommendPartnerModal.tsx`
-- `ProgressAnalysisModal.tsx`
-- `JoinRequestsPanel.tsx`
-
-### 3. Fonte Google Fonts como render-blocking
-
-A fonte "Plus Jakarta Sans" esta sendo carregada via preload, mas o script de fallback noscript ainda pode causar bloqueio.
+4. **JavaScript bloqueando renderizacao**
+   - Carousel autoplay carrega em multiplos componentes
+   - Hooks de animacao executam mesmo antes de ser visivel
 
 ---
 
 ## Solucao Proposta
 
-### Fase 1: Unificar caminhos de imagens (5 arquivos)
+### Fase 1: Imagens Responsivas para Hero (Maior Impacto)
 
-Substituir todos os imports de `@/assets` por caminhos estaticos de `/public`:
+Usar o atributo `srcSet` para servir imagens de tamanhos diferentes:
 
-**Header.tsx:**
-```text
-// REMOVER
-import logo from "@/assets/logo.jpg";
-
-// SUBSTITUIR por
-const logo = "/logo.jpg";
-```
-
-**Footer.tsx:**
-```text
-// REMOVER
-import logo from "@/assets/logo.jpg";
-
-// SUBSTITUIR por
-const logo = "/logo.jpg";
-```
-
-**PremiumPartnerSlots.tsx:**
-```text
-// REMOVER
-import naturuaiLogo from "@/assets/naturuai-logo.jpg";
-
-// SUBSTITUIR por
-const naturuaiLogo = "/naturuai-logo.jpg";
-```
-
-**PremiumLogosCarousel.tsx:**
-```text
-// REMOVER
-import logoImage from "@/assets/logo.jpg";
-import naturuaiLogo from "@/assets/naturuai-logo.jpg";
-
-// SUBSTITUIR por
-const logoImage = "/logo.jpg";
-const naturuaiLogo = "/naturuai-logo.jpg";
-```
-
-**PartnersSection.tsx:**
-```text
-// REMOVER (linha 101-102)
-import logoImage from "@/assets/logo.jpg";
-import naturuaiLogo from "@/assets/naturuai-logo.jpg";
-
-// SUBSTITUIR por
-const logoImage = "/logo.jpg";
-const naturuaiLogo = "/naturuai-logo.jpg";
-```
-
-### Fase 2: Remover framer-motion dos modais (8 arquivos)
-
-Converter animacoes de `motion.div` e `AnimatePresence` para classes CSS do Tailwind:
-
-**Padrao de conversao:**
-
-```text
-// ANTES (framer-motion)
-import { motion, AnimatePresence } from "framer-motion";
-
-<AnimatePresence>
-  {open && (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-    >
-      ...
-    </motion.div>
-  )}
-</AnimatePresence>
-
-// DEPOIS (CSS)
-{open && (
-  <div className="animate-in fade-in duration-200">
-    ...
-  </div>
-)}
-```
-
-**Arquivos a converter:**
-
-1. `CreateGroupModal.tsx`
-2. `EditGroupModal.tsx`
-3. `EditMemberGoalModal.tsx`
-4. `AddMemberModal.tsx`
-5. `InviteMemberModal.tsx`
-6. `RecommendPartnerModal.tsx`
-7. `ProgressAnalysisModal.tsx`
-8. `JoinRequestsPanel.tsx`
-
-### Fase 3: Otimizar carregamento de fonte
-
-Adicionar `font-display: swap` inline e usar estrategia de preload mais agressiva:
-
-**index.html:**
-```html
-<!-- Preload apenas o subset critico -->
-<link 
-  rel="preload" 
-  href="https://fonts.gstatic.com/s/plusjakartasans/v8/LDIoaomQNQcsA88c7O9yZ4KMCoOg4Ko20yygg_vb.woff2" 
-  as="font" 
-  type="font/woff2" 
-  crossorigin 
+**Hero.tsx - Adicionar srcSet:**
+```tsx
+<img
+  src={heroImage}
+  srcSet="/hero-donation-mobile.webp 640w, /hero-donation-tablet.webp 1024w, /hero-donation.webp 1920w"
+  sizes="100vw"
+  alt="Comunidade unida"
+  className="w-full h-full object-cover"
+  fetchPriority="high"
+  decoding="async"
 />
 ```
 
-### Fase 4: Limpar assets duplicados em src/assets
+**Criar versoes otimizadas:**
+- `hero-donation-mobile.webp` - 640px de largura, ~50-80KB
+- `hero-donation-tablet.webp` - 1024px de largura, ~100-150KB  
+- `hero-donation.webp` - 1920px (manter atual ou comprimir)
 
-Apos a Fase 1, os seguintes arquivos em `src/assets` podem ser removidos pois ja existem em `public/`:
+**index.html - Preload responsivo:**
+```html
+<link rel="preload" as="image" type="image/webp" href="/hero-donation-mobile.webp" media="(max-width: 640px)" fetchpriority="high" />
+<link rel="preload" as="image" type="image/webp" href="/hero-donation-tablet.webp" media="(min-width: 641px) and (max-width: 1024px)" fetchpriority="high" />
+<link rel="preload" as="image" type="image/webp" href="/hero-donation.webp" media="(min-width: 1025px)" fetchpriority="high" />
+```
 
-- `src/assets/logo.jpg` (duplicado de `public/logo.jpg`)
-- `src/assets/naturuai-logo.jpg` (duplicado de `public/naturuai-logo.jpg`)
+### Fase 2: Lazy Loading para Imagens Abaixo da Dobra
+
+**GroupsSection.tsx - Adicionar loading lazy:**
+```tsx
+<img 
+  src={group.image_url || placeholderImages[index % placeholderImages.length]} 
+  alt={group.name} 
+  loading="lazy"
+  decoding="async"
+  className="w-full h-full object-cover ..." 
+/>
+```
+
+**PartnersSection.tsx - Adicionar loading lazy em logos:**
+```tsx
+<img
+  src={partnerLogo}
+  alt={partner.name}
+  loading="lazy"
+  decoding="async"
+  className="..."
+/>
+```
+
+### Fase 3: Otimizar Carrosséis e Autoplay
+
+**Problema:** O plugin `embla-carousel-autoplay` e importado em varios componentes e inicia imediatamente.
+
+**Solucao:** Lazy load do plugin apenas quando visivel:
+
+```tsx
+// Antes
+import Autoplay from "embla-carousel-autoplay";
+const autoplayPlugin = useRef(Autoplay({ delay: 3000 }));
+
+// Depois - carrega apenas quando necessario
+const [autoplayPlugin, setAutoplayPlugin] = useState<any>(null);
+
+useEffect(() => {
+  // Importar dinamicamente apenas quando componente monta
+  import("embla-carousel-autoplay").then((module) => {
+    setAutoplayPlugin(module.default({ delay: 3000 }));
+  });
+}, []);
+```
+
+### Fase 4: Reduzir CSS Critico
+
+**index.html - Inline CSS critico:**
+```html
+<style>
+  /* CSS critico inline para primeiro render */
+  body { margin: 0; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
+  #root { min-height: 100vh; }
+  .hero-skeleton { background: linear-gradient(135deg, #1a7d3c 0%, #2e9e57 100%); min-height: 100vh; }
+</style>
+```
+
+### Fase 5: Defer Third-Party Scripts
+
+**Garantir que scripts de terceiros nao bloqueiam:**
+- Google Fonts ja usa preload com onload
+- Verificar se nao ha scripts bloqueantes
 
 ---
 
 ## Arquivos a Modificar
 
-### Prioridade Alta (Fase 1):
-1. `src/components/Header.tsx` - Usar caminho publico
-2. `src/components/Footer.tsx` - Usar caminho publico
-3. `src/components/PremiumPartnerSlots.tsx` - Usar caminho publico
-4. `src/components/PremiumLogosCarousel.tsx` - Usar caminho publico
-5. `src/components/PartnersSection.tsx` - Usar caminho publico
+### Prioridade Alta (Fase 1-2):
+1. `src/components/Hero.tsx` - Adicionar srcSet responsivo
+2. `index.html` - Preload condicional por media query
+3. `src/components/GroupsSection.tsx` - loading="lazy" nas imagens
+4. `src/components/PartnersSection.tsx` - loading="lazy" nas imagens
 
-### Prioridade Media (Fase 2):
-6. `src/components/CreateGroupModal.tsx` - Remover framer-motion
-7. `src/components/EditGroupModal.tsx` - Remover framer-motion
-8. `src/components/EditMemberGoalModal.tsx` - Remover framer-motion
-9. `src/components/AddMemberModal.tsx` - Remover framer-motion
-10. `src/components/InviteMemberModal.tsx` - Remover framer-motion
-11. `src/components/RecommendPartnerModal.tsx` - Remover framer-motion
-12. `src/components/ProgressAnalysisModal.tsx` - Remover framer-motion
-13. `src/components/JoinRequestsPanel.tsx` - Remover framer-motion
+### Prioridade Media (Fase 3):
+5. `src/components/HeroPremiumLogos.tsx` - Lazy load do Autoplay
+6. `src/components/GoldPartnersCarousel.tsx` - Lazy load do Autoplay
+7. `src/components/PremiumLogosCarousel.tsx` - Lazy load do Autoplay
 
-### Prioridade Baixa (Fase 3):
-14. `index.html` - Otimizar preload de fonte
+### Prioridade Baixa (Fase 4):
+8. `index.html` - CSS critico inline
+
+---
+
+## Imagens a Criar (Manual)
+
+O usuario precisara criar versoes otimizadas da imagem hero:
+
+| Arquivo | Largura | Tamanho Alvo | Uso |
+|---------|---------|--------------|-----|
+| `hero-donation-mobile.webp` | 640px | 50-80 KB | Smartphones |
+| `hero-donation-tablet.webp` | 1024px | 100-150 KB | Tablets |
+| `hero-donation.webp` | 1920px | 200-300 KB | Desktop |
+
+**Ferramentas recomendadas:**
+- [Squoosh.app](https://squoosh.app/) - Compressao WebP online
+- [TinyPNG](https://tinypng.com/) - Compressao automatica
 
 ---
 
 ## Impacto Esperado
 
-| Metrica | Atual | Esperado | Economia |
-|---------|-------|----------|----------|
-| JavaScript nao usado | 112 KiB | 30 KiB | ~80 KiB |
-| Entrega de imagens | 1.478 KiB | Melhor cache | - |
-| Render-blocking | 250 ms | 100 ms | 150 ms |
-| Performance Score | 63% | 75-80% | +12-17% |
+| Metrica | Atual Mobile | Esperado | Melhoria |
+|---------|--------------|----------|----------|
+| LCP | ~4-5s | ~2-3s | -50% |
+| FCP | ~2-3s | ~1.5-2s | -30% |
+| Performance Score | 64% | 75-85% | +11-21% |
+
+### Por que essas mudancas funcionam?
+
+1. **Imagens responsivas**: Mobile baixa imagem 5-10x menor
+2. **Lazy loading**: Imagens abaixo da dobra nao bloqueiam render inicial
+3. **Autoplay lazy**: Reduz JS executado no carregamento inicial
+4. **CSS inline**: Primeiro paint mais rapido
 
 ---
 
 ## Secao Tecnica
 
-### Por que substituir imports de assets por caminhos publicos?
+### Como srcSet funciona?
 
-Quando voce usa `import logo from "@/assets/logo.jpg"`, o Vite processa a imagem e:
-1. Adiciona um hash ao nome do arquivo (ex: `logo-abc123.jpg`)
-2. Inclui a referencia no bundle JavaScript
-3. O cache do browser nao funciona bem entre deploys
+O atributo `srcSet` permite ao browser escolher a imagem mais apropriada:
 
-Usando caminhos estaticos (`const logo = "/logo.jpg"`):
-1. O arquivo permanece com nome fixo
-2. Headers de cache funcionam melhor
-3. O bundle JavaScript fica menor
+```html
+<img 
+  src="/hero-desktop.webp"
+  srcSet="/hero-mobile.webp 640w, /hero-tablet.webp 1024w, /hero-desktop.webp 1920w"
+  sizes="100vw"
+/>
+```
 
-### Por que remover framer-motion?
+- `640w` = imagem de 640px de largura
+- `sizes="100vw"` = imagem ocupa 100% da viewport
+- Browser calcula: `device width * DPR` e escolhe a menor imagem suficiente
 
-O framer-motion adiciona aproximadamente 30-50KB ao bundle. Mesmo com lazy loading, quando o usuario abre um modal, ele precisa baixar essa biblioteca.
+### loading="lazy" vs fetchPriority="high"
 
-Classes CSS como `animate-in fade-in` do Tailwind CSS Animate sao:
-1. Ja incluidas no CSS
-2. Nao requerem JavaScript adicional
-3. Tem performance nativa do browser
+- `loading="lazy"`: Adia carregamento ate proximo da viewport
+- `fetchPriority="high"`: Prioriza download imediato (so para LCP)
 
-### Limitacoes
+**Regra:**
+- Hero image: `fetchPriority="high"` (e LCP)
+- Tudo abaixo da dobra: `loading="lazy"`
 
-- **Cache headers**: O problema "ciclos de vida de cache" (1.940 KiB) e configuracao de servidor/CDN, nao codigo
-- **Imagem hero**: O problema "entrega de imagens" (1.478 KiB) provavelmente e a hero-donation.webp - pode precisar comprimir mais
+### Por que mobile e mais lento?
+
+1. **Conexao**: 3G/4G mais lenta que cabo/WiFi
+2. **CPU**: Dispositivos moveis tem menos poder de processamento
+3. **Memoria**: Menos RAM disponivel para parsing de JS
+4. **DPR**: Retina displays precisam de imagens maiores
+
+---
+
+## Limitacoes
+
+- **Criacao das imagens**: O usuario precisara criar as versoes otimizadas manualmente
+- **Cache CDN**: A configuracao de cache esta no servidor, nao no codigo
+- **Conexao 3G**: Mesmo com otimizacoes, conexoes muito lentas terao impacto
