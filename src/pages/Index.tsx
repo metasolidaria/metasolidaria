@@ -1,16 +1,24 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { Hero } from "@/components/Hero";
-import { HowItWorksModal } from "@/components/HowItWorksModal";
-import { ImpactCounter } from "@/components/ImpactCounter";
-import { GroupsSection } from "@/components/GroupsSection";
-import { EntitiesSection } from "@/components/EntitiesSection";
-import { PartnersSection } from "@/components/PartnersSection";
 import { Footer } from "@/components/Footer";
 import { AuthModal } from "@/components/AuthModal";
 import { useInviteLink } from "@/hooks/useInviteLink";
-import { InstallPWAPrompt } from "@/components/InstallPWAPrompt";
+
+// Lazy load below-the-fold sections to improve FCP and LCP
+const HowItWorksModal = lazy(() => import("@/components/HowItWorksModal").then(m => ({ default: m.HowItWorksModal })));
+const ImpactCounter = lazy(() => import("@/components/ImpactCounter").then(m => ({ default: m.ImpactCounter })));
+const GroupsSection = lazy(() => import("@/components/GroupsSection").then(m => ({ default: m.GroupsSection })));
+const EntitiesSection = lazy(() => import("@/components/EntitiesSection").then(m => ({ default: m.EntitiesSection })));
+const PartnersSection = lazy(() => import("@/components/PartnersSection").then(m => ({ default: m.PartnersSection })));
+
+// Minimal loading placeholder for sections
+const SectionPlaceholder = () => (
+  <div className="py-16 flex justify-center">
+    <div className="animate-pulse bg-muted h-32 w-full max-w-4xl rounded-lg" />
+  </div>
+);
 
 const Index = () => {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
@@ -88,23 +96,34 @@ const Index = () => {
           </div>
         </div>
       )}
-      <HowItWorksModal />
+      
+      <Suspense fallback={null}>
+        <HowItWorksModal />
+      </Suspense>
+      
       <main>
         <Hero />
-        <div id="impacto">
-          <ImpactCounter />
-        </div>
-        <GroupsSection onRequireAuth={handleRequireAuth} />
-        <div id="entidades">
-          <EntitiesSection onRequireAuth={handleRequireAuth} />
-        </div>
-        <div id="parceiros">
-          <PartnersSection />
-        </div>
+        <Suspense fallback={<SectionPlaceholder />}>
+          <div id="impacto">
+            <ImpactCounter />
+          </div>
+        </Suspense>
+        <Suspense fallback={<SectionPlaceholder />}>
+          <GroupsSection onRequireAuth={handleRequireAuth} />
+        </Suspense>
+        <Suspense fallback={<SectionPlaceholder />}>
+          <div id="entidades">
+            <EntitiesSection onRequireAuth={handleRequireAuth} />
+          </div>
+        </Suspense>
+        <Suspense fallback={<SectionPlaceholder />}>
+          <div id="parceiros">
+            <PartnersSection />
+          </div>
+        </Suspense>
       </main>
       <Footer />
       <AuthModal open={isAuthModalOpen} onOpenChange={setIsAuthModalOpen} />
-      <InstallPWAPrompt />
     </div>
   );
 };
