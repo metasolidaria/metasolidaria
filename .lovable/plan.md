@@ -1,129 +1,129 @@
 
-# Plano de Correção - Performance Mobile 90%
+# Plano de Recuperacao da Performance
 
-## Diagnóstico: Por que ainda está em 64%?
+## Diagnostico da Queda de Performance
 
-### Problema 1: Animações CSS Inexistentes
-As classes `animate-fade-in` e `animate-scale-in` foram adicionadas ao Hero.tsx e Header.tsx, mas **não foram definidas** no `tailwind.config.ts`. O plugin `tailwindcss-animate` usa sintaxe diferente (`animate-in fade-in`), então essas classes não fazem nada.
+A queda de 66 para 63 (mobile) e 95 para 86 (desktop) foi causada por dois fatores principais:
 
-**Arquivos afetados:**
-- src/components/Hero.tsx (linhas 38, 65, 66, 104)
-- src/components/Header.tsx (linhas 38, 135)
+### Problema 1: Imagem hero-donation-optimized.webp Possivelmente Grande
 
-### Problema 2: HeroStats ainda usa framer-motion
-O componente `HeroStats.tsx` ainda importa e usa `motion` de framer-motion na linha 2:
-```tsx
-import { motion } from "framer-motion";
-```
-Isso carrega ~45KB de JavaScript assim que o componente é renderizado.
+A imagem criada pode nao ter sido comprimida adequadamente. Precisa ser uma versao realmente otimizada com:
+- Resolucao maxima de 1920x1080
+- Compressao WebP de qualidade 75-80%
+- Tamanho alvo: menos de 150KB
 
-### Problema 3: useIsAdmin no Footer
-O Footer.tsx importa `useIsAdmin` diretamente (linha 5), fazendo com que a lógica de admin seja carregada para todos os visitantes.
+### Problema 2: framer-motion em Componentes Criticos da Pagina Inicial
+
+Os seguintes componentes ainda usam framer-motion e sao carregados na pagina inicial:
+
+| Componente | Status | Impacto |
+|------------|--------|---------|
+| ImpactCounter.tsx | USA framer-motion | Alto (acima da dobra) |
+| GroupsSection.tsx | USA framer-motion | Medio |
+| EntitiesSection.tsx | USA framer-motion | Medio |
+| PartnersSection.tsx | USA framer-motion | Medio |
+| PremiumPartnerSlots.tsx | USA framer-motion | Alto (dentro ImpactCounter) |
+
+Mesmo usando lazy loading para esses componentes, quando eles sao renderizados, o framer-motion (~45KB) e carregado, impactando o TTI.
 
 ---
 
-## Solução Proposta
+## Solucao Proposta
 
-### Fase 1: Definir keyframes de animação no Tailwind
+### Fase 1: Converter ImpactCounter para CSS Animations
 
-**Arquivo:** `tailwind.config.ts`
+O ImpactCounter esta acima da dobra e usa framer-motion extensivamente. Substituir por animacoes CSS nativas:
 
-Adicionar os keyframes e animações necessários:
-- `fade-in`: Para entrada suave com opacity
-- `scale-in`: Para entrada com escala
+**Arquivo:** `src/components/ImpactCounter.tsx`
 
 ```text
-keyframes: {
-  // ... existentes ...
-  "fade-in": {
-    "from": { opacity: "0" },
-    "to": { opacity: "1" }
-  },
-  "scale-in": {
-    "from": { opacity: "0", transform: "scale(0.95)" },
-    "to": { opacity: "1", transform: "scale(1)" }
-  }
-}
-
-animation: {
-  // ... existentes ...
-  "fade-in": "fade-in 0.5s ease-out forwards",
-  "scale-in": "scale-in 0.3s ease-out forwards"
-}
-```
-
-### Fase 2: Remover framer-motion do HeroStats
-
-**Arquivo:** `src/components/HeroStats.tsx`
-
-Substituir:
-```tsx
+// REMOVER
 import { motion } from "framer-motion";
-// ...
-<motion.div
-  initial={{ opacity: 0, y: 20 }}
-  animate={{ opacity: 1, y: 0 }}
-  transition={{ delay: 0.6, duration: 0.5 }}
-  className="flex flex-wrap..."
->
+
+// SUBSTITUIR motion.div por div com classes CSS
+<div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
 ```
 
-Por:
-```tsx
-// Remover import do motion
-<div className="flex flex-wrap... animate-in fade-in slide-in-from-bottom-4 duration-500 delay-600">
+### Fase 2: Converter PremiumPartnerSlots para CSS Animations
+
+**Arquivo:** `src/components/PremiumPartnerSlots.tsx`
+
+```text
+// REMOVER
+import { motion } from "framer-motion";
+
+// SUBSTITUIR motion.div por div com classes CSS
+<div className="animate-in fade-in zoom-in-95 duration-300" style={{ animationDelay: '100ms' }}>
 ```
 
-### Fase 3: Lazy load useIsAdmin no Footer
+### Fase 3: Converter GroupsSection para CSS Animations
 
-**Arquivo:** `src/components/Footer.tsx`
+**Arquivo:** `src/components/GroupsSection.tsx`
 
-Mover a lógica de admin para dentro do componente lazy, evitando que o hook seja executado para visitantes normais.
+Substituir todas as ocorrencias de `motion.div` por `div` com classes do tailwindcss-animate.
 
-### Fase 4: Corrigir InstallPWAPrompt com forwardRef
+### Fase 4: Converter EntitiesSection para CSS Animations
 
-O console mostra um warning sobre refs no InstallPWAPrompt. Isso não afeta performance diretamente, mas indica um problema com o lazy loading.
+**Arquivo:** `src/components/EntitiesSection.tsx`
 
-**Arquivo:** `src/components/InstallPWAPrompt.tsx`
+Substituir todas as ocorrencias de `motion.div` por `div` com classes do tailwindcss-animate.
 
-Envolver o componente com `forwardRef` para suportar corretamente o lazy loading.
+### Fase 5: Converter PartnersSection para CSS Animations
+
+**Arquivo:** `src/components/PartnersSection.tsx`
+
+Substituir todas as ocorrencias de `motion.div` por `div` com classes do tailwindcss-animate.
+
+---
+
+## Animacoes CSS Equivalentes
+
+O plugin `tailwindcss-animate` ja esta instalado e fornece:
+
+| framer-motion | CSS Equivalent |
+|---------------|----------------|
+| `initial={{ opacity: 0 }}` + `animate={{ opacity: 1 }}` | `animate-in fade-in` |
+| `initial={{ y: 20 }}` + `animate={{ y: 0 }}` | `slide-in-from-bottom-5` |
+| `initial={{ scale: 0.9 }}` + `animate={{ scale: 1 }}` | `zoom-in-90` |
+| `transition={{ delay: 0.2 }}` | `style={{ animationDelay: '200ms' }}` |
+| `whileInView` | Usar Intersection Observer ou remover (menos critico) |
 
 ---
 
 ## Resumo de Arquivos a Modificar
 
-| Arquivo | Alteração |
-|---------|-----------|
-| tailwind.config.ts | Adicionar keyframes fade-in e scale-in |
-| src/components/HeroStats.tsx | Remover framer-motion, usar CSS animations |
-| src/components/Footer.tsx | Mover useIsAdmin para dentro do lazy component |
-| src/components/InstallPWAPrompt.tsx | Adicionar forwardRef para compatibilidade |
+1. `src/components/ImpactCounter.tsx` - Remover framer-motion, usar CSS
+2. `src/components/PremiumPartnerSlots.tsx` - Remover framer-motion, usar CSS
+3. `src/components/GroupsSection.tsx` - Remover framer-motion, usar CSS
+4. `src/components/EntitiesSection.tsx` - Remover framer-motion, usar CSS
+5. `src/components/PartnersSection.tsx` - Remover framer-motion, usar CSS
 
 ---
 
 ## Impacto Esperado
 
-- **Bundle inicial**: Redução de ~45KB (framer-motion não será carregado imediatamente)
-- **FCP**: Melhoria com animações CSS nativas funcionando corretamente
-- **LCP**: Melhoria com menos JavaScript bloqueando a renderização
+- **Bundle Inicial**: Reducao de ~45KB (framer-motion nao sera carregado para a pagina inicial)
+- **TTI**: Melhoria significativa com menos JavaScript para processar
+- **FCP/LCP**: Melhoria com animacoes CSS nativas que nao bloqueiam a thread principal
 
 ---
 
-## Seção Técnica
+## Secao Tecnica
 
-### Por que as animações não funcionavam?
+### Por que framer-motion impacta tanto a performance?
 
-O Tailwind só gera CSS para classes que existem na configuração ou nos plugins. As classes `animate-fade-in` e `animate-scale-in` eram classes inventadas que não correspondiam a nenhuma animação real.
+1. **Tamanho do bundle**: ~45KB minificado
+2. **Processamento JS**: Cria sistema de animacao em JavaScript que compete com a renderizacao
+3. **Hidratacao**: Precisa hidratar todos os componentes motion antes de interatividade
 
-### Sintaxe do tailwindcss-animate
+### Como funciona tailwindcss-animate?
 
-O plugin usa uma sintaxe composta:
-- `animate-in` ou `animate-out` para ativar a animação
-- `fade-in`, `zoom-in`, `slide-in-from-*` para definir o tipo
-- `duration-*` e `delay-*` para timing
+O plugin adiciona classes que usam CSS @keyframes nativos:
+- `animate-in` - Ativa a animacao de entrada
+- `fade-in` - Opacidade de 0 para 1
+- `slide-in-from-bottom-X` - Desliza de baixo para cima
+- `zoom-in-XX` - Escala de XX% para 100%
+- `duration-XXX` - Duracao da animacao
 
-Exemplo: `animate-in fade-in slide-in-from-bottom-4 duration-500`
+Essas animacoes sao processadas pela GPU, nao pela thread JavaScript.
 
-### Por que definir keyframes customizados?
-
-Para manter compatibilidade com o código existente que usa `animate-fade-in` como classe única, definiremos os keyframes diretamente no config, evitando refatoração massiva de todos os componentes.
