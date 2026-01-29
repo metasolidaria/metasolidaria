@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
-import { useAdminUsers, type AdminUser, type AppRole } from "@/hooks/useAdminUsers";
+import { useAdminUsers, type AdminUser, type AppRole, type RegistrationSource } from "@/hooks/useAdminUsers";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -60,6 +60,21 @@ const roleConfig: Record<AppRole, { label: string; icon: React.ReactNode; classN
     label: "User",
     icon: <User className="h-3 w-3" />,
     className: "bg-blue-500/20 text-blue-700 border-blue-500/30",
+  },
+};
+
+const registrationSourceConfig: Record<RegistrationSource, { label: string; className: string }> = {
+  self_signup: {
+    label: "Cadastro próprio",
+    className: "bg-green-500/20 text-green-700 border-green-500/30",
+  },
+  admin_added: {
+    label: "Adicionado (Admin)",
+    className: "bg-purple-500/20 text-purple-700 border-purple-500/30",
+  },
+  leader_added: {
+    label: "Adicionado (Líder)",
+    className: "bg-orange-500/20 text-orange-700 border-orange-500/30",
   },
 };
 
@@ -148,6 +163,10 @@ const AdminUsers = () => {
       case "roles":
         aValue = a.roles?.length ?? 0;
         bValue = b.roles?.length ?? 0;
+        break;
+      case "registration_source":
+        aValue = a.registration_source ?? "";
+        bValue = b.registration_source ?? "";
         break;
       case "created_at":
         aValue = new Date(a.created_at).getTime();
@@ -310,6 +329,7 @@ const AdminUsers = () => {
                   <TableHead><SortableHeader column="full_name">Nome</SortableHeader></TableHead>
                   <TableHead><SortableHeader column="email">Email</SortableHeader></TableHead>
                   <TableHead><SortableHeader column="city">Cidade</SortableHeader></TableHead>
+                  <TableHead><SortableHeader column="registration_source">Origem</SortableHeader></TableHead>
                   <TableHead><SortableHeader column="roles">Papéis</SortableHeader></TableHead>
                   <TableHead><SortableHeader column="created_at">Cadastro</SortableHeader></TableHead>
                   <TableHead><SortableHeader column="last_sign_in_at">Último Login</SortableHeader></TableHead>
@@ -319,7 +339,7 @@ const AdminUsers = () => {
               <TableBody>
                 {sortedUsers?.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                       Nenhum usuário encontrado
                     </TableCell>
                   </TableRow>
@@ -329,6 +349,17 @@ const AdminUsers = () => {
                       <TableCell className="font-medium">{u.full_name}</TableCell>
                       <TableCell>{u.email}</TableCell>
                       <TableCell>{u.city || "-"}</TableCell>
+                      <TableCell>
+                        {u.registration_source ? (
+                          <Badge variant="outline" className={registrationSourceConfig[u.registration_source]?.className}>
+                            {registrationSourceConfig[u.registration_source]?.label}
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline" className={registrationSourceConfig.self_signup.className}>
+                            {registrationSourceConfig.self_signup.label}
+                          </Badge>
+                        )}
+                      </TableCell>
                       <TableCell>
                         <div className="flex flex-wrap gap-1">
                           {u.roles && u.roles.length > 0 ? (
