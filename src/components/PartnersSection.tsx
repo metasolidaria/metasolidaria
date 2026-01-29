@@ -34,7 +34,7 @@ import {
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
-import { usePartners, PartnerTier } from "@/hooks/usePartners";
+import { usePaginatedPartners, useAllPartnersForProximity, PartnerTier } from "@/hooks/usePaginatedPartners";
 import { useGeolocation, calculateDistance } from "@/hooks/useGeolocation";
 import { Slider } from "./ui/slider";
 import { RecommendPartnerModal } from "./RecommendPartnerModal";
@@ -184,9 +184,21 @@ export const PartnersSection = () => {
   const [isRecommendModalOpen, setIsRecommendModalOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   
-  const { partners, isLoading } = usePartners();
   const { latitude, longitude, loading: geoLoading, error: geoError, requestLocation, hasLocation } = useGeolocation();
   const { profile } = useUserProfile();
+
+  // Use server-side pagination when NOT using proximity filter
+  const { partners: paginatedPartners, totalCount, isLoading: isPaginatedLoading } = usePaginatedPartners({
+    page: currentPage,
+    limit: ITEMS_PER_PAGE,
+    category: selectedCategory !== "all" ? selectedCategory : undefined,
+    city: !useProximity ? searchCity : undefined,
+  });
+
+  // Use client-side data only when proximity is active
+  const { partners: allPartnersForProximity, isLoading: isProximityLoading } = useAllPartnersForProximity();
+  
+  const isLoading = useProximity ? isProximityLoading : isPaginatedLoading;
 
   // Initialize city filter from URL param
   useEffect(() => {
@@ -276,25 +288,28 @@ export const PartnersSection = () => {
     return state ? state[1] : null;
   };
 
-  // Filtrar categorias disponíveis baseado na cidade selecionada
+  // For category filtering, we need all partners data only when using proximity
+  // Otherwise, server-side handles it
   const availableCategories = useMemo(() => {
-    if (!searchCity) {
+    // When not using proximity, show all categories
+    if (!useProximity) {
+      return allCategories;
+    }
+
+    if (!searchCity || !allPartnersForProximity) {
       return allCategories;
     }
     
     const searchStateAbbr = extractStateFromCity(searchCity);
     
-    const partnersInCity = (partners || []).filter((partner) => {
-      // Parceiro nacional (Brasil) - aparece em todas as cidades
+    const partnersInCity = allPartnersForProximity.filter((partner) => {
       if (isNationwidePartner(partner.city)) {
         return true;
       }
-      // Parceiro estadual
       if (isStatewidePartner(partner.city)) {
         const partnerStateAbbr = getStatewidePartnerState(partner.city);
         return partnerStateAbbr === searchStateAbbr;
       }
-      // Parceiro normal
       return partner.city.toLowerCase().includes(searchCity.toLowerCase());
     });
     
@@ -303,37 +318,35 @@ export const PartnersSection = () => {
     return allCategories.filter(
       (cat) => cat.id === "all" || specialtiesInCity.has(cat.id)
     );
-  }, [partners, searchCity]);
+  }, [allPartnersForProximity, searchCity, useProximity]);
 
   // Reset categoria se ela não estiver mais disponível
-  useMemo(() => {
+  useEffect(() => {
     if (selectedCategory !== "all" && !availableCategories.find(c => c.id === selectedCategory)) {
       setSelectedCategory("all");
     }
   }, [availableCategories, selectedCategory]);
 
-  const filteredAndSortedPartners = useMemo(() => {
-    let result = (partners || []).filter((partner) => {
+  // For proximity mode: filter and sort client-side
+  const proximityFilteredPartners = useMemo(() => {
+    if (!useProximity) return [];
+    
+    let result = (allPartnersForProximity || []).filter((partner) => {
       const matchesCategory =
         selectedCategory === "all" || partner.specialty === selectedCategory;
       
-      // Lógica de filtragem por cidade/estado
       let matchesCity = true;
       if (searchCity) {
         const searchCityLower = searchCity.toLowerCase();
         const searchStateAbbr = extractStateFromCity(searchCity);
         
-        // Verifica se o parceiro é nacional (Brasil)
         if (isNationwidePartner(partner.city)) {
-          matchesCity = true; // Aparece em todas as cidades
+          matchesCity = true;
         }
-        // Verifica se o parceiro é estadual
         else if (isStatewidePartner(partner.city)) {
           const partnerStateAbbr = getStatewidePartnerState(partner.city);
-          // Parceiro estadual aparece se a busca é por uma cidade do mesmo estado
           matchesCity = partnerStateAbbr === searchStateAbbr;
         } else {
-          // Parceiro normal: busca padrão por cidade
           matchesCity = partner.city.toLowerCase().includes(searchCityLower);
         }
       }
@@ -341,8 +354,8 @@ export const PartnersSection = () => {
       return matchesCategory && matchesCity;
     });
 
-    // Caso 1: Proximidade ativa COM localização permitida
-    if (useProximity && hasLocation && latitude && longitude) {
+    // Proximity filtering with location
+    if (hasLocation && latitude && longitude) {
       result = result
         .map((partner) => {
           const distance =
@@ -352,25 +365,22 @@ export const PartnersSection = () => {
           return { ...partner, distance };
         })
         .filter((partner) => {
-          // Quando proximidade está ativa, mostrar APENAS parceiros com coordenadas dentro do raio
           if (partner.distance === null) return false;
           return partner.distance <= radiusKm;
         })
         .sort((a, b) => {
-          // Primeiro por tier, depois por distância
           const tierA = tierOrder[a.tier] || 3;
           const tierB = tierOrder[b.tier] || 3;
           if (tierA !== tierB) return tierA - tierB;
           
-          // Ordenar por distância
           if (a.distance === null && b.distance === null) return 0;
           if (a.distance === null) return 1;
           if (b.distance === null) return -1;
           return a.distance - b.distance;
         });
     }
-    // Caso 2: Proximidade ativa MAS localização negada - usar cidade do perfil
-    else if (useProximity && geoError && profile?.city) {
+    // Fallback to city filtering
+    else if (geoError && profile?.city) {
       const userCityNormalized = normalizeText(extractCityName(profile.city));
       result = result
         .filter((partner) => 
@@ -382,27 +392,32 @@ export const PartnersSection = () => {
           return tierA - tierB;
         });
     }
-    // Caso 3: Sem filtro de proximidade ou sem dados disponíveis
-    else if (!useProximity) {
-      result = result.sort((a, b) => {
-        const tierA = tierOrder[a.tier] || 3;
-        const tierB = tierOrder[b.tier] || 3;
-        return tierA - tierB;
-      });
-    }
 
     return result;
-  }, [partners, selectedCategory, searchCity, useProximity, hasLocation, latitude, longitude, radiusKm, geoError, profile?.city]);
+  }, [allPartnersForProximity, selectedCategory, searchCity, useProximity, hasLocation, latitude, longitude, radiusKm, geoError, profile?.city]);
 
-  // Paginação
-  const totalPages = Math.ceil(filteredAndSortedPartners.length / ITEMS_PER_PAGE);
-  const paginatedPartners = useMemo(() => {
-    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-    return filteredAndSortedPartners.slice(startIndex, startIndex + ITEMS_PER_PAGE);
-  }, [filteredAndSortedPartners, currentPage]);
+  // Final partners list depends on mode
+  const displayPartners = useMemo(() => {
+    if (useProximity) {
+      // Client-side pagination for proximity mode
+      const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+      return proximityFilteredPartners.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+    }
+    // Server-side pagination
+    return paginatedPartners;
+  }, [useProximity, proximityFilteredPartners, paginatedPartners, currentPage]);
+
+  const totalPages = useMemo(() => {
+    if (useProximity) {
+      return Math.ceil(proximityFilteredPartners.length / ITEMS_PER_PAGE);
+    }
+    return Math.ceil(totalCount / ITEMS_PER_PAGE);
+  }, [useProximity, proximityFilteredPartners.length, totalCount]);
+
+  const displayTotalCount = useProximity ? proximityFilteredPartners.length : totalCount;
 
   // Reset page when filters change
-  useMemo(() => {
+  useEffect(() => {
     setCurrentPage(1);
   }, [selectedCategory, searchCity, useProximity, radiusKm]);
 
@@ -560,10 +575,10 @@ export const PartnersSection = () => {
           <div className="flex items-center justify-center py-12">
             <Loader2 className="w-8 h-8 animate-spin text-primary" />
           </div>
-        ) : paginatedPartners.length > 0 ? (
+        ) : displayPartners.length > 0 ? (
           <>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {paginatedPartners.map((partner, index) => (
+              {displayPartners.map((partner, index) => (
                 <div
                   key={partner.id}
                   className={`bg-card rounded-2xl overflow-hidden shadow-soft hover:shadow-glow transition-all duration-300 hover:-translate-y-1 animate-in fade-in slide-in-from-bottom-4 duration-400 ${
@@ -650,7 +665,7 @@ export const PartnersSection = () => {
                   Anterior
                 </Button>
                 <span className="text-sm text-muted-foreground">
-                  Página {currentPage} de {totalPages} ({filteredAndSortedPartners.length} parceiros)
+                  Página {currentPage} de {totalPages} ({displayTotalCount} parceiros)
                 </span>
                 <Button
                   variant="outline"
@@ -667,7 +682,7 @@ export const PartnersSection = () => {
         ) : (
           <div className="text-center py-12 animate-in fade-in duration-300">
             <p className="text-muted-foreground text-lg">
-              {partners && partners.length === 0
+              {displayTotalCount === 0 && !useProximity
                 ? "Ainda não há parceiros cadastrados."
                 : useProximity && hasLocation
                 ? `Nenhum parceiro com localização cadastrada encontrado em um raio de ${radiusKm}km.`

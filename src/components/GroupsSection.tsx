@@ -1,12 +1,11 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Users, Target, MapPin, Plus, Heart, Loader2, Lock, Globe, Mail, ChevronLeft, ChevronRight, Crown } from "lucide-react";
-import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { CreateGroupModal } from "./CreateGroupModal";
 import { InviteMemberModal } from "./InviteMemberModal";
 import { GroupSearch } from "./GroupSearch";
-import { useGroups } from "@/hooks/useGroups";
+import { usePaginatedGroups, useUserMemberships } from "@/hooks/usePaginatedGroups";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 
@@ -15,66 +14,46 @@ const donationTypeLabels: Record<string, {
   label: string;
   icon: string;
 }> = {
-  alimentos: {
-    label: "Alimentos",
-    icon: "🍎"
-  },
-  livros: {
-    label: "Livros",
-    icon: "📚"
-  },
-  roupas: {
-    label: "Roupas",
-    icon: "👕"
-  },
-  cobertores: {
-    label: "Cobertores",
-    icon: "🛏️"
-  },
-  sopas: {
-    label: "Sopas",
-    icon: "🍲"
-  },
-  brinquedos: {
-    label: "Brinquedos",
-    icon: "🧸"
-  },
-  higiene: {
-    label: "Kits de Higiene",
-    icon: "🧴"
-  },
-  outro: {
-    label: "Outro",
-    icon: "📦"
-  }
+  alimentos: { label: "Alimentos", icon: "🍎" },
+  livros: { label: "Livros", icon: "📚" },
+  roupas: { label: "Roupas", icon: "👕" },
+  cobertores: { label: "Cobertores", icon: "🛏️" },
+  sopas: { label: "Sopas", icon: "🍲" },
+  brinquedos: { label: "Brinquedos", icon: "🧸" },
+  higiene: { label: "Kits de Higiene", icon: "🧴" },
+  outro: { label: "Outro", icon: "📦" }
 };
-const placeholderImages = ["https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=400", "https://images.unsplash.com/photo-1511632765486-a01980e01a18?w=400", "https://images.unsplash.com/photo-1582213782179-e0d53f98f2ca?w=400", "https://images.unsplash.com/photo-1517486808906-6ca8b3f04846?w=400", "https://images.unsplash.com/photo-1491438590914-bc09fcaaf77a?w=400", "https://images.unsplash.com/photo-1523464862212-d6631d073194?w=400"];
+const placeholderImages = [
+  "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=400",
+  "https://images.unsplash.com/photo-1511632765486-a01980e01a18?w=400",
+  "https://images.unsplash.com/photo-1582213782179-e0d53f98f2ca?w=400",
+  "https://images.unsplash.com/photo-1517486808906-6ca8b3f04846?w=400",
+  "https://images.unsplash.com/photo-1491438590914-bc09fcaaf77a?w=400",
+  "https://images.unsplash.com/photo-1523464862212-d6631d073194?w=400"
+];
 
 interface GroupsSectionProps {
   onRequireAuth: () => void;
 }
 
-export const GroupsSection = ({
-  onRequireAuth
-}: GroupsSectionProps) => {
-  const {
-    groups,
-    isLoading,
-    joinGroup,
-    userMemberships
-  } = useGroups();
-  const {
-    user
-  } = useAuth();
-  const {
-    toast
-  } = useToast();
+export const GroupsSection = ({ onRequireAuth }: GroupsSectionProps) => {
+  const { user } = useAuth();
+  const { toast } = useToast();
   const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [inviteModalOpen, setInviteModalOpen] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState<{ id: string; name: string; description?: string } | null>(null);
   const [filter, setFilter] = useState<"all" | "mine">("all");
   const [currentPage, setCurrentPage] = useState(1);
+  
+  const userMemberships = useUserMemberships();
+  const { groups, totalCount, isLoading, joinGroup } = usePaginatedGroups({
+    page: currentPage,
+    limit: ITEMS_PER_PAGE,
+    filter,
+    userMemberships,
+  });
+
   const isUserMember = (groupId: string) => userMemberships.includes(groupId);
 
   // Ativar filtro "Meus Grupos" quando usuário logar
@@ -84,28 +63,12 @@ export const GroupsSection = ({
     }
   }, [user]);
 
-  // Filtra os grupos baseado na seleção e cidade
-  const filteredGroups = useMemo(() => {
-    return groups?.filter(group => {
-      // Filtro de membro
-      if (filter === "mine" && !isUserMember(group.id)) {
-        return false;
-      }
-      return true;
-    });
-  }, [groups, filter, userMemberships]);
-
-  // Paginação
-  const totalPages = Math.ceil((filteredGroups?.length || 0) / ITEMS_PER_PAGE);
-  const paginatedGroups = useMemo(() => {
-    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-    return filteredGroups?.slice(startIndex, startIndex + ITEMS_PER_PAGE);
-  }, [filteredGroups, currentPage]);
-
-  // Reset page when filters change
-  useMemo(() => {
+  // Reset page when filter changes
+  useEffect(() => {
     setCurrentPage(1);
   }, [filter]);
+
+  const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
 
   const handleGroupAction = (groupId: string, isPrivate: boolean) => {
     if (!user) {
@@ -113,7 +76,6 @@ export const GroupsSection = ({
       return;
     }
 
-    // If user is already a member, navigate to group page
     if (isUserMember(groupId)) {
       navigate(`/grupo/${groupId}`);
       return;
@@ -200,10 +162,10 @@ export const GroupsSection = ({
           <div className="flex items-center justify-center py-12">
             <Loader2 className="w-8 h-8 animate-spin text-primary" />
           </div>
-        ) : paginatedGroups && paginatedGroups.length > 0 ? (
+        ) : groups && groups.length > 0 ? (
           <>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {paginatedGroups.map((group, index) => (
+              {groups.map((group, index) => (
                 <div
                   key={group.id}
                   className="bg-card rounded-2xl overflow-hidden shadow-soft hover:shadow-glow transition-all duration-300 hover:-translate-y-1 group animate-in fade-in slide-in-from-bottom-4 duration-400"
@@ -308,7 +270,7 @@ export const GroupsSection = ({
                   Anterior
                 </Button>
                 <span className="text-sm text-muted-foreground">
-                  Página {currentPage} de {totalPages} ({filteredGroups?.length} grupos)
+                  Página {currentPage} de {totalPages} ({totalCount} grupos)
                 </span>
                 <Button variant="outline" size="sm" onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} disabled={currentPage === totalPages}>
                   Próxima
