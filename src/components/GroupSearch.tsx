@@ -408,6 +408,7 @@ export const GroupSearch = ({ onRequireAuth, userMemberships }: GroupSearchProps
               <button
                 type="button"
                 onClick={handleClear}
+                aria-label="Limpar busca"
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
               >
                 <X className="w-4 h-4" />
