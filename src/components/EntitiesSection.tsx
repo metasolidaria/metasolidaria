@@ -1,5 +1,4 @@
 import { useState, useMemo } from "react";
-import { motion } from "framer-motion";
 import { Building2, Plus, MapPin, Loader2, Search } from "lucide-react";
 import { Button } from "./ui/button";
 import { Card, CardContent } from "./ui/card";
@@ -61,12 +60,7 @@ export const EntitiesSection = ({ onRequireAuth }: EntitiesSectionProps) => {
   return (
     <section className="py-16 md:py-24 bg-muted/30">
       <div className="container mx-auto px-4">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="text-center mb-12"
-        >
+        <div className="text-center mb-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
           <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
             Entidades Beneficiárias
           </h2>
@@ -86,18 +80,14 @@ export const EntitiesSection = ({ onRequireAuth }: EntitiesSectionProps) => {
               placeholder="Buscar por cidade..."
             />
           </div>
-        </motion.div>
+        </div>
 
         {isLoading ? (
           <div className="flex justify-center py-12">
             <Loader2 className="w-8 h-8 animate-spin text-primary" />
           </div>
         ) : entities.length === 0 ? (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="text-center py-12"
-          >
+          <div className="text-center py-12 animate-in fade-in duration-300">
             <Building2 className="w-16 h-16 text-muted-foreground/50 mx-auto mb-4" />
             <p className="text-muted-foreground">
               Nenhuma entidade cadastrada ainda.
@@ -105,13 +95,9 @@ export const EntitiesSection = ({ onRequireAuth }: EntitiesSectionProps) => {
             <p className="text-sm text-muted-foreground mt-2">
               Seja o primeiro a cadastrar uma entidade beneficiária!
             </p>
-          </motion.div>
+          </div>
         ) : filteredEntities.length === 0 ? (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="text-center py-12"
-          >
+          <div className="text-center py-12 animate-in fade-in duration-300">
             <Search className="w-16 h-16 text-muted-foreground/50 mx-auto mb-4" />
             <p className="text-muted-foreground">
               Nenhuma entidade encontrada em "{searchCity}".
@@ -119,16 +105,14 @@ export const EntitiesSection = ({ onRequireAuth }: EntitiesSectionProps) => {
             <p className="text-sm text-muted-foreground mt-2">
               Tente buscar por outra cidade.
             </p>
-          </motion.div>
+          </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredEntities.map((entity, index) => (
-              <motion.div
+              <div
                 key={entity.id}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.05 }}
+                className="animate-in fade-in slide-in-from-bottom-4 duration-400"
+                style={{ animationDelay: `${index * 50}ms` }}
               >
                 <Card className="h-full hover:shadow-soft transition-shadow">
                   <CardContent className="p-6">
@@ -148,7 +132,7 @@ export const EntitiesSection = ({ onRequireAuth }: EntitiesSectionProps) => {
                     </div>
                   </CardContent>
                 </Card>
-              </motion.div>
+              </div>
             ))}
           </div>
         )}
@@ -182,7 +166,7 @@ export const EntitiesSection = ({ onRequireAuth }: EntitiesSectionProps) => {
                 onChange={(city) =>
                   setNewEntity((prev) => ({ ...prev, city }))
                 }
-              placeholder="Digite a cidade..."
+                placeholder="Digite a cidade..."
               />
             </div>
             <div className="space-y-2">
@@ -199,7 +183,7 @@ export const EntitiesSection = ({ onRequireAuth }: EntitiesSectionProps) => {
             <div className="flex justify-end gap-3 pt-4">
               <Button
                 variant="outline"
-              onClick={() => {
+                onClick={() => {
                   setNewEntity({ name: "", city: "", phone: "" });
                   setIsModalOpen(false);
                 }}

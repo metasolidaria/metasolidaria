@@ -1,4 +1,3 @@
-import { motion } from "framer-motion";
 import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Users, Target, MapPin, Plus, Heart, Loader2, Lock, Globe, Mail, ChevronLeft, ChevronRight, Crown } from "lucide-react";
@@ -10,6 +9,7 @@ import { GroupSearch } from "./GroupSearch";
 import { useGroups } from "@/hooks/useGroups";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+
 const ITEMS_PER_PAGE = 10;
 const donationTypeLabels: Record<string, {
   label: string;
@@ -49,9 +49,11 @@ const donationTypeLabels: Record<string, {
   }
 };
 const placeholderImages = ["https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=400", "https://images.unsplash.com/photo-1511632765486-a01980e01a18?w=400", "https://images.unsplash.com/photo-1582213782179-e0d53f98f2ca?w=400", "https://images.unsplash.com/photo-1517486808906-6ca8b3f04846?w=400", "https://images.unsplash.com/photo-1491438590914-bc09fcaaf77a?w=400", "https://images.unsplash.com/photo-1523464862212-d6631d073194?w=400"];
+
 interface GroupsSectionProps {
   onRequireAuth: () => void;
 }
+
 export const GroupsSection = ({
   onRequireAuth
 }: GroupsSectionProps) => {
@@ -104,6 +106,7 @@ export const GroupsSection = ({
   useMemo(() => {
     setCurrentPage(1);
   }, [filter]);
+
   const handleGroupAction = (groupId: string, isPrivate: boolean) => {
     if (!user) {
       onRequireAuth();
@@ -133,6 +136,7 @@ export const GroupsSection = ({
       }
     });
   };
+
   const handleInviteMembers = (group: { id: string; name: string; description?: string | null }) => {
     if (!user) {
       onRequireAuth();
@@ -141,6 +145,7 @@ export const GroupsSection = ({
     setSelectedGroup({ id: group.id, name: group.name, description: group.description || undefined });
     setInviteModalOpen(true);
   };
+
   const handleCreateGroup = () => {
     if (!user) {
       onRequireAuth();
@@ -148,20 +153,13 @@ export const GroupsSection = ({
     }
     setIsModalOpen(true);
   };
+
   const isGroupLeader = (leaderId: string) => user?.id === leaderId;
-  return <section id="grupos" className="py-24 bg-background">
+
+  return (
+    <section id="grupos" className="py-24 bg-background">
       <div className="container mx-auto px-4">
-        <motion.div initial={{
-        opacity: 0,
-        y: 20
-      }} whileInView={{
-        opacity: 1,
-        y: 0
-      }} viewport={{
-        once: true
-      }} transition={{
-        duration: 0.6
-      }} className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
           <div>
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
               Grupos Ativos
@@ -172,7 +170,7 @@ export const GroupsSection = ({
             <Plus className="w-5 h-5" />
             Criar Novo Grupo
           </Button>
-        </motion.div>
+        </div>
 
         {/* Filtros */}
         <div className="flex flex-col gap-4 mb-8">
@@ -198,22 +196,19 @@ export const GroupsSection = ({
           </div>
         </div>
 
-        {isLoading ? <div className="flex items-center justify-center py-12">
+        {isLoading ? (
+          <div className="flex items-center justify-center py-12">
             <Loader2 className="w-8 h-8 animate-spin text-primary" />
-          </div> : paginatedGroups && paginatedGroups.length > 0 ? <>
+          </div>
+        ) : paginatedGroups && paginatedGroups.length > 0 ? (
+          <>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {paginatedGroups.map((group, index) => <motion.div key={group.id} initial={{
-            opacity: 0,
-            y: 30
-          }} whileInView={{
-            opacity: 1,
-            y: 0
-          }} viewport={{
-            once: true
-          }} transition={{
-            duration: 0.5,
-            delay: index * 0.1
-          }} className="bg-card rounded-2xl overflow-hidden shadow-soft hover:shadow-glow transition-all duration-300 hover:-translate-y-1 group">
+              {paginatedGroups.map((group, index) => (
+                <div
+                  key={group.id}
+                  className="bg-card rounded-2xl overflow-hidden shadow-soft hover:shadow-glow transition-all duration-300 hover:-translate-y-1 group animate-in fade-in slide-in-from-bottom-4 duration-400"
+                  style={{ animationDelay: `${index * 100}ms` }}
+                >
                   <div className="relative h-40 overflow-hidden">
                     <img 
                       src={group.image_url || placeholderImages[index % placeholderImages.length]} 
@@ -300,7 +295,8 @@ export const GroupsSection = ({
                       </Button>
                     </div>
                   </div>
-                </motion.div>)}
+                </div>
+              ))}
             </div>
 
             {/* Paginação */}
@@ -317,11 +313,9 @@ export const GroupsSection = ({
                   <ChevronRight className="w-4 h-4 ml-1" />
                 </Button>
               </div>}
-          </> : filter === "mine" ? <motion.div initial={{
-        opacity: 0
-      }} animate={{
-        opacity: 1
-      }} className="text-center py-12">
+          </>
+        ) : filter === "mine" ? (
+          <div className="text-center py-12 animate-in fade-in duration-300">
             <Users className="w-12 h-12 mx-auto text-muted-foreground/50 mb-4" />
             <p className="text-muted-foreground text-lg mb-4">
               Você ainda não faz parte de nenhum grupo.
@@ -336,11 +330,9 @@ export const GroupsSection = ({
                 Criar Meu Grupo
               </Button>
             </div>
-          </motion.div> : <motion.div initial={{
-        opacity: 0
-      }} animate={{
-        opacity: 1
-      }} className="text-center py-12">
+          </div>
+        ) : (
+          <div className="text-center py-12 animate-in fade-in duration-300">
             <p className="text-muted-foreground text-lg mb-4">
               Ainda não há grupos cadastrados. Seja o primeiro a criar!
             </p>
@@ -348,11 +340,13 @@ export const GroupsSection = ({
               <Plus className="w-5 h-5" />
               Criar Primeiro Grupo
             </Button>
-          </motion.div>}
+          </div>
+        )}
       </div>
 
       <CreateGroupModal open={isModalOpen} onOpenChange={setIsModalOpen} onRequireAuth={onRequireAuth} />
 
       <InviteMemberModal open={inviteModalOpen} onOpenChange={setInviteModalOpen} groupId={selectedGroup?.id || null} groupName={selectedGroup?.name} groupDescription={selectedGroup?.description} />
-    </section>;
+    </section>
+  );
 };

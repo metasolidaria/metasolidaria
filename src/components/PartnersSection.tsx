@@ -1,4 +1,3 @@
-import { motion, AnimatePresence } from "framer-motion";
 import { useState, useMemo, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { 
@@ -150,11 +149,7 @@ const CategoryFilters = ({ categories, selectedCategory, onSelectCategory }: Cat
         </Button>
       </CollapsibleTrigger>
       <CollapsibleContent>
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="mt-3 p-4 bg-card rounded-lg border border-border"
-        >
+        <div className="mt-3 p-4 bg-card rounded-lg border border-border animate-in fade-in duration-200">
           <div className="flex flex-wrap gap-2">
             {categories.map((category) => (
               <Button
@@ -172,7 +167,7 @@ const CategoryFilters = ({ categories, selectedCategory, onSelectCategory }: Cat
               </Button>
             ))}
           </div>
-        </motion.div>
+        </div>
       </CollapsibleContent>
     </Collapsible>
   );
@@ -422,13 +417,7 @@ export const PartnersSection = () => {
   return (
     <section id="parceiros" className="py-24 bg-muted">
       <div className="container mx-auto px-4">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-          className="text-center mb-12"
-        >
+        <div className="text-center mb-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
           <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
             Guia de Parceiros
           </h2>
@@ -444,15 +433,12 @@ export const PartnersSection = () => {
             <UserPlus className="w-4 h-4" />
             Recomendar ou Seja Parceiro
           </Button>
-        </motion.div>
+        </div>
 
         {/* Filters */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6, delay: 0.1 }}
-          className="mb-10"
+        <div
+          className="mb-10 animate-in fade-in slide-in-from-bottom-4 duration-500"
+          style={{ animationDelay: '100ms' }}
         >
           <div className="flex flex-col md:flex-row gap-4 mb-6">
             <div className="flex-1 max-w-md">
@@ -522,12 +508,7 @@ export const PartnersSection = () => {
 
           {/* Slider de Raio */}
           {useProximity && hasLocation && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              className="mb-6 p-4 bg-card rounded-lg border border-border"
-            >
+            <div className="mb-6 p-4 bg-card rounded-lg border border-border animate-in fade-in slide-in-from-top-2 duration-300">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-medium text-foreground">Raio de busca</span>
                 <span className="text-sm font-bold text-primary">{radiusKm} km</span>
@@ -544,23 +525,19 @@ export const PartnersSection = () => {
                 <span>5 km</span>
                 <span>200 km</span>
               </div>
-            </motion.div>
+            </div>
           )}
 
           {/* Feedback de filtragem por cidade */}
           {useProximity && geoError && profile?.city && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              className="mb-4 p-4 bg-amber-50 dark:bg-amber-950/20 rounded-lg border border-amber-200 dark:border-amber-800"
-            >
+            <div className="mb-4 p-4 bg-amber-50 dark:bg-amber-950/20 rounded-lg border border-amber-200 dark:border-amber-800 animate-in fade-in duration-300">
               <div className="flex items-center gap-2 text-amber-700 dark:text-amber-400">
                 <Info className="w-4 h-4 flex-shrink-0" />
                 <span className="text-sm">
                   Mostrando parceiros de <strong>{extractCityName(profile.city)}</strong> (cidade do seu cadastro)
                 </span>
               </div>
-            </motion.div>
+            </div>
           )}
 
           {/* Erro de geolocalização sem cidade de fallback */}
@@ -576,7 +553,7 @@ export const PartnersSection = () => {
             selectedCategory={selectedCategory}
             onSelectCategory={setSelectedCategory}
           />
-        </motion.div>
+        </div>
 
         {/* Partners Grid */}
         {isLoading ? (
@@ -587,15 +564,12 @@ export const PartnersSection = () => {
           <>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {paginatedPartners.map((partner, index) => (
-                <motion.div
+                <div
                   key={partner.id}
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.5, delay: index * 0.1 }}
-                  className={`bg-card rounded-2xl overflow-hidden shadow-soft hover:shadow-glow transition-all duration-300 hover:-translate-y-1 ${
+                  className={`bg-card rounded-2xl overflow-hidden shadow-soft hover:shadow-glow transition-all duration-300 hover:-translate-y-1 animate-in fade-in slide-in-from-bottom-4 duration-400 ${
                     (partner.tier === 'ouro' || partner.tier === 'premium') ? 'ring-2 ring-yellow-500/50' : ''
                   }`}
+                  style={{ animationDelay: `${index * 100}ms` }}
                 >
                   {/* Badge de Tier - apenas Ouro (inclui premium) */}
                   {(partner.tier === 'ouro' || partner.tier === 'premium') && (
@@ -659,7 +633,7 @@ export const PartnersSection = () => {
                       </Button>
                     )}
                   </div>
-                </motion.div>
+                </div>
               ))}
             </div>
 
@@ -691,11 +665,7 @@ export const PartnersSection = () => {
             )}
           </>
         ) : (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="text-center py-12"
-          >
+          <div className="text-center py-12 animate-in fade-in duration-300">
             <p className="text-muted-foreground text-lg">
               {partners && partners.length === 0
                 ? "Ainda não há parceiros cadastrados."
@@ -712,7 +682,7 @@ export const PartnersSection = () => {
                 Tente {hasLocation ? "aumentar o raio ou " : ""}desativar o filtro de proximidade para ver todos os parceiros.
               </p>
             )}
-          </motion.div>
+          </div>
         )}
 
         <RecommendPartnerModal
