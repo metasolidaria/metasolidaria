@@ -4,8 +4,6 @@ import { Button } from "./ui/button";
 import { Skeleton } from "./ui/skeleton";
 import { useAuth } from "@/hooks/useAuth";
 
-// Direct path to public folder - enables preload in index.html
-const heroImage = "/hero-donation.webp";
 
 // Lazy load non-critical components to improve FCP
 const HeroPremiumLogos = lazy(() => import("./HeroPremiumLogos").then(m => ({ default: m.HeroPremiumLogos })));
@@ -52,20 +50,8 @@ export const Hero = () => {
 
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-      {/* Background Image with responsive srcSet */}
-      <div className="absolute inset-0 z-0">
-        <img
-          src={heroImage}
-          srcSet="/hero-donation-mobile.webp 640w, /hero-donation-tablet.webp 1024w, /hero-donation.webp 1920w"
-          sizes="100vw"
-          alt="Comunidade unida fazendo doações"
-          className="w-full h-full object-cover"
-          fetchPriority="high"
-          decoding="async"
-        />
-        {/* Overlay gradient for text readability */}
-        <div className="absolute inset-0 bg-gradient-to-b from-primary/80 via-primary/70 to-primary/60" />
-      </div>
+      {/* Background gradient only - no image for better performance */}
+      <div className="absolute inset-0 z-0 bg-gradient-to-b from-primary via-primary/95 to-primary/90" />
 
       {/* Content - Using CSS animations instead of framer-motion */}
       <div className="relative z-10 container mx-auto px-4 py-20 text-center">
