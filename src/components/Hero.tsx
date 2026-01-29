@@ -52,19 +52,8 @@ export const Hero = () => {
 
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-      {/* Background Image with Overlay - using fetchpriority for LCP optimization */}
-      <div className="absolute inset-0 z-0">
-        <img
-          src={heroImage}
-          srcSet="/hero-donation-mobile.webp 640w, /hero-donation-tablet.webp 1024w, /hero-donation.webp 1920w"
-          sizes="100vw"
-          alt="Comunidade unida"
-          className="w-full h-full object-cover"
-          fetchPriority="high"
-          decoding="async"
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-foreground/70 via-foreground/50 to-foreground/80" />
-      </div>
+      {/* Background gradient only - no image for performance testing */}
+      <div className="absolute inset-0 z-0 bg-gradient-to-b from-primary via-primary/90 to-primary/80" />
 
       {/* Content - Using CSS animations instead of framer-motion */}
       <div className="relative z-10 container mx-auto px-4 py-20 text-center">
