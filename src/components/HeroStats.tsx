@@ -49,40 +49,41 @@ export const HeroStats = () => {
     <div className="flex flex-wrap justify-center gap-6 sm:gap-12 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-600">
       <div className="text-center">
         <div className="flex items-center justify-center gap-2 mb-1">
-          <Users className="w-5 h-5 text-secondary" />
-          {isLoadingStats ? (
-            <Skeleton className="h-8 w-16 bg-primary-foreground/20" />
-          ) : (
-            <span className="text-2xl sm:text-3xl font-bold text-secondary">
-              +<AnimatedCounter value={heroStats?.totalGroups || 0} />
-            </span>
-          )}
+          <Users className="w-5 h-5 text-secondary flex-shrink-0" />
+          {/* Fixed min-width prevents layout shift during counter animation */}
+          <span className="text-2xl sm:text-3xl font-bold text-secondary min-w-[4rem] sm:min-w-[5rem] inline-block text-left">
+            {isLoadingStats ? (
+              <span className="opacity-0">+0</span>
+            ) : (
+              <>+<AnimatedCounter value={heroStats?.totalGroups || 0} /></>
+            )}
+          </span>
         </div>
         <p className="text-primary-foreground/70 text-xs sm:text-sm">Grupos Ativos</p>
       </div>
       <div className="text-center">
         <div className="flex items-center justify-center gap-2 mb-1">
-          <UserCheck className="w-5 h-5 text-secondary" />
-          {isLoadingStats ? (
-            <Skeleton className="h-8 w-20 bg-primary-foreground/20" />
-          ) : (
-            <span className="text-2xl sm:text-3xl font-bold text-secondary">
-              +<AnimatedCounter value={heroStats?.totalUsers || 0} />
-            </span>
-          )}
+          <UserCheck className="w-5 h-5 text-secondary flex-shrink-0" />
+          <span className="text-2xl sm:text-3xl font-bold text-secondary min-w-[5rem] sm:min-w-[6.5rem] inline-block text-left">
+            {isLoadingStats ? (
+              <span className="opacity-0">+0</span>
+            ) : (
+              <>+<AnimatedCounter value={heroStats?.totalUsers || 0} /></>
+            )}
+          </span>
         </div>
         <p className="text-primary-foreground/70 text-xs sm:text-sm">Voluntários</p>
       </div>
       <div className="text-center">
         <div className="flex items-center justify-center gap-2 mb-1">
-          <Target className="w-5 h-5 text-secondary" />
-          {isLoadingStats ? (
-            <Skeleton className="h-8 w-24 bg-primary-foreground/20" />
-          ) : (
-            <span className="text-2xl sm:text-3xl font-bold text-secondary">
-              +<AnimatedCounter value={heroStats?.totalGoals || 0} />
-            </span>
-          )}
+          <Target className="w-5 h-5 text-secondary flex-shrink-0" />
+          <span className="text-2xl sm:text-3xl font-bold text-secondary min-w-[6rem] sm:min-w-[8rem] inline-block text-left">
+            {isLoadingStats ? (
+              <span className="opacity-0">+0</span>
+            ) : (
+              <>+<AnimatedCounter value={heroStats?.totalGoals || 0} /></>
+            )}
+          </span>
         </div>
         <p className="text-primary-foreground/70 text-xs sm:text-sm">Metas Definidas</p>
       </div>
