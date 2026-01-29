@@ -212,7 +212,9 @@ export const GroupsSection = ({
                   <div className="relative h-40 overflow-hidden">
                     <img 
                       src={group.image_url || placeholderImages[index % placeholderImages.length]} 
-                      alt={group.name} 
+                      alt={group.name}
+                      loading="lazy"
+                      decoding="async"
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" 
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-foreground/60 to-transparent" />

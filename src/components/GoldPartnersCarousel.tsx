@@ -5,9 +5,9 @@ import { Badge } from "@/components/ui/badge";
 import { MapPin, Star, ExternalLink, ArrowRight, Crown } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "react-router-dom";
-import Autoplay from "embla-carousel-autoplay";
-import { useRef } from "react";
+import { useState, useEffect } from "react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import type { AutoplayType } from "embla-carousel-autoplay";
 
 // Use static paths from public folder for better caching
 const logoImage = "/logo.jpg";
@@ -21,10 +21,14 @@ interface GoldPartnersCarouselProps {
 
 export const GoldPartnersCarousel = ({ groupCity, groupId, groupName }: GoldPartnersCarouselProps) => {
   const { data: partners, isLoading } = usePremiumAndGoldPartners(groupCity);
+  const [autoplayPlugin, setAutoplayPlugin] = useState<AutoplayType | null>(null);
   
-  const autoplayPlugin = useRef(
-    Autoplay({ delay: 3000, stopOnInteraction: false, stopOnMouseEnter: true })
-  );
+  // Dynamic import for autoplay plugin to reduce initial JS
+  useEffect(() => {
+    import("embla-carousel-autoplay").then((module) => {
+      setAutoplayPlugin(module.default({ delay: 3000, stopOnInteraction: false, stopOnMouseEnter: true }));
+    });
+  }, []);
 
   if (isLoading) {
     return (
@@ -80,7 +84,7 @@ export const GoldPartnersCarousel = ({ groupCity, groupId, groupName }: GoldPart
           align: "start",
           loop: true,
         }}
-        plugins={[autoplayPlugin.current]}
+        plugins={autoplayPlugin ? [autoplayPlugin] : []}
         className="w-full"
       >
         <CarouselContent className="-ml-2 md:-ml-4">

@@ -56,6 +56,8 @@ export const Hero = () => {
       <div className="absolute inset-0 z-0">
         <img
           src={heroImage}
+          srcSet="/hero-donation-mobile.webp 640w, /hero-donation-tablet.webp 1024w, /hero-donation.webp 1920w"
+          sizes="100vw"
           alt="Comunidade unida"
           className="w-full h-full object-cover"
           fetchPriority="high"
