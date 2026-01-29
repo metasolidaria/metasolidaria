@@ -1,218 +1,137 @@
 
 
-# Plano de Configuracao de Cache Eficiente
+# Plano de Otimizacao: Paginacao Server-Side
 
-## Diagnostico do Problema
+## Diagnostico Confirmado
 
-O PageSpeed identificou que **todos os assets estaticos** estao sendo servidos **sem headers de cache (TTL: None)**, resultando em:
+A volumetria de dados **e sim um problema** significativo para performance mobile:
 
-| Metrica | Valor |
-|---------|-------|
-| Economia Potencial | 1.896 KiB |
-| Hero Image | 1.461 KiB sem cache |
-| JS Bundle | 155 KiB sem cache |
-| Logos | 95 KiB sem cache |
+| Recurso | Carregado | Exibido | Desperdicio |
+|---------|-----------|---------|-------------|
+| Grupos | 555 | 10 | 98% |
+| Parceiros | 1.178 | 10 | 99% |
+
+**Impacto estimado:** ~140KB de JSON desnecessario no load inicial, causando 2-4s de atraso em conexoes moveis lentas.
 
 ---
 
-## Causa Raiz
+## Problema Atual
 
-A hospedagem do Lovable nao esta configurando headers `Cache-Control` automaticamente para os assets estaticos. Diferente de CDNs como Vercel/Netlify que detectam arquivos com hash (ex: `index-C-ik6uaT.js`) e aplicam cache imutavel, a infraestrutura atual nao faz isso.
+A paginacao atual e **client-side**:
+
+```tsx
+// useGroups.tsx - Carrega TODOS os grupos
+const { data: groupsData } = await supabase
+  .from("groups_public")
+  .select("*")
+  .order("created_at", { ascending: false }); // Sem .limit() ou .range()
+
+// GroupsSection.tsx - Pagina no cliente
+const paginatedGroups = filteredGroups?.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+```
+
+Isso significa que o browser:
+1. Baixa 555 grupos (63KB)
+2. Parse o JSON inteiro
+3. Mostra apenas 10
 
 ---
 
 ## Solucao Proposta
 
-### Fase 1: Criar arquivo `_headers` (Netlify-style)
+### Fase 1: Paginacao Server-Side para Grupos
 
-Criar arquivo `public/_headers` com regras de cache agressivo:
-
-```text
-# Cache imutavel para assets com hash (1 ano)
-/assets/*
-  Cache-Control: public, max-age=31536000, immutable
-
-# Cache longo para imagens estaticas (1 ano)
-/*.webp
-  Cache-Control: public, max-age=31536000, immutable
-
-/*.jpg
-  Cache-Control: public, max-age=31536000, immutable
-
-/*.png
-  Cache-Control: public, max-age=31536000, immutable
-
-# Cache medio para favicon e icons (1 semana)
-/favicon.*
-  Cache-Control: public, max-age=604800
-
-/icon-*.png
-  Cache-Control: public, max-age=604800
-
-# Sem cache para service worker (sempre atualizado)
-/sw.js
-  Cache-Control: no-cache, no-store, must-revalidate
-
-# Sem cache para manifest (pode mudar)
-/manifest.webmanifest
-  Cache-Control: no-cache
-```
-
-**Nota:** Este arquivo funciona em Netlify e algumas outras hospedagens. Se a hospedagem do Lovable nao suportar, a Fase 2 sera a solucao principal.
-
-### Fase 2: Expandir Service Worker Cache
-
-Atualizar `vite.config.ts` para incluir todos os assets estaticos no cache do Service Worker:
-
-**Mudancas:**
-
-1. Adicionar todas as imagens ao `includeAssets`
-2. Adicionar regra de `runtimeCaching` para assets locais com estrategia `CacheFirst`
-3. Incluir pattern para imagens `.webp` e `.jpg`
-
-```typescript
-// vite.config.ts - VitePWA config
-includeAssets: [
-  "favicon.jpg", 
-  "robots.txt",
-  "logo.jpg",
-  "naturuai-logo.jpg",
-  "hero-donation.webp",
-  "hero-donation-mobile.webp",
-  "hero-donation-tablet.webp",
-  "og-image.png",
-  "icon-192x192.png",
-  "icon-512x512.png"
-],
-
-workbox: {
-  globPatterns: ["**/*.{js,css,html,ico,png,jpg,webp,svg,woff,woff2}"],
-  runtimeCaching: [
-    // Cache local para imagens estaticas
-    {
-      urlPattern: /\.(webp|jpg|jpeg|png|svg)$/i,
-      handler: "CacheFirst",
-      options: {
-        cacheName: "static-images-cache",
-        expiration: {
-          maxEntries: 50,
-          maxAgeSeconds: 60 * 60 * 24 * 365, // 1 ano
-        },
-        cacheableResponse: {
-          statuses: [0, 200],
-        },
-      },
-    },
-    // Cache para chunks JS com hash
-    {
-      urlPattern: /\/assets\/.*\.js$/i,
-      handler: "CacheFirst",
-      options: {
-        cacheName: "js-cache",
-        expiration: {
-          maxEntries: 100,
-          maxAgeSeconds: 60 * 60 * 24 * 365, // 1 ano
-        },
-        cacheableResponse: {
-          statuses: [0, 200],
-        },
-      },
-    },
-    // Cache para CSS
-    {
-      urlPattern: /\/assets\/.*\.css$/i,
-      handler: "CacheFirst",
-      options: {
-        cacheName: "css-cache",
-        expiration: {
-          maxEntries: 20,
-          maxAgeSeconds: 60 * 60 * 24 * 365, // 1 ano
-        },
-        cacheableResponse: {
-          statuses: [0, 200],
-        },
-      },
-    },
-    // Manter cache de Google Fonts existente
-    {
-      urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
-      handler: "CacheFirst",
-      options: { ... }
-    },
-    {
-      urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
-      handler: "CacheFirst",
-      options: { ... }
-    },
-  ],
-}
-```
-
-### Fase 3: Restaurar Imagem Hero
-
-Agora que o cache estara configurado, restaurar a imagem hero com `srcSet` responsivo:
+**useGroups.tsx:**
+- Adicionar parametros `page` e `limit`
+- Usar `.range(from, to)` do Supabase
+- Retornar `count` para calcular total de paginas
 
 ```tsx
-// src/components/Hero.tsx
-<img
-  src="/hero-donation.webp"
-  srcSet="/hero-donation-mobile.webp 640w, /hero-donation-tablet.webp 1024w, /hero-donation.webp 1920w"
-  sizes="100vw"
-  alt="Comunidade unida"
-  className="w-full h-full object-cover"
-  fetchPriority="high"
-  decoding="async"
-/>
+// Antes
+.select("*")
+.order("created_at", { ascending: false })
+
+// Depois
+.select("*", { count: "exact", head: false })
+.order("created_at", { ascending: false })
+.range((page - 1) * limit, page * limit - 1)
 ```
+
+**GroupsSection.tsx:**
+- Passar `page` e `limit` para o hook
+- Remover slice client-side
+- Usar `count` retornado para paginacao
+
+### Fase 2: Paginacao Server-Side para Parceiros
+
+**usePartners.tsx:**
+- Mesma abordagem de `.range()`
+- Considerar filtros de categoria/cidade no servidor
+
+**PartnersSection.tsx:**
+- Adaptar para paginacao server-side
+- Manter filtros de proximidade no cliente (requer lat/lng)
+
+### Fase 3: Manter Busca/Filtros no Cliente
+
+Para manter a experiencia de busca responsiva:
+- Criar um hook separado `useGroupsSearch` que carrega apenas para busca
+- A busca pode usar a view `groups_search` que tem menos campos
 
 ---
 
-## Arquivos a Criar/Modificar
+## Arquivos a Modificar
 
-### Criar:
-1. `public/_headers` - Regras de cache HTTP
+### Prioridade Alta:
+1. `src/hooks/useGroups.tsx` - Adicionar paginacao server-side
+2. `src/components/GroupsSection.tsx` - Usar nova paginacao
+3. `src/hooks/usePartners.tsx` - Adicionar paginacao server-side
+4. `src/components/PartnersSection.tsx` - Usar nova paginacao
 
-### Modificar:
-2. `vite.config.ts` - Expandir PWA config
-3. `src/components/Hero.tsx` - Restaurar imagem
+### Prioridade Media:
+5. `src/components/GroupSearch.tsx` - Manter busca separada
 
 ---
 
 ## Impacto Esperado
 
-| Metrica | Antes | Depois |
-|---------|-------|--------|
-| Cache TTL | None | 1 ano (assets) |
-| Visitas Repetidas | Re-download 1.9MB | Cache hit 95%+ |
-| FCP (repeat visit) | Lento | Instantaneo |
+| Metrica | Antes | Depois | Melhoria |
+|---------|-------|--------|----------|
+| JSON Grupos | 63 KB | ~3 KB | -95% |
+| JSON Parceiros | 76 KB | ~4 KB | -95% |
+| FCP Mobile | ~4s | ~2s | -50% |
+| Performance Score | 62% | 75%+ | +13% |
 
 ---
 
-## Secao Tecnica
+## Consideracoes Tecnicas
 
-### Por que Cache-Control e importante?
+### Trade-offs da Paginacao Server-Side
 
-O header `Cache-Control` diz ao browser por quanto tempo manter um arquivo em cache:
+**Vantagens:**
+- Reducao drastica do payload inicial
+- Menos parse de JSON no cliente
+- Menor uso de memoria
 
-```text
-Cache-Control: public, max-age=31536000, immutable
-```
+**Desvantagens:**
+- Latencia adicional ao mudar de pagina
+- Filtros de cidade/categoria precisam ir para o servidor
+- Complexidade adicional no codigo
 
-- `public`: Pode ser cacheado por proxies/CDNs
-- `max-age=31536000`: Valido por 1 ano (em segundos)
-- `immutable`: Nunca revalidar - o arquivo nao vai mudar
+### Alternativa: Lazy Loading por Secao
 
-### Por que arquivos com hash podem ser imutaveis?
+Se a paginacao server-side for muito complexa, uma alternativa e:
+- Carregar apenas quando a secao ficar visivel (`IntersectionObserver`)
+- Manter paginacao client-side mas adiar o fetch
 
-O Vite gera arquivos como `index-C-ik6uaT.js`. O hash `C-ik6uaT` e derivado do conteudo. Se o codigo mudar, o hash muda e o browser busca o novo arquivo. Por isso e seguro cachear por 1 ano.
+Esta alternativa e mais simples mas menos eficiente.
 
-### Service Worker como fallback
+---
 
-Se a hospedagem nao suportar o arquivo `_headers`, o Service Worker do PWA funcionara como cache secundario. Quando o usuario visitar pela primeira vez, o SW cacheara todos os assets. Nas visitas seguintes, servira do cache local.
+## Proximos Passos
 
-### Limitacoes
-
-- **Primeiro load**: O usuario ainda precisa baixar 1.9MB na primeira visita
-- **Suporte _headers**: Depende da hospedagem do Lovable suportar este formato
-- **Service Worker**: So funciona apos registro (3s apos load inicial)
+Apos a paginacao server-side, as proximas otimizacoes seriam:
+1. Otimizar `AnimatedCounter` (reduzir frequencia de atualizacao)
+2. Lazy load da API IBGE (5570 municipios)
+3. Eliminar chamadas duplicadas de API
 
