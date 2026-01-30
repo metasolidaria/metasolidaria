@@ -1,56 +1,113 @@
 
+# Plano: Reorganizar Categorias de Parceiros
 
-# Plano: Popular Tabela de Progresso para o Doadômetro
+## Resumo
+Atualizar a lista centralizada de especialidades de parceiros para corresponder à nova estrutura organizada por setores, com 61 categorias finais.
 
-## Diagnóstico
-O doadômetro (ImpactCounter) está zerado porque a view `impact_stats_public` consulta a tabela `goal_progress`, que está **vazia**. 
+## Mudanças
 
-A distinção é:
-- **`member_commitments`**: Metas e compromissos planejados (já populados com 1.540 unidades)
-- **`goal_progress`**: Doações efetivamente registradas (está vazia)
+### 1. Remover categorias (6)
+- Agropecuária
+- Comércio
+- Empresa
+- Hotel/Pousada
+- Imobiliária
+- Indústria
 
-O doadômetro exibe o **impacto real** (doações feitas), não as metas futuras.
+### 2. Renomear categorias (5)
+- "Clube" → "Clube Esportivo/Associação"
+- "Influencer" → "Influenciador/Criador de Conteúdo"
+- "Mecânico" → "Oficina Mecânica"
+- "Loja de brinquedos" → "Loja Infantil/Brinquedos"
+- "Atleta" e "Personalidade" → "Atleta/Personalidade" (unificados)
 
-## Solução
-Inserir registros de progresso de doações na tabela `goal_progress` para simular doações já realizadas pelos membros.
+### 3. Adicionar categorias novas (14)
+- Laboratório/Clínica Popular
+- Salão de Beleza
+- Barbearia
+- Clínica Estética
+- Curso Livre/Profissionalizante
+- Escola de Idiomas
+- Auto Center
+- Posto de Combustível
+- Locadora de Veículos
+- Eletricista
+- Encanador
+- Marcenaria/Serralheria
+- ONG/Instituição Parceira
 
-## Implementação
+### 4. Atualizar componente de recomendação
+O arquivo `src/components/RecommendPartnerModal.tsx` possui uma lista duplicada de especialidades que também precisa ser atualizada para usar a lista centralizada de `partnerSpecialties.ts`.
 
-### Passo 1: Inserir registros de progresso
-Criar entradas de doações em `goal_progress` vinculadas aos membros existentes, distribuindo quantidades realistas por categoria:
+## Detalhes Técnicos
 
-| Categoria    | Quantidade | Membros envolvidos |
-|--------------|------------|-------------------|
-| Alimentos    | ~400 kg    | 4 membros         |
-| Livros       | ~150 un    | 4 membros         |
-| Cobertores   | ~100 un    | 4 membros         |
-| Roupas       | ~200 peças | 4 membros         |
-| Brinquedos   | ~80 un     | 4 membros         |
+### Arquivo: `src/lib/partnerSpecialties.ts`
+Substituir a lista atual por uma nova lista ordenada alfabeticamente com as 61 categorias:
 
-**Total esperado**: ~930 doações registradas
-
-### Detalhes Técnicos
-
-A tabela `goal_progress` tem a seguinte estrutura:
-- `group_id`: UUID do grupo (já temos 5 grupos)
-- `member_id`: UUID do membro (já temos 20 membros)
-- `user_id`: UUID do usuário (usaremos o líder admin: `094b97b9-3b1b-4b0e-9e5f-d42b1953c704`)
-- `amount`: Quantidade doada
-- `description`: Descrição opcional
-
-### SQL de Seed
-
-```sql
-INSERT INTO goal_progress (group_id, member_id, user_id, amount, description) VALUES
--- Grupo Alimentos (11111111...)
-('11111111-1111-1111-1111-111111111111', 'b1111111-1111-1111-1111-111111111111', '094b97b9...', 120, 'Campanha de arrecadação'),
-('11111111-1111-1111-1111-111111111111', 'b1111111-1111-1111-1111-111111111112', '094b97b9...', 80, 'Doação da feira'),
--- ... mais registros para cada categoria
+```typescript
+export const partnerSpecialties = [
+  "Academia",
+  "Açougue",
+  "Advogado",
+  "Arquiteto",
+  "Atleta/Personalidade",
+  "Auto Center",
+  "Auto Peças",
+  "Barbearia",
+  "Cafeteria",
+  "Clínica",
+  "Clínica Estética",
+  "Clube Esportivo/Associação",
+  "Contador",
+  "Consultor",
+  "Corretor",
+  "Curso Livre/Profissionalizante",
+  "Dentista",
+  "Despachante",
+  "Eletricista",
+  "Emissora",
+  "Encanador",
+  "Escola de Idiomas",
+  "Escola/Colégio",
+  "Esteticista",
+  "Faculdade",
+  "Farmácia",
+  "Fisioterapeuta",
+  "Hamburgueria",
+  "Influenciador/Criador de Conteúdo",
+  "Jornal",
+  "Laboratório/Clínica Popular",
+  "Lanchonete",
+  "Lava Rápido",
+  "Locadora de Veículos",
+  "Loja de Calçados",
+  "Loja de Cama, Mesa e Banho",
+  "Loja de Eletro",
+  "Loja de Móveis",
+  "Loja de Roupas",
+  "Loja Infantil/Brinquedos",
+  "Marcenaria/Serralheria",
+  "Material de Construção",
+  "Médico",
+  "Nutricionista",
+  "Oficina Mecânica",
+  "ONG/Instituição Parceira",
+  "Padaria",
+  "Personal Trainer",
+  "Pet Shop",
+  "Piscinas",
+  "Posto de Combustível",
+  "Psicólogo",
+  "Restaurante",
+  "Salão de Beleza",
+  "Sorveteria",
+  "Supermercado",
+  "Veterinário",
+] as const;
 ```
 
-## Resultado Esperado
-Após a execução:
-- O doadômetro exibirá ~930 doações totais
-- Cada categoria (alimentos, livros, etc.) mostrará seus respectivos totais
-- A animação de contagem funcionará normalmente
+### Arquivo: `src/components/RecommendPartnerModal.tsx`
+Atualizar o componente para importar e usar a lista centralizada `partnerSpecialties` em vez de manter uma lista duplicada local.
 
+## Impacto nos dados existentes
+Parceiros que já possuem especialidades que foram removidas ou renomeadas continuarão funcionando, mas suas especialidades antigas serão exibidas normalmente. Para padronizar, será necessário atualizar manualmente no painel de administração os parceiros com categorias antigas.
