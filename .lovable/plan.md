@@ -1,113 +1,60 @@
 
-# Plano: Reorganizar Categorias de Parceiros
+# Plano: Atualizar Filtro de Categorias na Aba Parceiros
 
-## Resumo
-Atualizar a lista centralizada de especialidades de parceiros para corresponder à nova estrutura organizada por setores, com 61 categorias finais.
+## Problema Identificado
+O componente `PartnersSection.tsx` possui uma lista duplicada e desatualizada de categorias (`allCategories`) nas linhas 51-99 que **não está sincronizada** com a lista centralizada de `partnerSpecialties.ts`.
 
-## Mudanças
+### Lista Atual (Desatualizada)
+- Contém 47 categorias + "Todos"
+- Ainda tem: Agropecuária, Comércio, Empresa, Imobiliária, Indústria, Político
+- Usa nomes antigos: Jogador, Influencer, Mecânico, Clube, Loja de brinquedos
+- Faltam novas categorias: Arquiteto, Auto Center, Clínica Estética, Esteticista, Faculdade, etc.
 
-### 1. Remover categorias (6)
-- Agropecuária
-- Comércio
-- Empresa
-- Hotel/Pousada
-- Imobiliária
-- Indústria
+## Solução
+Atualizar o componente `PartnersSection.tsx` para:
+1. Importar a lista centralizada `partnerSpecialties` de `src/lib/partnerSpecialties.ts`
+2. Gerar dinamicamente o array `allCategories` a partir dessa lista
+3. Manter os ícones apropriados para cada categoria
 
-### 2. Renomear categorias (5)
-- "Clube" → "Clube Esportivo/Associação"
-- "Influencer" → "Influenciador/Criador de Conteúdo"
-- "Mecânico" → "Oficina Mecânica"
-- "Loja de brinquedos" → "Loja Infantil/Brinquedos"
-- "Atleta" e "Personalidade" → "Atleta/Personalidade" (unificados)
+## Mudanças Técnicas
 
-### 3. Adicionar categorias novas (14)
-- Laboratório/Clínica Popular
-- Salão de Beleza
-- Barbearia
-- Clínica Estética
-- Curso Livre/Profissionalizante
-- Escola de Idiomas
-- Auto Center
-- Posto de Combustível
-- Locadora de Veículos
-- Eletricista
-- Encanador
-- Marcenaria/Serralheria
-- ONG/Instituição Parceira
+### Arquivo: `src/components/PartnersSection.tsx`
 
-### 4. Atualizar componente de recomendação
-O arquivo `src/components/RecommendPartnerModal.tsx` possui uma lista duplicada de especialidades que também precisa ser atualizada para usar a lista centralizada de `partnerSpecialties.ts`.
-
-## Detalhes Técnicos
-
-### Arquivo: `src/lib/partnerSpecialties.ts`
-Substituir a lista atual por uma nova lista ordenada alfabeticamente com as 61 categorias:
-
+1. **Adicionar import** da lista centralizada:
 ```typescript
-export const partnerSpecialties = [
-  "Academia",
-  "Açougue",
-  "Advogado",
-  "Arquiteto",
-  "Atleta/Personalidade",
-  "Auto Center",
-  "Auto Peças",
-  "Barbearia",
-  "Cafeteria",
-  "Clínica",
-  "Clínica Estética",
-  "Clube Esportivo/Associação",
-  "Contador",
-  "Consultor",
-  "Corretor",
-  "Curso Livre/Profissionalizante",
-  "Dentista",
-  "Despachante",
-  "Eletricista",
-  "Emissora",
-  "Encanador",
-  "Escola de Idiomas",
-  "Escola/Colégio",
-  "Esteticista",
-  "Faculdade",
-  "Farmácia",
-  "Fisioterapeuta",
-  "Hamburgueria",
-  "Influenciador/Criador de Conteúdo",
-  "Jornal",
-  "Laboratório/Clínica Popular",
-  "Lanchonete",
-  "Lava Rápido",
-  "Locadora de Veículos",
-  "Loja de Calçados",
-  "Loja de Cama, Mesa e Banho",
-  "Loja de Eletro",
-  "Loja de Móveis",
-  "Loja de Roupas",
-  "Loja Infantil/Brinquedos",
-  "Marcenaria/Serralheria",
-  "Material de Construção",
-  "Médico",
-  "Nutricionista",
-  "Oficina Mecânica",
-  "ONG/Instituição Parceira",
-  "Padaria",
-  "Personal Trainer",
-  "Pet Shop",
-  "Piscinas",
-  "Posto de Combustível",
-  "Psicólogo",
-  "Restaurante",
-  "Salão de Beleza",
-  "Sorveteria",
-  "Supermercado",
-  "Veterinário",
-] as const;
+import { partnerSpecialties } from "@/lib/partnerSpecialties";
 ```
 
-### Arquivo: `src/components/RecommendPartnerModal.tsx`
-Atualizar o componente para importar e usar a lista centralizada `partnerSpecialties` em vez de manter uma lista duplicada local.
+2. **Criar mapeamento de ícones** por categoria ou padrão:
+```typescript
+const categoryIcons: Record<string, LucideIcon> = {
+  // Alimentação
+  "Açougue": Store,
+  "Padaria": Store,
+  "Restaurante": Store,
+  // Saúde
+  "Clínica": Building2,
+  "Médico": Stethoscope,
+  "Dentista": Stethoscope,
+  // etc.
+};
+```
 
-## Impacto nos dados existentes
-Parceiros que já possuem especialidades que foram removidas ou renomeadas continuarão funcionando, mas suas especialidades antigas serão exibidas normalmente. Para padronizar, será necessário atualizar manualmente no painel de administração os parceiros com categorias antigas.
+3. **Gerar `allCategories` dinamicamente**:
+```typescript
+const allCategories = [
+  { id: "all", label: "Todos", icon: Star },
+  ...partnerSpecialties.map(specialty => ({
+    id: specialty,
+    label: specialty,
+    icon: categoryIcons[specialty] || Store, // ícone padrão
+  })),
+  { id: "Outros", label: "Outros", icon: MoreHorizontal },
+];
+```
+
+## Resultado Esperado
+- O filtro de categorias na aba "Parceiros" exibirá as **57 categorias atualizadas**
+- Novas categorias como Arquiteto, Esteticista, Faculdade aparecerão no filtro
+- Categorias removidas (Político, Agropecuária, etc.) não aparecerão mais
+- Qualquer alteração futura em `partnerSpecialties.ts` será refletida automaticamente no filtro
