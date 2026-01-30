@@ -46,7 +46,7 @@ export const partnerSpecialties = [
   "Personalidade",
   "Pet Shop",
   "Piscinas",
-  "Político",
+  
   "Psicólogo",
   "Restaurante",
   "Sorveteria",
