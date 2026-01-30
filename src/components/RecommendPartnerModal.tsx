@@ -5,13 +5,7 @@ import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea";
 import { Label } from "./ui/label";
 import { CityAutocomplete } from "./CityAutocomplete";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "./ui/select";
+import { SpecialtySelect } from "./SpecialtySelect";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { partnerSchema, validateForm } from "@/lib/validations";
@@ -21,55 +15,6 @@ interface RecommendPartnerModalProps {
   onOpenChange: (open: boolean) => void;
   onRequireAuth?: () => void;
 }
-
-const specialties = [
-  { id: "Academia", label: "Academia" },
-  { id: "Açougue", label: "Açougue" },
-  { id: "Advogado", label: "Advogado" },
-  { id: "Agropecuária", label: "Agropecuária" },
-  { id: "Auto peças", label: "Auto peças" },
-  { id: "Cafeteria", label: "Cafeteria" },
-  { id: "Clínica", label: "Clínica" },
-  { id: "Clube", label: "Clube" },
-  { id: "Comércio", label: "Comércio" },
-  { id: "Contador", label: "Contador" },
-  { id: "Consultor", label: "Consultor" },
-  { id: "Corretor", label: "Corretor" },
-  { id: "Dentista", label: "Dentista" },
-  { id: "Despachante", label: "Despachante" },
-  { id: "Emissora", label: "Emissora" },
-  { id: "Empresa", label: "Empresa" },
-  { id: "Farmácia", label: "Farmácia" },
-  { id: "Fisioterapeuta", label: "Fisioterapeuta" },
-  { id: "Hamburgueria", label: "Hamburgueria" },
-  { id: "Imobiliária", label: "Imobiliária" },
-  { id: "Indústria", label: "Indústria" },
-  { id: "Influencer", label: "Influencer" },
-  { id: "Jogador", label: "Jogador" },
-  { id: "Jornal", label: "Jornal" },
-  { id: "Lanchonete", label: "Lanchonete" },
-  { id: "Loja de brinquedos", label: "Loja de brinquedos" },
-  { id: "Loja de calçados", label: "Loja de calçados" },
-  { id: "Loja de cama, mesa e banho", label: "Loja de cama, mesa e banho" },
-  { id: "Loja de eletro", label: "Loja de eletro" },
-  { id: "Loja de móveis", label: "Loja de móveis" },
-  { id: "Loja de roupas", label: "Loja de roupas" },
-  { id: "Material de Construção", label: "Material de Construção" },
-  { id: "Mecânico", label: "Mecânico" },
-  { id: "Médico", label: "Médico" },
-  { id: "Nutricionista", label: "Nutricionista" },
-  { id: "Padaria", label: "Padaria" },
-  { id: "Personal Trainer", label: "Personal Trainer" },
-  { id: "Personalidade", label: "Personalidade" },
-  { id: "Pet Shop", label: "Pet Shop" },
-  { id: "Político", label: "Político" },
-  { id: "Psicólogo", label: "Psicólogo" },
-  { id: "Restaurante", label: "Restaurante" },
-  { id: "Sorveteria", label: "Sorveteria" },
-  { id: "Supermercado", label: "Supermercado" },
-  { id: "Veterinário", label: "Veterinário" },
-  { id: "Outros", label: "Outros" },
-];
 
 export const RecommendPartnerModal = ({
   open,
@@ -216,23 +161,13 @@ export const RecommendPartnerModal = ({
 
           <div className="space-y-2">
             <Label htmlFor="specialty">Especialidade (opcional)</Label>
-            <Select
+            <SpecialtySelect
               value={formData.specialty}
-              onValueChange={(value) =>
+              onChange={(value) =>
                 setFormData((prev) => ({ ...prev, specialty: value }))
               }
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione a especialidade" />
-              </SelectTrigger>
-              <SelectContent>
-                {specialties.map((spec) => (
-                  <SelectItem key={spec.id} value={spec.id}>
-                    {spec.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              placeholder="Selecione a especialidade"
+            />
           </div>
 
           <div className="space-y-2">
