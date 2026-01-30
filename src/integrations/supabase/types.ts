@@ -106,6 +106,13 @@ export type Database = {
             foreignKeyName: "goal_progress_group_id_fkey"
             columns: ["group_id"]
             isOneToOne: false
+            referencedRelation: "groups_admin"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "goal_progress_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
             referencedRelation: "groups_public"
             referencedColumns: ["id"]
           },
@@ -178,6 +185,13 @@ export type Database = {
             foreignKeyName: "group_invitations_group_id_fkey"
             columns: ["group_id"]
             isOneToOne: false
+            referencedRelation: "groups_admin"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "group_invitations_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
             referencedRelation: "groups_public"
             referencedColumns: ["id"]
           },
@@ -237,6 +251,13 @@ export type Database = {
             columns: ["group_id"]
             isOneToOne: false
             referencedRelation: "groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "group_join_requests_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "groups_admin"
             referencedColumns: ["id"]
           },
           {
@@ -317,6 +338,13 @@ export type Database = {
             columns: ["group_id"]
             isOneToOne: false
             referencedRelation: "groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "group_members_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "groups_admin"
             referencedColumns: ["id"]
           },
           {
@@ -620,13 +648,29 @@ export type Database = {
           leader_name: string | null
           leader_whatsapp: string | null
           member_count: number | null
+          members_visible: boolean | null
           name: string | null
           total_donations: number | null
           total_goals: number | null
           updated_at: string | null
           view_count: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "groups_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: false
+            referencedRelation: "entities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "groups_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: false
+            referencedRelation: "entities_public"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       groups_public: {
         Row: {
@@ -643,6 +687,7 @@ export type Database = {
           leader_id: string | null
           leader_name: string | null
           member_count: number | null
+          members_visible: boolean | null
           name: string | null
           total_donations: number | null
           total_goals: number | null
@@ -833,6 +878,22 @@ export type Database = {
             }
             Returns: string
           }
+        | {
+            Args: {
+              _city: string
+              _description: string
+              _donation_type: string
+              _end_date?: string
+              _entity_id?: string
+              _goal_2026: number
+              _is_private: boolean
+              _leader_name: string
+              _leader_whatsapp: string
+              _members_visible?: boolean
+              _name: string
+            }
+            Returns: string
+          }
       get_admin_groups: {
         Args: never
         Returns: {
@@ -851,6 +912,7 @@ export type Database = {
           leader_name: string
           leader_whatsapp: string
           member_count: number
+          members_visible: boolean
           name: string
           total_donations: number
           total_goals: number

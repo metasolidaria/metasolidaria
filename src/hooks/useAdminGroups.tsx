@@ -9,6 +9,7 @@ export interface AdminGroup {
   donation_type: string;
   goal_2026: number;
   is_private: boolean;
+  members_visible: boolean;
   leader_id: string;
   leader_name: string | null;
   leader_whatsapp: string | null;
@@ -77,6 +78,7 @@ export const useAdminGroups = () => {
         donation_type: string;
         goal_2026: number;
         is_private: boolean;
+        members_visible: boolean;
         leader_name: string;
         leader_whatsapp: string;
         description: string | null;
