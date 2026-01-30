@@ -44,6 +44,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 import { usePaginatedPartners, useAllPartnersForProximity, PartnerTier } from "@/hooks/usePaginatedPartners";
+import { usePartnersCategories } from "@/hooks/usePartnersCategories";
 import { useGeolocation, calculateDistance } from "@/hooks/useGeolocation";
 import { Slider } from "./ui/slider";
 import { RecommendPartnerModal } from "./RecommendPartnerModal";
@@ -242,6 +243,11 @@ export const PartnersSection = () => {
   // Use client-side data only when proximity is active
   const { partners: allPartnersForProximity, isLoading: isProximityLoading } = useAllPartnersForProximity();
   
+  // Fetch available categories for the selected city (server-side)
+  const { specialties: citySpecialties, isLoading: isCategoriesLoading } = usePartnersCategories({
+    city: !useProximity ? searchCity : undefined,
+  });
+  
   const isLoading = useProximity ? isProximityLoading : isPaginatedLoading;
 
   // Initialize city filter from URL param
@@ -332,37 +338,45 @@ export const PartnersSection = () => {
     return state ? state[1] : null;
   };
 
-  // For category filtering, we need all partners data only when using proximity
-  // Otherwise, server-side handles it
+  // For category filtering based on city
   const availableCategories = useMemo(() => {
-    // When not using proximity, show all categories
-    if (!useProximity) {
-      return allCategories;
+    // When using proximity mode, filter client-side
+    if (useProximity) {
+      if (!searchCity || !allPartnersForProximity) {
+        return allCategories;
+      }
+      
+      const searchStateAbbr = extractStateFromCity(searchCity);
+      
+      const partnersInCity = allPartnersForProximity.filter((partner) => {
+        if (isNationwidePartner(partner.city)) {
+          return true;
+        }
+        if (isStatewidePartner(partner.city)) {
+          const partnerStateAbbr = getStatewidePartnerState(partner.city);
+          return partnerStateAbbr === searchStateAbbr;
+        }
+        return partner.city.toLowerCase().includes(searchCity.toLowerCase());
+      });
+      
+      const specialtiesInCity = new Set(partnersInCity.map((p) => p.specialty));
+      
+      return allCategories.filter(
+        (cat) => cat.id === "all" || specialtiesInCity.has(cat.id)
+      );
     }
 
-    if (!searchCity || !allPartnersForProximity) {
-      return allCategories;
+    // When city is selected, filter categories based on server data
+    if (searchCity && citySpecialties.length > 0) {
+      const specialtiesSet = new Set(citySpecialties);
+      return allCategories.filter(
+        (cat) => cat.id === "all" || specialtiesSet.has(cat.id)
+      );
     }
-    
-    const searchStateAbbr = extractStateFromCity(searchCity);
-    
-    const partnersInCity = allPartnersForProximity.filter((partner) => {
-      if (isNationwidePartner(partner.city)) {
-        return true;
-      }
-      if (isStatewidePartner(partner.city)) {
-        const partnerStateAbbr = getStatewidePartnerState(partner.city);
-        return partnerStateAbbr === searchStateAbbr;
-      }
-      return partner.city.toLowerCase().includes(searchCity.toLowerCase());
-    });
-    
-    const specialtiesInCity = new Set(partnersInCity.map((p) => p.specialty));
-    
-    return allCategories.filter(
-      (cat) => cat.id === "all" || specialtiesInCity.has(cat.id)
-    );
-  }, [allPartnersForProximity, searchCity, useProximity]);
+
+    // No city selected, show all categories
+    return allCategories;
+  }, [allPartnersForProximity, searchCity, useProximity, citySpecialties]);
 
   // Reset categoria se ela não estiver mais disponível
   useEffect(() => {
