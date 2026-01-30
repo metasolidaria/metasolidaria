@@ -1,103 +1,118 @@
 
-
-# Plano: Tornar Convites por Link Reutilizáveis
+# Plano: Controle de Visibilidade de Membros
 
 ## Resumo
-Modificar o sistema de convites para permitir que links de convite possam ser usados por múltiplas pessoas, até a data de expiração (30 dias).
+Adicionar uma opção para líderes definirem se a lista de membros do grupo é visível para outros membros. Quando desativada, os indicadores de meta e progresso (totais) continuam visíveis, mas a lista detalhada de membros é ocultada.
 
-## Comportamento Atual
-1. Líder gera link de convite → cria registro com `status = 'pending'`
-2. Primeira pessoa usa o link → `status` muda para `'accepted'`
-3. Segunda pessoa tenta usar → erro "Convite inválido ou expirado"
+## Mudanças Necessárias
 
-## Novo Comportamento
-1. Líder gera link de convite → cria registro com `status = 'pending'`
-2. Primeira pessoa usa o link → continua `status = 'pending'`
-3. Segunda pessoa usa o link → também entra no grupo
-4. Link continua válido até expirar (30 dias)
-
-## Mudanças Técnicas
-
-### 1. Atualizar Função RPC `accept_link_invitation`
-
-Remover a linha que atualiza o status para 'accepted' em convites do tipo 'link':
+### 1. Banco de Dados
+Adicionar nova coluna `members_visible` na tabela `groups`:
 
 ```sql
--- REMOVER esta parte para convites tipo 'link':
-UPDATE group_invitations
-SET status = 'accepted'
-WHERE id = _invitation.id;
+ALTER TABLE public.groups 
+ADD COLUMN members_visible boolean NOT NULL DEFAULT true;
+
+-- Atualizar views que expõem dados de grupos
+-- A coluna será acessível apenas para usuários autenticados via políticas existentes
 ```
 
-A função continuará:
-- Verificando se o convite existe e não expirou
-- Verificando se o usuário já é membro (evita duplicidade)
-- Adicionando o usuário ao grupo
-- **MAS NÃO** marcará o convite como 'accepted'
+### 2. Arquivos de Frontend a Modificar
 
-### 2. Migração SQL
+#### `src/components/CreateGroupModal.tsx`
+- Adicionar estado `membersVisible` no `formData` (padrão: `true`)
+- Adicionar switch com ícone e descrição explicativa
+- Passar o novo campo na criação do grupo
+
+#### `src/components/EditGroupModal.tsx`
+- Adicionar estado `membersVisible` no `formData`
+- Carregar valor existente do grupo no `useEffect`
+- Adicionar switch para alternar visibilidade
+- Passar o campo na atualização
+
+#### `src/components/admin/CreateGroupAdminModal.tsx`
+- Adicionar campo `membersVisible` no formulário
+- Passar na chamada RPC `create_group_with_leader`
+
+#### `src/components/admin/EditGroupAdminModal.tsx`
+- Adicionar campo `membersVisible` no formulário
+- Incluir na interface e no `onSave`
+
+#### `src/pages/GroupPage.tsx` (linhas ~516-640)
+- Verificar `group.members_visible` antes de renderizar a seção de membros
+- Se `members_visible === false`:
+  - Ocultar lista detalhada de membros
+  - Mostrar apenas contagem de membros e progresso agregado
+  - Mostrar mensagem explicativa "Lista de membros oculta pelo líder"
+- Líderes sempre veem a lista completa (para gerenciamento)
+
+#### `src/hooks/useGroupDetails.tsx`
+- Atualizar `updateGroup` para aceitar `members_visible`
+
+#### `src/hooks/useAdminGroups.tsx`
+- Adicionar `members_visible` ao tipo `AdminGroup`
+- Incluir no mutation `updateGroup`
+
+### 3. Interface Visual
+
+```text
+┌─────────────────────────────────────────┐
+│ 👥 Visibilidade dos Membros             │
+│                                         │
+│ Membros Visíveis                 [ON]   │
+│ Outros membros podem ver a lista        │
+│ de participantes do grupo               │
+│                                         │
+│ ─────────────────────────────────────── │
+│                                         │
+│ Membros Ocultos                  [OFF]  │
+│ Apenas você (líder) pode ver a          │
+│ lista de membros. Os totais de meta     │
+│ e doações continuam visíveis.           │
+└─────────────────────────────────────────┘
+```
+
+### 4. Lógica de Exibição na Página do Grupo
+
+```
+SE group.members_visible === true OU usuário é líder:
+  → Mostrar lista completa de membros com avatar, nome, metas, botões
+SENÃO:
+  → Mostrar card simplificado:
+    "👥 Membros: X participantes"
+    "📊 Meta do grupo: X / Y (soma de todos)"
+    "ℹ️ A lista de membros está oculta pelo líder"
+```
+
+### 5. Função RPC `create_group_with_leader`
+Atualizar para aceitar parâmetro `_members_visible`:
 
 ```sql
-CREATE OR REPLACE FUNCTION public.accept_link_invitation(_invite_code text)
-RETURNS uuid
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path TO 'public'
-AS $function$
-DECLARE
-  _invitation record;
-  _new_member_id uuid;
-  _user_name text;
-BEGIN
-  IF auth.uid() IS NULL THEN
-    RAISE EXCEPTION 'User not authenticated';
-  END IF;
-
-  -- Find the invitation
-  SELECT * INTO _invitation
-  FROM group_invitations
-  WHERE invite_code = _invite_code
-    AND invite_type = 'link'
-    AND status = 'pending'
-    AND expires_at > now();
-
-  IF _invitation IS NULL THEN
-    RAISE EXCEPTION 'Invitation not found or expired';
-  END IF;
-
-  -- Check if user is already a member
-  IF EXISTS (SELECT 1 FROM group_members WHERE group_id = _invitation.group_id AND user_id = auth.uid()) THEN
-    RAISE EXCEPTION 'User is already a member of this group';
-  END IF;
-
-  -- Get user name
-  SELECT COALESCE(p.full_name, u.raw_user_meta_data->>'full_name', u.email)
-  INTO _user_name 
-  FROM auth.users u
-  LEFT JOIN profiles p ON p.user_id = u.id
-  WHERE u.id = auth.uid();
-
-  -- NÃO atualiza status para 'accepted' em convites tipo link
-  -- permitindo que múltiplas pessoas usem o mesmo link
-
-  -- Add user to group
-  INSERT INTO group_members (group_id, user_id, name)
-  VALUES (_invitation.group_id, auth.uid(), COALESCE(_user_name, 'Membro'))
-  RETURNING id INTO _new_member_id;
-
-  RETURN _new_member_id;
-END;
-$function$;
+CREATE OR REPLACE FUNCTION public.create_group_with_leader(
+  _name text,
+  _city text,
+  _donation_type text,
+  _goal_2026 integer,
+  _is_private boolean,
+  _leader_name text,
+  _leader_whatsapp text,
+  _description text,
+  _end_date date DEFAULT '2026-12-31'::date,
+  _entity_id uuid DEFAULT NULL,
+  _members_visible boolean DEFAULT true  -- Novo parâmetro
+)
 ```
 
-## Benefícios
-- Líder pode compartilhar um único link em grupos de WhatsApp
-- Múltiplas pessoas podem entrar usando o mesmo link
-- Link expira automaticamente após 30 dias
-- Proteção contra duplicidade (usuário não pode entrar duas vezes)
+## Fluxo Resumido
 
-## Considerações
-- Convites por email (`invite_type = 'email'`) continuam sendo de uso único
-- O painel de administração mostrará o convite como "pendente" mesmo após pessoas entrarem
-- Se desejar, podemos adicionar um contador de quantas pessoas usaram cada link no futuro
+1. **Líder cria grupo** → Define `membersVisible: true/false`
+2. **Líder edita grupo** → Pode alternar a qualquer momento
+3. **Membro acessa grupo**:
+   - Se visível: vê lista completa de membros
+   - Se oculto: vê apenas totais agregados
+4. **Líder sempre vê tudo** (para poder gerenciar)
 
+## Considerações de Segurança
+- A coluna segue as políticas RLS existentes da tabela `groups`
+- Apenas usuários autenticados com acesso ao grupo podem ver o campo
+- Líderes mantêm controle total sobre a visibilidade
