@@ -29,7 +29,16 @@ import {
   ChevronDown,
   ChevronUp,
   ArrowLeft,
-  Handshake
+  Handshake,
+  Scissors,
+  Car,
+  Fuel,
+  Home,
+  Wrench,
+  GraduationCap,
+  Tv,
+  Dog,
+  type LucideIcon
 } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Input } from "./ui/input";
@@ -40,6 +49,7 @@ import { Slider } from "./ui/slider";
 import { RecommendPartnerModal } from "./RecommendPartnerModal";
 import { CitySearchAutocomplete } from "./CitySearchAutocomplete";
 import { useUserProfile } from "@/hooks/useUserProfile";
+import { partnerSpecialties } from "@/lib/partnerSpecialties";
 
 // Configuração de tiers - apenas Ouro tem selo visível
 const tierOrder: Record<PartnerTier, number> = {
@@ -48,53 +58,87 @@ const tierOrder: Record<PartnerTier, number> = {
   apoiador: 2,
 };
 
+// Mapeamento de ícones por categoria
+const categoryIcons: Record<string, LucideIcon> = {
+  // Alimentação
+  "Açougue": Store,
+  "Cafeteria": Store,
+  "Hamburgueria": Store,
+  "Lanchonete": Store,
+  "Padaria": Store,
+  "Restaurante": Store,
+  "Sorveteria": Store,
+  "Supermercado": ShoppingCart,
+  // Saúde & Bem-Estar
+  "Clínica": Building2,
+  "Médico": Stethoscope,
+  "Dentista": Stethoscope,
+  "Psicólogo": Brain,
+  "Fisioterapeuta": HeartPulse,
+  "Nutricionista": Apple,
+  "Farmácia": HeartPulse,
+  "Laboratório/Clínica Popular": Building2,
+  // Beleza & Estética
+  "Salão de Beleza": Scissors,
+  "Barbearia": Scissors,
+  "Esteticista": Scissors,
+  "Clínica Estética": Building2,
+  // Esporte & Lazer
+  "Academia": Dumbbell,
+  "Personal Trainer": Dumbbell,
+  "Clube Esportivo/Associação": Dumbbell,
+  "Piscinas": Dumbbell,
+  // Pet
+  "Pet Shop": Dog,
+  "Veterinário": HeartPulse,
+  // Serviços Profissionais
+  "Advogado": Brain,
+  "Contador": Brain,
+  "Consultor": Brain,
+  "Corretor": UserPlus,
+  "Despachante": Store,
+  // Educação
+  "Escola/Colégio": GraduationCap,
+  "Faculdade": GraduationCap,
+  "Curso Livre/Profissionalizante": GraduationCap,
+  "Escola de Idiomas": GraduationCap,
+  // Varejo – Moda & Casa
+  "Loja de Roupas": Store,
+  "Loja de Calçados": Store,
+  "Loja de Cama, Mesa e Banho": Store,
+  "Loja Infantil/Brinquedos": Store,
+  // Varejo – Eletro & Móveis
+  "Loja de Eletro": Store,
+  "Loja de Móveis": Store,
+  // Automotivo
+  "Oficina Mecânica": Car,
+  "Auto Peças": Car,
+  "Auto Center": Car,
+  "Lava Rápido": Car,
+  "Posto de Combustível": Fuel,
+  "Locadora de Veículos": Car,
+  // Casa & Construção
+  "Material de Construção": Home,
+  "Arquiteto": Home,
+  "Eletricista": Wrench,
+  "Encanador": Wrench,
+  "Marcenaria/Serralheria": Wrench,
+  // Criadores & Parceiros Institucionais
+  "Influenciador/Criador de Conteúdo": Star,
+  "Atleta/Personalidade": Star,
+  "Emissora": Tv,
+  "Jornal": Tv,
+  "ONG/Instituição Parceira": Handshake,
+};
+
+// Gera allCategories dinamicamente a partir da lista centralizada
 const allCategories = [
   { id: "all", label: "Todos", icon: Star },
-  { id: "Academia", label: "Academia", icon: Dumbbell },
-  { id: "Açougue", label: "Açougue", icon: Store },
-  { id: "Advogado", label: "Advogado", icon: Brain },
-  { id: "Agropecuária", label: "Agropecuária", icon: Store },
-  { id: "Auto peças", label: "Auto peças", icon: Store },
-  { id: "Cafeteria", label: "Cafeteria", icon: Store },
-  { id: "Clínica", label: "Clínica", icon: Building2 },
-  { id: "Clube", label: "Clube", icon: Dumbbell },
-  { id: "Comércio", label: "Comércio", icon: Store },
-  { id: "Contador", label: "Contador", icon: Brain },
-  { id: "Consultor", label: "Consultor", icon: Brain },
-  { id: "Corretor", label: "Corretor", icon: UserPlus },
-  { id: "Dentista", label: "Dentista", icon: Stethoscope },
-  { id: "Despachante", label: "Despachante", icon: Store },
-  { id: "Emissora", label: "Emissora", icon: Building2 },
-  { id: "Empresa", label: "Empresa", icon: Building2 },
-  { id: "Farmácia", label: "Farmácia", icon: HeartPulse },
-  { id: "Fisioterapeuta", label: "Fisioterapeuta", icon: HeartPulse },
-  { id: "Hamburgueria", label: "Hamburgueria", icon: Store },
-  { id: "Imobiliária", label: "Imobiliária", icon: Building2 },
-  { id: "Indústria", label: "Indústria", icon: Building2 },
-  { id: "Influencer", label: "Influencer", icon: Star },
-  { id: "Jogador", label: "Jogador", icon: Star },
-  { id: "Jornal", label: "Jornal", icon: Building2 },
-  { id: "Lanchonete", label: "Lanchonete", icon: Store },
-  { id: "Loja de brinquedos", label: "Loja de brinquedos", icon: Store },
-  { id: "Loja de calçados", label: "Loja de calçados", icon: Store },
-  { id: "Loja de cama, mesa e banho", label: "Loja de cama, mesa e banho", icon: Store },
-  { id: "Loja de eletro", label: "Loja de eletro", icon: Store },
-  { id: "Loja de móveis", label: "Loja de móveis", icon: Store },
-  { id: "Loja de roupas", label: "Loja de roupas", icon: Store },
-  { id: "Material de Construção", label: "Material de Construção", icon: Building2 },
-  { id: "Mecânico", label: "Mecânico", icon: Store },
-  { id: "Médico", label: "Médico", icon: Stethoscope },
-  { id: "Nutricionista", label: "Nutricionista", icon: Apple },
-  { id: "Padaria", label: "Padaria", icon: Store },
-  { id: "Personal Trainer", label: "Personal Trainer", icon: Dumbbell },
-  { id: "Personalidade", label: "Personalidade", icon: Star },
-  { id: "Pet Shop", label: "Pet Shop", icon: Store },
-  { id: "Político", label: "Político", icon: UserPlus },
-  { id: "Psicólogo", label: "Psicólogo", icon: Brain },
-  { id: "Restaurante", label: "Restaurante", icon: Store },
-  { id: "Sorveteria", label: "Sorveteria", icon: Store },
-  { id: "Supermercado", label: "Supermercado", icon: ShoppingCart },
-  { id: "Veterinário", label: "Veterinário", icon: HeartPulse },
+  ...partnerSpecialties.map((specialty) => ({
+    id: specialty,
+    label: specialty,
+    icon: categoryIcons[specialty] || Store,
+  })),
   { id: "Outros", label: "Outros", icon: MoreHorizontal },
 ];
 
