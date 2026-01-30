@@ -516,159 +516,161 @@ export default function GroupPage() {
           {/* Sidebar */}
           <div className="space-y-6">
             {/* Members - Show based on visibility settings */}
-            {((group as any).members_visible !== false || isLeader) ? (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-                className="bg-card rounded-2xl p-6 shadow-soft"
-              >
-                <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
-                  <Users className="w-5 h-5 text-primary" />
-                  Membros ({members?.length || 0})
-                  {(group as any).members_visible === false && isLeader && (
-                    <span className="text-xs bg-muted px-2 py-0.5 rounded-full text-muted-foreground flex items-center gap-1">
-                      <EyeOff className="w-3 h-3" />
-                      Oculto para outros
-                    </span>
-                  )}
-                </h2>
+            {(() => {
+              const membersVisible = (group as any).members_visible !== false;
+              const showAllMembers = membersVisible || isLeader;
+              // Filter to show only user's own member when list is hidden
+              const displayMembers = showAllMembers 
+                ? members 
+                : members?.filter(m => m.user_id === user?.id);
+              
+              return (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                  className="bg-card rounded-2xl p-6 shadow-soft"
+                >
+                  <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
+                    <Users className="w-5 h-5 text-primary" />
+                    Membros ({members?.length || 0})
+                    {!membersVisible && isLeader && (
+                      <span className="text-xs bg-muted px-2 py-0.5 rounded-full text-muted-foreground flex items-center gap-1">
+                        <EyeOff className="w-3 h-3" />
+                        Oculto para outros
+                      </span>
+                    )}
+                  </h2>
 
-                {members && members.length > 0 ? (
-                  <div className="space-y-3">
-                    {members.map((member) => (
-                      <div 
-                        key={member.id}
-                        className="p-3 bg-muted/30 rounded-lg"
-                      >
-                        {/* Header: Avatar + Name + Edit Button */}
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                            <span className="text-primary font-medium">
-                              {member.name.charAt(0).toUpperCase()}
-                            </span>
+                  {/* Hidden members notice for regular members */}
+                  {!showAllMembers && (
+                    <div className="text-center py-4 mb-4 bg-muted/30 rounded-lg">
+                      <div className="flex items-center justify-center gap-2 text-muted-foreground mb-1">
+                        <EyeOff className="w-4 h-4" />
+                        <span className="text-sm">Lista de membros oculta pelo líder</span>
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        {members?.length || 0} participante{(members?.length || 0) !== 1 ? 's' : ''} no total
+                      </p>
+                    </div>
+                  )}
+
+                  {displayMembers && displayMembers.length > 0 ? (
+                    <div className="space-y-3">
+                      {!showAllMembers && userMember && (
+                        <p className="text-xs text-primary font-medium mb-2">Seus dados:</p>
+                      )}
+                      {displayMembers.map((member) => (
+                        <div 
+                          key={member.id}
+                          className="p-3 bg-muted/30 rounded-lg"
+                        >
+                          {/* Header: Avatar + Name + Edit Button */}
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                              <span className="text-primary font-medium">
+                                {member.name.charAt(0).toUpperCase()}
+                              </span>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium text-foreground truncate">
+                                {member.name}
+                                {member.user_id === group.leader_id && (
+                                  <span className="ml-2 text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">
+                                    Líder
+                                  </span>
+                                )}
+                              </p>
+                              <p className="text-sm text-muted-foreground">
+                                {member.total_contributed || 0} / {(member.commitments || []).reduce((sum, c) => sum + (c.personal_goal || 0), 0)} {donationType.unit}
+                              </p>
+                            </div>
+                            {member.user_id === user?.id && (
+                              <Button
+                                variant={(member.commitments || []).length === 0 ? "default" : "ghost"}
+                                size="sm"
+                                onClick={() => setEditGoalOpen(true)}
+                                className={`flex-shrink-0 ${(member.commitments || []).length === 0
+                                  ? "bg-primary text-primary-foreground hover:bg-primary/90" 
+                                  : "text-primary hover:text-primary hover:bg-primary/10"
+                                }`}
+                              >
+                                <Target className="w-4 h-4" />
+                                <span className="ml-1 hidden sm:inline">{(member.commitments || []).length === 0 ? "DEFINIR" : "EDITAR"}</span>
+                              </Button>
+                            )}
                           </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="font-medium text-foreground truncate">
-                              {member.name}
-                              {member.user_id === group.leader_id && (
-                                <span className="ml-2 text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">
-                                  Líder
-                                </span>
-                              )}
-                            </p>
-                            <p className="text-sm text-muted-foreground">
-                              {member.total_contributed || 0} / {(member.commitments || []).reduce((sum, c) => sum + (c.personal_goal || 0), 0)} {donationType.unit}
-                            </p>
-                          </div>
-                          {member.user_id === user?.id && (
-                            <Button
-                              variant={(member.commitments || []).length === 0 ? "default" : "ghost"}
-                              size="sm"
-                              onClick={() => setEditGoalOpen(true)}
-                              className={`flex-shrink-0 ${(member.commitments || []).length === 0
-                                ? "bg-primary text-primary-foreground hover:bg-primary/90" 
-                                : "text-primary hover:text-primary hover:bg-primary/10"
-                              }`}
-                            >
-                              <Target className="w-4 h-4" />
-                              <span className="ml-1 hidden sm:inline">{(member.commitments || []).length === 0 ? "DEFINIR" : "EDITAR"}</span>
-                            </Button>
-                          )}
-                        </div>
-                        
-                        {/* Commitments list */}
-                        {member.commitments && member.commitments.length > 0 && (
-                          <div className="mt-3 space-y-2">
-                            {member.commitments.map((c, idx) => (
-                              <div key={c.id || idx} className="flex items-start gap-2 bg-muted/30 rounded-md p-2">
-                                <div className="flex-1 min-w-0">
-                                  <p className="text-xs text-primary break-words">
-                                    📌 {c.name ? `${c.name}: ` : ''}{c.ratio} {c.metric} = {c.donation_amount} {donationType.unit}
-                                  </p>
-                                  <p className="text-xs text-muted-foreground">
-                                    Meta: {c.personal_goal} {donationType.unit}
-                                  </p>
-                                  {c.penalty_donation && c.penalty_donation > 0 && (
-                                    <p className="text-xs text-amber-600 dark:text-amber-400">
-                                      🔥 Desafio: {c.penalty_donation} {donationType.unit}
+                          
+                          {/* Commitments list */}
+                          {member.commitments && member.commitments.length > 0 && (
+                            <div className="mt-3 space-y-2">
+                              {member.commitments.map((c, idx) => (
+                                <div key={c.id || idx} className="flex items-start gap-2 bg-muted/30 rounded-md p-2">
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-xs text-primary break-words">
+                                      📌 {c.name ? `${c.name}: ` : ''}{c.ratio} {c.metric} = {c.donation_amount} {donationType.unit}
                                     </p>
+                                    <p className="text-xs text-muted-foreground">
+                                      Meta: {c.personal_goal} {donationType.unit}
+                                    </p>
+                                    {c.penalty_donation && c.penalty_donation > 0 && (
+                                      <p className="text-xs text-amber-600 dark:text-amber-400">
+                                        🔥 Desafio: {c.penalty_donation} {donationType.unit}
+                                      </p>
+                                    )}
+                                  </div>
+                                  {member.user_id === user?.id && (
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => {
+                                        setSelectedCommitment({
+                                          id: c.id,
+                                          name: c.name,
+                                          metric: c.metric,
+                                          ratio: c.ratio,
+                                          donation_amount: c.donation_amount,
+                                          personal_goal: c.personal_goal,
+                                        });
+                                        setAddProgressOpen(true);
+                                      }}
+                                      className="h-7 px-2 text-green-600 hover:text-green-700 hover:bg-green-50 flex-shrink-0"
+                                    >
+                                      <Plus className="w-3 h-3" />
+                                      <span className="ml-1 text-xs">Doar</span>
+                                    </Button>
                                   )}
                                 </div>
-                                {member.user_id === user?.id && (
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => {
-                                      setSelectedCommitment({
-                                        id: c.id,
-                                        name: c.name,
-                                        metric: c.metric,
-                                        ratio: c.ratio,
-                                        donation_amount: c.donation_amount,
-                                        personal_goal: c.personal_goal,
-                                      });
-                                      setAddProgressOpen(true);
-                                    }}
-                                    className="h-7 px-2 text-green-600 hover:text-green-700 hover:bg-green-50 flex-shrink-0"
-                                  >
-                                    <Plus className="w-3 h-3" />
-                                    <span className="ml-1 text-xs">Doar</span>
-                                  </Button>
-                                )}
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                        
-                        {/* Leader remove button */}
-                        {isLeader && member.user_id !== group.leader_id && (
-                          <div className="mt-2 flex justify-end">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => setMemberToRemove({ id: member.id, name: member.name })}
-                              disabled={removeMember.isPending}
-                              className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                              <span className="ml-1">Remover</span>
-                            </Button>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-muted-foreground text-center py-4">
-                    Nenhum membro ainda
-                  </p>
-                )}
-              </motion.div>
-            ) : (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-                className="bg-card rounded-2xl p-6 shadow-soft"
-              >
-                <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
-                  <Users className="w-5 h-5 text-primary" />
-                  Membros
-                </h2>
-                <div className="text-center py-6">
-                  <div className="w-12 h-12 bg-muted rounded-full flex items-center justify-center mx-auto mb-3">
-                    <EyeOff className="w-6 h-6 text-muted-foreground" />
-                  </div>
-                  <p className="text-sm text-muted-foreground mb-2">
-                    A lista de membros está oculta pelo líder
-                  </p>
-                  <p className="text-lg font-semibold text-foreground">
-                    {members?.length || 0} participante{(members?.length || 0) !== 1 ? 's' : ''}
-                  </p>
-                </div>
-              </motion.div>
-            )}
+                              ))}
+                            </div>
+                          )}
+                          
+                          {/* Leader remove button */}
+                          {isLeader && member.user_id !== group.leader_id && (
+                            <div className="mt-2 flex justify-end">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setMemberToRemove({ id: member.id, name: member.name })}
+                                disabled={removeMember.isPending}
+                                className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                                <span className="ml-1">Remover</span>
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-muted-foreground text-center py-4">
+                      {showAllMembers ? "Nenhum membro ainda" : "Você ainda não é membro deste grupo"}
+                    </p>
+                  )}
+                </motion.div>
+              );
+            })()}
 
             {/* Stats */}
             <motion.div
