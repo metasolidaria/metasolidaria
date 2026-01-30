@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import { Loader2 } from "lucide-react";
+import { Loader2, Users } from "lucide-react";
 import { CityAutocomplete } from "@/components/CityAutocomplete";
 import type { AdminGroup } from "@/hooks/useAdminGroups";
 
@@ -26,6 +26,7 @@ interface EditGroupAdminModalProps {
     donation_type: string;
     goal_2026: number;
     is_private: boolean;
+    members_visible: boolean;
     leader_name: string;
     leader_whatsapp: string;
     description: string | null;
@@ -46,6 +47,7 @@ export const EditGroupAdminModal = ({
   const [donationType, setDonationType] = useState("");
   const [goal2026, setGoal2026] = useState(0);
   const [isPrivate, setIsPrivate] = useState(true);
+  const [membersVisible, setMembersVisible] = useState(true);
   const [leaderName, setLeaderName] = useState("");
   const [leaderWhatsapp, setLeaderWhatsapp] = useState("");
   const [description, setDescription] = useState("");
@@ -58,6 +60,7 @@ export const EditGroupAdminModal = ({
       setDonationType(group.donation_type || "");
       setGoal2026(group.goal_2026 || 0);
       setIsPrivate(group.is_private);
+      setMembersVisible(group.members_visible ?? true);
       setLeaderName(group.leader_name || "");
       setLeaderWhatsapp(group.leader_whatsapp || "");
       setDescription(group.description || "");
@@ -73,6 +76,7 @@ export const EditGroupAdminModal = ({
       donation_type: donationType,
       goal_2026: goal2026,
       is_private: isPrivate,
+      members_visible: membersVisible,
       leader_name: leaderName,
       leader_whatsapp: leaderWhatsapp,
       description: description || null,
@@ -144,6 +148,25 @@ export const EditGroupAdminModal = ({
               id="isPrivate"
               checked={isPrivate}
               onCheckedChange={setIsPrivate}
+            />
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Users className="w-4 h-4 text-muted-foreground" />
+              <div>
+                <Label htmlFor="membersVisible" className="text-sm font-medium">
+                  {membersVisible ? "Membros Visíveis" : "Membros Ocultos"}
+                </Label>
+                <p className="text-xs text-muted-foreground">
+                  {membersVisible ? "Todos podem ver a lista" : "Apenas o líder vê a lista"}
+                </p>
+              </div>
+            </div>
+            <Switch
+              id="membersVisible"
+              checked={membersVisible}
+              onCheckedChange={setMembersVisible}
             />
           </div>
 

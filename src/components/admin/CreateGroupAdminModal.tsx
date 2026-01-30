@@ -21,7 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { CalendarIcon, Loader2, Lock, Globe } from "lucide-react";
+import { CalendarIcon, Loader2, Lock, Globe, Users } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
@@ -57,6 +57,7 @@ export const CreateGroupAdminModal = ({
     city: "",
     donationType: "",
     isPrivate: true,
+    membersVisible: true,
     leaderName: "",
     leaderWhatsapp: "",
     description: "",
@@ -70,6 +71,7 @@ export const CreateGroupAdminModal = ({
       city: "",
       donationType: "",
       isPrivate: true,
+      membersVisible: true,
       leaderName: "",
       leaderWhatsapp: "",
       description: "",
@@ -231,6 +233,26 @@ export const CreateGroupAdminModal = ({
               checked={formData.isPrivate}
               onCheckedChange={(checked) =>
                 setFormData({ ...formData, isPrivate: checked })
+              }
+            />
+          </div>
+
+          <div className="flex items-center justify-between p-4 rounded-lg bg-muted/50">
+            <div className="flex items-center gap-2">
+              <Users className="h-4 w-4 text-muted-foreground" />
+              <div>
+                <span className="text-sm font-medium">
+                  {formData.membersVisible ? "Membros Visíveis" : "Membros Ocultos"}
+                </span>
+                <p className="text-xs text-muted-foreground">
+                  {formData.membersVisible ? "Todos podem ver a lista" : "Apenas o líder vê a lista"}
+                </p>
+              </div>
+            </div>
+            <Switch
+              checked={formData.membersVisible}
+              onCheckedChange={(checked) =>
+                setFormData({ ...formData, membersVisible: checked })
               }
             />
           </div>

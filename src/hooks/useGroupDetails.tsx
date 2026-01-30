@@ -312,6 +312,7 @@ export const useGroupDetails = (groupId: string | undefined) => {
       donation_type: string;
       description: string | null;
       is_private: boolean;
+      members_visible?: boolean;
       leader_name: string;
       leader_whatsapp: string;
       end_date: string;

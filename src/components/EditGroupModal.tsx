@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { X, Settings, Lock, Globe, User, Phone, FileText, CalendarIcon, Camera, Loader2, Trash2 } from "lucide-react";
+import { X, Settings, Lock, Globe, User, Phone, FileText, CalendarIcon, Camera, Loader2, Trash2, Users } from "lucide-react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
@@ -22,6 +22,7 @@ interface Group {
   donation_type: string;
   description: string | null;
   is_private: boolean;
+  members_visible?: boolean;
   leader_name: string | null;
   leader_whatsapp: string | null;
   end_date: string | null;
@@ -37,6 +38,7 @@ interface EditGroupModalProps {
     donation_type: string;
     description: string | null;
     is_private: boolean;
+    members_visible: boolean;
     leader_name: string;
     leader_whatsapp: string;
     end_date: string;
@@ -73,6 +75,7 @@ export const EditGroupModal = ({
     donationType: group.donation_type,
     description: group.description || "",
     isPrivate: group.is_private,
+    membersVisible: group.members_visible ?? true,
     leaderName: group.leader_name || "",
     leaderWhatsapp: group.leader_whatsapp || "",
     endDate: group.end_date ? new Date(group.end_date) : new Date("2026-12-31"),
@@ -86,6 +89,7 @@ export const EditGroupModal = ({
         donationType: group.donation_type,
         description: group.description || "",
         isPrivate: group.is_private,
+        membersVisible: group.members_visible ?? true,
         leaderName: group.leader_name || "",
         leaderWhatsapp: group.leader_whatsapp || "",
         endDate: group.end_date ? new Date(group.end_date) : new Date("2026-12-31"),
@@ -179,6 +183,7 @@ export const EditGroupModal = ({
       donation_type: formData.donationType,
       description: formData.description || null,
       is_private: formData.isPrivate,
+      members_visible: formData.membersVisible,
       leader_name: formData.leaderName,
       leader_whatsapp: formData.leaderWhatsapp,
       end_date: format(formData.endDate, "yyyy-MM-dd"),
@@ -425,6 +430,28 @@ export const EditGroupModal = ({
                   checked={formData.isPrivate}
                   onCheckedChange={(checked) =>
                     setFormData({ ...formData, isPrivate: checked })
+                  }
+                />
+              </div>
+
+              <div className="flex items-center justify-between p-4 rounded-xl border border-border bg-muted/30">
+                <div className="flex items-center gap-3">
+                  <Users className="w-5 h-5 text-muted-foreground" />
+                  <div>
+                    <Label className="text-foreground font-medium">
+                      {formData.membersVisible ? "Membros Visíveis" : "Membros Ocultos"}
+                    </Label>
+                    <p className="text-xs text-muted-foreground">
+                      {formData.membersVisible 
+                        ? "Todos podem ver a lista de membros" 
+                        : "Apenas você (líder) vê a lista"}
+                    </p>
+                  </div>
+                </div>
+                <Switch
+                  checked={formData.membersVisible}
+                  onCheckedChange={(checked) =>
+                    setFormData({ ...formData, membersVisible: checked })
                   }
                 />
               </div>

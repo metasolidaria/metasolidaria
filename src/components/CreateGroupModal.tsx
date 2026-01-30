@@ -45,6 +45,7 @@ export const CreateGroupModal = ({ open, onOpenChange, onRequireAuth }: CreateGr
     city: "",
     donationType: "",
     isPrivate: true,
+    membersVisible: true,
     leaderName: "",
     leaderWhatsapp: "",
     description: "",
@@ -225,6 +226,7 @@ export const CreateGroupModal = ({ open, onOpenChange, onRequireAuth }: CreateGr
           city: "", 
           donationType: "",
           isPrivate: false,
+          membersVisible: true,
           leaderName: "",
           leaderWhatsapp: "",
           description: "",
@@ -503,6 +505,28 @@ export const CreateGroupModal = ({ open, onOpenChange, onRequireAuth }: CreateGr
                   checked={formData.isPrivate}
                   onCheckedChange={(checked) =>
                     setFormData({ ...formData, isPrivate: checked })
+                  }
+                />
+              </div>
+
+              <div className="flex items-center justify-between p-4 rounded-xl border border-border bg-muted/30">
+                <div className="flex items-center gap-3">
+                  <Users className="w-5 h-5 text-muted-foreground" />
+                  <div>
+                    <Label className="text-foreground font-medium">
+                      {formData.membersVisible ? "Membros Visíveis" : "Membros Ocultos"}
+                    </Label>
+                    <p className="text-xs text-muted-foreground">
+                      {formData.membersVisible 
+                        ? "Todos podem ver a lista de membros" 
+                        : "Apenas o líder vê a lista de membros"}
+                    </p>
+                  </div>
+                </div>
+                <Switch
+                  checked={formData.membersVisible}
+                  onCheckedChange={(checked) =>
+                    setFormData({ ...formData, membersVisible: checked })
                   }
                 />
               </div>
