@@ -19,7 +19,7 @@ export const partnerSpecialties = [
   "Emissora",
   "Empresa",
   "Escola/Colégio",
-  "Estilista",
+  "Esteticista",
   "Faculdade",
   "Farmácia",
   "Fisioterapeuta",
