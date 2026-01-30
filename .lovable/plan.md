@@ -1,60 +1,103 @@
 
-# Plano: Atualizar Filtro de Categorias na Aba Parceiros
 
-## Problema Identificado
-O componente `PartnersSection.tsx` possui uma lista duplicada e desatualizada de categorias (`allCategories`) nas linhas 51-99 que **não está sincronizada** com a lista centralizada de `partnerSpecialties.ts`.
+# Plano: Tornar Convites por Link Reutilizáveis
 
-### Lista Atual (Desatualizada)
-- Contém 47 categorias + "Todos"
-- Ainda tem: Agropecuária, Comércio, Empresa, Imobiliária, Indústria, Político
-- Usa nomes antigos: Jogador, Influencer, Mecânico, Clube, Loja de brinquedos
-- Faltam novas categorias: Arquiteto, Auto Center, Clínica Estética, Esteticista, Faculdade, etc.
+## Resumo
+Modificar o sistema de convites para permitir que links de convite possam ser usados por múltiplas pessoas, até a data de expiração (30 dias).
 
-## Solução
-Atualizar o componente `PartnersSection.tsx` para:
-1. Importar a lista centralizada `partnerSpecialties` de `src/lib/partnerSpecialties.ts`
-2. Gerar dinamicamente o array `allCategories` a partir dessa lista
-3. Manter os ícones apropriados para cada categoria
+## Comportamento Atual
+1. Líder gera link de convite → cria registro com `status = 'pending'`
+2. Primeira pessoa usa o link → `status` muda para `'accepted'`
+3. Segunda pessoa tenta usar → erro "Convite inválido ou expirado"
+
+## Novo Comportamento
+1. Líder gera link de convite → cria registro com `status = 'pending'`
+2. Primeira pessoa usa o link → continua `status = 'pending'`
+3. Segunda pessoa usa o link → também entra no grupo
+4. Link continua válido até expirar (30 dias)
 
 ## Mudanças Técnicas
 
-### Arquivo: `src/components/PartnersSection.tsx`
+### 1. Atualizar Função RPC `accept_link_invitation`
 
-1. **Adicionar import** da lista centralizada:
-```typescript
-import { partnerSpecialties } from "@/lib/partnerSpecialties";
+Remover a linha que atualiza o status para 'accepted' em convites do tipo 'link':
+
+```sql
+-- REMOVER esta parte para convites tipo 'link':
+UPDATE group_invitations
+SET status = 'accepted'
+WHERE id = _invitation.id;
 ```
 
-2. **Criar mapeamento de ícones** por categoria ou padrão:
-```typescript
-const categoryIcons: Record<string, LucideIcon> = {
-  // Alimentação
-  "Açougue": Store,
-  "Padaria": Store,
-  "Restaurante": Store,
-  // Saúde
-  "Clínica": Building2,
-  "Médico": Stethoscope,
-  "Dentista": Stethoscope,
-  // etc.
-};
+A função continuará:
+- Verificando se o convite existe e não expirou
+- Verificando se o usuário já é membro (evita duplicidade)
+- Adicionando o usuário ao grupo
+- **MAS NÃO** marcará o convite como 'accepted'
+
+### 2. Migração SQL
+
+```sql
+CREATE OR REPLACE FUNCTION public.accept_link_invitation(_invite_code text)
+RETURNS uuid
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $function$
+DECLARE
+  _invitation record;
+  _new_member_id uuid;
+  _user_name text;
+BEGIN
+  IF auth.uid() IS NULL THEN
+    RAISE EXCEPTION 'User not authenticated';
+  END IF;
+
+  -- Find the invitation
+  SELECT * INTO _invitation
+  FROM group_invitations
+  WHERE invite_code = _invite_code
+    AND invite_type = 'link'
+    AND status = 'pending'
+    AND expires_at > now();
+
+  IF _invitation IS NULL THEN
+    RAISE EXCEPTION 'Invitation not found or expired';
+  END IF;
+
+  -- Check if user is already a member
+  IF EXISTS (SELECT 1 FROM group_members WHERE group_id = _invitation.group_id AND user_id = auth.uid()) THEN
+    RAISE EXCEPTION 'User is already a member of this group';
+  END IF;
+
+  -- Get user name
+  SELECT COALESCE(p.full_name, u.raw_user_meta_data->>'full_name', u.email)
+  INTO _user_name 
+  FROM auth.users u
+  LEFT JOIN profiles p ON p.user_id = u.id
+  WHERE u.id = auth.uid();
+
+  -- NÃO atualiza status para 'accepted' em convites tipo link
+  -- permitindo que múltiplas pessoas usem o mesmo link
+
+  -- Add user to group
+  INSERT INTO group_members (group_id, user_id, name)
+  VALUES (_invitation.group_id, auth.uid(), COALESCE(_user_name, 'Membro'))
+  RETURNING id INTO _new_member_id;
+
+  RETURN _new_member_id;
+END;
+$function$;
 ```
 
-3. **Gerar `allCategories` dinamicamente**:
-```typescript
-const allCategories = [
-  { id: "all", label: "Todos", icon: Star },
-  ...partnerSpecialties.map(specialty => ({
-    id: specialty,
-    label: specialty,
-    icon: categoryIcons[specialty] || Store, // ícone padrão
-  })),
-  { id: "Outros", label: "Outros", icon: MoreHorizontal },
-];
-```
+## Benefícios
+- Líder pode compartilhar um único link em grupos de WhatsApp
+- Múltiplas pessoas podem entrar usando o mesmo link
+- Link expira automaticamente após 30 dias
+- Proteção contra duplicidade (usuário não pode entrar duas vezes)
 
-## Resultado Esperado
-- O filtro de categorias na aba "Parceiros" exibirá as **57 categorias atualizadas**
-- Novas categorias como Arquiteto, Esteticista, Faculdade aparecerão no filtro
-- Categorias removidas (Político, Agropecuária, etc.) não aparecerão mais
-- Qualquer alteração futura em `partnerSpecialties.ts` será refletida automaticamente no filtro
+## Considerações
+- Convites por email (`invite_type = 'email'`) continuam sendo de uso único
+- O painel de administração mostrará o convite como "pendente" mesmo após pessoas entrarem
+- Se desejar, podemos adicionar um contador de quantas pessoas usaram cada link no futuro
+
