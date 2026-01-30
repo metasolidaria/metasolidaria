@@ -350,6 +350,7 @@ export type Database = {
           leader_id: string
           leader_name: string | null
           leader_whatsapp: string | null
+          members_visible: boolean
           name: string
           updated_at: string
           view_count: number
@@ -368,6 +369,7 @@ export type Database = {
           leader_id: string
           leader_name?: string | null
           leader_whatsapp?: string | null
+          members_visible?: boolean
           name: string
           updated_at?: string
           view_count?: number
@@ -386,6 +388,7 @@ export type Database = {
           leader_id?: string
           leader_name?: string | null
           leader_whatsapp?: string | null
+          members_visible?: boolean
           name?: string
           updated_at?: string
           view_count?: number
