@@ -66,7 +66,7 @@ export const GoldPartnersCarousel = ({ groupCity, groupId, groupName }: GoldPart
 
   return (
     <div
-      className="animate-in fade-in slide-in-from-bottom-4 duration-300 bg-gradient-to-r from-amber-500/10 via-purple-500/5 to-amber-600/10 rounded-2xl p-6 shadow-soft border border-amber-500/20"
+      className="animate-in fade-in slide-in-from-bottom-4 duration-300 bg-gradient-to-r from-amber-500/10 via-purple-500/5 to-amber-600/10 rounded-2xl p-6 shadow-soft border border-amber-500/20 overflow-hidden"
     >
       <div className="flex items-center gap-2 mb-4">
         <div className="flex items-center gap-1">
@@ -85,7 +85,7 @@ export const GoldPartnersCarousel = ({ groupCity, groupId, groupName }: GoldPart
           loop: true,
         }}
         plugins={autoplayPlugin ? [autoplayPlugin] : []}
-        className="w-full"
+        className="w-full overflow-hidden"
       >
         <CarouselContent className="-ml-2 md:-ml-4">
           {partners.map((partner) => (

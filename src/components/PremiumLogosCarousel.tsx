@@ -68,7 +68,7 @@ export const PremiumLogosCarousel = () => {
 
   return (
     <TooltipProvider delayDuration={100}>
-      <div className="flex flex-col items-center gap-1">
+      <div className="flex flex-col items-center gap-1 overflow-hidden">
         <span className="text-[10px] text-primary font-bold uppercase tracking-wide">
           Parceiros Idealizadores
         </span>
@@ -78,7 +78,7 @@ export const PremiumLogosCarousel = () => {
             loop: true,
           }}
           plugins={autoplayPlugin ? [autoplayPlugin] : []}
-          className="w-auto max-w-[200px]"
+          className="w-auto max-w-[200px] overflow-hidden"
         >
           <CarouselContent className="-ml-1">
             {premiumPartners.map((partner) => (
