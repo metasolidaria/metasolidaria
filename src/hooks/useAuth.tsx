@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
 
 export const useAuth = () => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     let mounted = true;
@@ -17,6 +19,19 @@ export const useAuth = () => {
           setSession(session);
           setUser(session?.user ?? null);
           setLoading(false);
+          
+          // Invalidate user-related queries on auth state change for faster data refresh
+          if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+            // Use setTimeout to avoid blocking the auth callback
+            setTimeout(() => {
+              queryClient.invalidateQueries({ queryKey: ["userMemberships"] });
+              queryClient.invalidateQueries({ queryKey: ["paginatedGroups"] });
+            }, 0);
+          } else if (event === 'SIGNED_OUT') {
+            // Clear user-specific caches on logout
+            queryClient.removeQueries({ queryKey: ["userMemberships"] });
+            queryClient.invalidateQueries({ queryKey: ["paginatedGroups"] });
+          }
         }
       }
     );
