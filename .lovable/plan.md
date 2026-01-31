@@ -1,82 +1,114 @@
 
-# Plano: Corrigir Clique em Parceiros Premium no Carrossel
+# Plano: Corrigir Prompt de Instalação PWA no iOS/Safari
 
 ## Problema Identificado
 
-No carrossel "Parceiros Solidários" dentro da página do grupo, ao clicar em um parceiro Premium (como NaturUai), nada acontece. Isso ocorre porque:
+No iPhone/Safari, o prompt de instalação do PWA não aparece. Isso acontece porque:
 
-1. O componente `GoldPartnersCarousel.tsx` usa apenas `handleWhatsAppClick` para todos os parceiros
-2. Parceiros Premium como NaturUai têm o campo `whatsapp` vazio
-3. A função retorna imediatamente quando `whatsapp` está vazio, sem executar nenhuma ação
+1. O Safari **não suporta** o evento `beforeinstallprompt` que é usado para detectar se o app pode ser instalado
+2. Por isso, `isInstallable` permanece `false` no iOS
+3. A lógica atual depende dessa flag para decidir se mostra o prompt
 
-### Comportamento Esperado (já implementado no Hero)
+### Fluxo Atual (Problemático)
 
-- **Parceiros Premium**: devem abrir o perfil do Instagram ao clicar
-- **Parceiros Ouro**: devem abrir o WhatsApp ao clicar
+```text
++-------------------+     +------------------+     +-------------------+
+| iOS/Safari        | --> | beforeinstall    | --> | isInstallable     |
+| acessa o site     |     | prompt NUNCA     |     | = false           |
++-------------------+     | dispara          |     +-------------------+
+                          +------------------+               |
+                                                             v
+                          +------------------+     +-------------------+
+                          | Prompt NÃO       | <-- | shouldShowManual  |
+                          | aparece          |     | = true, MAS...    |
+                          +------------------+     +-------------------+
+                                                             |
+                          O problema: o prompt não renderiza porque a
+                          condição principal `if (isInstalled || isDismissed)`
+                          bloqueia a renderização quando isDismissed = true
+                          (valor inicial padrão)
+```
+
+### Causa Raiz
+
+O estado `isDismissed` inicia como `true` (linha 23) e só muda para `false` após o `useEffect` rodar. Porém, a lógica do `useEffect` só considera o `localStorage`, não considera que dispositivos iOS precisam de tratamento especial.
+
+---
 
 ## Solucao
 
-Adicionar tratamento diferenciado no `GoldPartnersCarousel.tsx` para que parceiros Premium abram o Instagram, seguindo o mesmo padrao do `HeroPremiumLogos.tsx`.
+Modificar a lógica para detectar iOS/Safari e garantir que o prompt com instruções manuais apareça para esses usuários.
 
 ---
 
 ## Etapas de Implementacao
 
-### Etapa 1: Adicionar funcao para Instagram
+### Etapa 1: Adicionar detecção de iOS no hook
 
-Criar funcao `handleInstagramClick` no componente:
-
-```typescript
-const handleInstagramClick = (partner: { instagram?: string | null }) => {
-  if (!partner.instagram) return;
-  const handle = partner.instagram.replace(/^@/, "").trim();
-  window.open(`https://instagram.com/${handle}`, "_blank");
-};
-```
-
-### Etapa 2: Criar funcao unificada de clique
-
-Criar funcao `handlePartnerClick` que decide qual acao tomar com base no tier:
+Modificar `usePWAInstall.tsx` para expor uma flag `isIOSDevice`:
 
 ```typescript
-const handlePartnerClick = (partner: Partner) => {
-  if (partner.is_test) return;
+const [isIOSDevice, setIsIOSDevice] = useState(false);
+
+useEffect(() => {
+  // Detectar iOS
+  const iOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && 
+              !(window as any).MSStream;
+  setIsIOSDevice(iOS);
   
-  if (isPremium(partner.tier)) {
-    // Premium abre Instagram
-    handleInstagramClick(partner);
-  } else {
-    // Ouro abre WhatsApp
-    handleWhatsAppClick(partner);
-  }
+  // ... resto do código
+}, []);
+
+return {
+  isInstallable,
+  isInstalled,
+  isIOSDevice, // Nova flag
+  installApp,
 };
 ```
 
-### Etapa 3: Atualizar o onClick do Card
+### Etapa 2: Ajustar lógica de renderização no componente
 
-Substituir `onClick={() => handleWhatsAppClick(partner)}` por `onClick={() => handlePartnerClick(partner)}`.
+Modificar `InstallPWAPrompt.tsx` para considerar iOS na decisão de mostrar o prompt:
 
-### Etapa 4: Atualizar texto de orientacao
+```typescript
+const { isInstallable, isInstalled, isIOSDevice, installApp } = usePWAInstall();
 
-Alterar o texto explicativo no rodape do carrossel para refletir os dois comportamentos:
+// Mudança na condição de renderização
+// No iOS, não depende de isInstallable porque nunca será true
+const shouldRender = !isInstalled && !isDismissed && (isInstallable || isIOSDevice);
 
+if (!shouldRender) {
+  return null;
+}
 ```
-De: "Clique em um parceiro para entrar em contato via WhatsApp"
-Para: "Clique em um parceiro para visitar o perfil ou WhatsApp"
+
+### Etapa 3: Simplificar lógica de instruções manuais
+
+Atualizar a variável `shouldShowManual` para ser mais clara:
+
+```typescript
+// Mostrar instruções manuais quando:
+// - É iOS (sempre precisa de instruções manuais)
+// - Ou não tem prompt nativo disponível
+// - Ou usuário clicou em instalar e falhou
+const shouldShowManual = isIOSDevice || !isInstallable || showManualInstructions;
 ```
 
 ---
 
-## Arquivo Afetado
+## Arquivos Afetados
 
 | Arquivo | Mudanca |
 |---------|---------|
-| `src/components/GoldPartnersCarousel.tsx` | Adicionar logica diferenciada para Premium (Instagram) vs Ouro (WhatsApp) |
+| `src/hooks/usePWAInstall.tsx` | Adicionar deteccao e exposicao de `isIOSDevice` |
+| `src/components/InstallPWAPrompt.tsx` | Ajustar logica de renderizacao para considerar iOS |
 
 ---
 
 ## Resultado Esperado
 
-- Clicar em NaturUai (Premium) abrira o Instagram `instagram.com/naturuai_`
-- Clicar em parceiros Ouro (nao-teste) abrira WhatsApp normalmente
-- Parceiros de teste continuarao sem acao ao clicar
+- Usuarios de iPhone/Safari verao o prompt com instrucoes: "Toque em Compartilhar e depois em Adicionar a Tela Inicial"
+- Usuarios de Android continuarao vendo o botao "Instalar App" quando disponivel
+- A logica de "dismiss" por 7 dias continuara funcionando normalmente
+- O prompt ainda sera exibido 3 segundos apos o carregamento da pagina (comportamento mantido)
