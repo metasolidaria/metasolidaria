@@ -6,8 +6,23 @@ export interface Entity {
   id: string;
   name: string;
   city: string;
+  accepted_donations: string[];
+  observations: string | null;
   created_at: string;
 }
+
+export const DONATION_OPTIONS = [
+  { value: "alimentos", label: "Alimentos" },
+  { value: "roupas", label: "Roupas" },
+  { value: "cobertores", label: "Cobertores" },
+  { value: "brinquedos", label: "Brinquedos" },
+  { value: "livros", label: "Livros" },
+  { value: "higiene", label: "Kits de Higiene" },
+  { value: "sopas", label: "Sopas/Refeições" },
+  { value: "moveis", label: "Móveis" },
+  { value: "eletrodomesticos", label: "Eletrodomésticos" },
+  { value: "dinheiro", label: "Dinheiro" },
+] as const;
 
 export const useEntities = () => {
   const { toast } = useToast();
@@ -28,7 +43,19 @@ export const useEntities = () => {
   });
 
   const createEntity = useMutation({
-    mutationFn: async ({ name, city, phone }: { name: string; city: string; phone?: string }) => {
+    mutationFn: async ({ 
+      name, 
+      city, 
+      phone,
+      accepted_donations,
+      observations 
+    }: { 
+      name: string; 
+      city: string; 
+      phone?: string;
+      accepted_donations?: string[];
+      observations?: string;
+    }) => {
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) throw new Error("User not authenticated");
 
@@ -38,6 +65,8 @@ export const useEntities = () => {
           name: name.trim(), 
           city: city.trim(),
           phone: phone?.trim() || null,
+          accepted_donations: accepted_donations || [],
+          observations: observations?.trim() || null,
           created_by: userData.user.id 
         })
         .select()
