@@ -1,177 +1,84 @@
 
-# Plano: Meta Padrão para Novos Membros
 
-## Objetivo
-Permitir que o líder defina uma meta padrão ao criar o grupo. Quando um novo membro entrar, ele automaticamente receberá essa meta como um "commitment block" inicial, podendo alterá-la posteriormente.
+# Plano: Corrigir o Bug de Entrada em Grupos Públicos
 
-## Exemplo do Usuário
-> "O líder parametrizar que cada 1 corrida que finalizar vai doar 1 kg de alimento. Depois o membro se quiser pode alterar."
+## Diagnóstico do Problema
+
+Ao clicar em "Participar" num grupo público, o usuário é redirecionado para a página do grupo, mas não aparece como membro. A análise revelou:
+
+### Fluxo Atual (Problemático)
+1. Usuário clica "Participar" em grupo público
+2. `joinGroup.mutate()` insere o membro no banco (funciona corretamente)
+3. `apply_default_commitment` aplica meta padrão (funciona)
+4. `onSuccess` invalida apenas: `paginatedGroups`, `userMemberships`, `impactStats`
+5. Navegação para `/grupo/{id}` acontece
+6. `useGroupDetails` usa query `["groupMembers", groupId]` **que NÃO foi invalidado**
+7. Dados em cache retornam sem o novo membro
+
+### Causa Raiz
+O cache `["groupMembers", groupId]` não é invalidado após a entrada bem-sucedida no grupo, resultando em dados desatualizados na página de destino.
 
 ---
 
-## Visão Geral da Implementação
+## Solução Proposta
 
-### 1. Adicionar Campos de Meta Padrão na Tabela `groups`
+### 1. Adicionar Invalidação do Cache de Membros
 
-Novos campos na tabela `groups`:
-- `default_commitment_name` (text, nullable) - Nome da meta padrão (ex: "Meta de Corridas")
-- `default_commitment_metric` (text, nullable) - Métrica (ex: "corrida")
-- `default_commitment_ratio` (integer, default 1) - Proporção (ex: 1)
-- `default_commitment_donation` (integer, default 1) - Quantidade de doação (ex: 1 kg)
-- `default_commitment_goal` (integer, default 0) - Meta inicial sugerida (ex: 10)
+Modificar o `onSuccess` do `joinGroup.mutate()` em **dois arquivos**:
 
-### 2. Atualizar o Modal de Criação de Grupo
+**Arquivo: `src/hooks/usePaginatedGroups.tsx`**
+- Adicionar invalidação de `["groupMembers"]` no callback de sucesso
+- Também invalidar `["group"]` para garantir dados frescos
 
-**Arquivos:** `src/components/CreateGroupModal.tsx`, `src/components/admin/CreateGroupAdminModal.tsx`
+**Arquivo: `src/hooks/useGroups.tsx`**  
+- Aplicar a mesma correção no hook legado
 
-Adicionar seção "Meta Padrão para Membros" com campos:
-- Nome da meta (opcional)
-- Regra: "A cada X [métrica] = Y [unidade de doação]"
-- Meta inicial sugerida (quantidade de unidades)
+### 2. Aguardar Invalidação Antes de Navegar
 
-O líder verá um preview como:
-> "A cada 1 corrida = 1 kg de alimento | Meta sugerida: 10 kg"
-
-### 3. Atualizar Função `create_group_with_leader`
-
-Adicionar parâmetros para os campos de meta padrão.
-
-### 4. Criar Função para Aplicar Meta Padrão a Novo Membro
-
-Nova função no banco: `apply_default_commitment(_member_id uuid, _group_id uuid)`
-
-Esta função:
-1. Busca os dados de meta padrão do grupo
-2. Se existir uma métrica padrão definida, cria um registro em `member_commitments` para o novo membro
-
-### 5. Modificar Pontos de Entrada de Membros
-
-**Locais onde membros são adicionados:**
-1. `accept_link_invitation` - Convite por link
-2. `accept_group_invitation` - Convite por email
-3. `joinGroup` (useGroups) - Entrada direta em grupo público
-4. `addMember` (AddMemberModal) - Líder adicionando membro manualmente
-5. `create_group_with_leader` - O próprio líder ao criar
-
-Cada um desses pontos chamará `apply_default_commitment` após inserir o membro.
-
-### 6. Permitir Edição da Meta Padrão no Modal de Edição do Grupo
-
-**Arquivo:** `src/components/EditGroupModal.tsx`
-
-Adicionar a mesma seção de "Meta Padrão" para que o líder possa alterar posteriormente.
+Modificar o callback em `src/components/GroupsSection.tsx`:
+- Usar `mutateAsync` ao invés de `mutate` com callback
+- Ou passar o `groupId` no `onSuccess` para invalidar especificamente
 
 ---
 
 ## Detalhes Técnicos
 
-### Migração SQL
+### Mudança em `src/hooks/usePaginatedGroups.tsx` (linhas 159-166)
 
-```sql
--- Adicionar campos de meta padrão na tabela groups
-ALTER TABLE groups ADD COLUMN IF NOT EXISTS default_commitment_name text;
-ALTER TABLE groups ADD COLUMN IF NOT EXISTS default_commitment_metric text;
-ALTER TABLE groups ADD COLUMN IF NOT EXISTS default_commitment_ratio integer DEFAULT 1;
-ALTER TABLE groups ADD COLUMN IF NOT EXISTS default_commitment_donation integer DEFAULT 1;
-ALTER TABLE groups ADD COLUMN IF NOT EXISTS default_commitment_goal integer DEFAULT 0;
+```typescript
+// ANTES:
+onSuccess: () => {
+  queryClient.invalidateQueries({ queryKey: ["paginatedGroups"] });
+  queryClient.invalidateQueries({ queryKey: ["userMemberships"] });
+  queryClient.invalidateQueries({ queryKey: ["impactStats"] });
+  toast({...});
+}
 
--- Função para aplicar meta padrão ao membro
-CREATE OR REPLACE FUNCTION apply_default_commitment(_member_id uuid, _group_id uuid)
-RETURNS void
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path TO 'public'
-AS $$
-DECLARE
-  _group record;
-BEGIN
-  -- Buscar configuração de meta padrão do grupo
-  SELECT 
-    default_commitment_name,
-    default_commitment_metric,
-    default_commitment_ratio,
-    default_commitment_donation,
-    default_commitment_goal
-  INTO _group
-  FROM groups
-  WHERE id = _group_id;
-
-  -- Se tem métrica definida, criar commitment
-  IF _group.default_commitment_metric IS NOT NULL 
-     AND _group.default_commitment_metric != '' THEN
-    INSERT INTO member_commitments (
-      member_id,
-      name,
-      metric,
-      ratio,
-      donation_amount,
-      personal_goal
-    ) VALUES (
-      _member_id,
-      COALESCE(_group.default_commitment_name, 'Meta de ' || _group.default_commitment_metric),
-      _group.default_commitment_metric,
-      COALESCE(_group.default_commitment_ratio, 1),
-      COALESCE(_group.default_commitment_donation, 1),
-      COALESCE(_group.default_commitment_goal, 0)
-    );
-  END IF;
-END;
-$$;
+// DEPOIS:
+onSuccess: (_, variables) => {
+  queryClient.invalidateQueries({ queryKey: ["paginatedGroups"] });
+  queryClient.invalidateQueries({ queryKey: ["userMemberships"] });
+  queryClient.invalidateQueries({ queryKey: ["impactStats"] });
+  // NOVO: Invalidar cache de membros do grupo específico
+  queryClient.invalidateQueries({ queryKey: ["groupMembers", variables.groupId] });
+  queryClient.invalidateQueries({ queryKey: ["group", variables.groupId] });
+  toast({...});
+}
 ```
 
-### Atualizar Funções de Entrada de Membros
+### Mudança similar em `src/hooks/useGroups.tsx` (linhas 201-208)
 
-As funções `accept_link_invitation`, `accept_group_invitation` e `create_group_with_leader` serão atualizadas para chamar `apply_default_commitment` após inserir o membro.
-
-### UI do Modal de Criação
-
-Nova seção no formulário:
-
-```
-┌─────────────────────────────────────────────┐
-│ 🎯 Meta Padrão para Membros (opcional)      │
-│                                             │
-│ Regra de Doação:                            │
-│ A cada [1] [corrida] = [1] kg              │
-│                                             │
-│ Meta inicial sugerida: [10] kg              │
-│                                             │
-│ 📌 Preview: "1 corrida = 1 kg"              │
-│    Membros entrarão com meta de 10 kg       │
-└─────────────────────────────────────────────┘
-```
+Adicionar as mesmas invalidações de `groupMembers` e `group`.
 
 ---
 
-## Fluxo do Usuário
+## Benefícios da Solução
 
-1. **Líder cria grupo** → Define "1 corrida = 1 kg, meta 10 kg"
-2. **Novo membro entra** → Automaticamente recebe commitment com:
-   - Métrica: "corrida"
-   - Regra: 1 corrida = 1 kg
-   - Meta: 10 kg
-3. **Membro acessa grupo** → Vê sua meta pré-configurada
-4. **Membro pode editar** → Altera valores conforme preferência
+1. Quando o usuário navegar para a página do grupo, o cache será invalidado
+2. O `useGroupDetails` fará uma nova requisição e receberá dados atualizados
+3. O novo membro aparecerá corretamente na lista
 
----
+## Risco
 
-## Arquivos a Modificar
+Nenhum risco identificado - apenas adiciona invalidações de cache adicionais que são necessárias para manter a consistência dos dados.
 
-| Arquivo | Alteração |
-|---------|-----------|
-| `supabase/migrations/` | Nova migração com campos e funções |
-| `src/components/CreateGroupModal.tsx` | Adicionar seção de meta padrão |
-| `src/components/admin/CreateGroupAdminModal.tsx` | Adicionar seção de meta padrão |
-| `src/components/EditGroupModal.tsx` | Adicionar edição de meta padrão |
-| `src/hooks/useGroups.tsx` | Passar parâmetros de meta padrão na criação |
-| `src/hooks/usePaginatedGroups.tsx` | Atualizar joinGroup para chamar apply_default_commitment |
-| `src/components/AddMemberModal.tsx` | Chamar apply_default_commitment após adicionar |
-
----
-
-## Considerações
-
-- **Retrocompatibilidade**: Grupos existentes não terão meta padrão (campos nullable)
-- **Membros existentes**: Não são afetados, apenas novos membros
-- **Líder como membro**: Ao criar o grupo, o líder também recebe a meta padrão
-- **Segurança**: Função `apply_default_commitment` é SECURITY DEFINER para permitir inserção em `member_commitments`
