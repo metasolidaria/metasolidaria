@@ -25,6 +25,9 @@ export const EntitiesSection = ({ onRequireAuth }: EntitiesSectionProps) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newEntity, setNewEntity] = useState({ name: "", city: "", phone: "" });
   const [searchCity, setSearchCity] = useState("");
+  const [showAll, setShowAll] = useState(false);
+
+  const shouldShowEntities = showAll || searchCity.trim().length > 0;
 
   const filteredEntities = useMemo(() => {
     if (!searchCity.trim()) return entities;
@@ -85,6 +88,20 @@ export const EntitiesSection = ({ onRequireAuth }: EntitiesSectionProps) => {
         {isLoading ? (
           <div className="flex justify-center py-12">
             <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          </div>
+        ) : !shouldShowEntities ? (
+          <div className="text-center py-12 animate-in fade-in duration-300">
+            <Building2 className="w-16 h-16 text-muted-foreground/50 mx-auto mb-4" />
+            <p className="text-muted-foreground mb-2">
+              Busque por uma cidade ou clique em "Ver Todas" para visualizar as entidades cadastradas.
+            </p>
+            <Button
+              variant="outline"
+              onClick={() => setShowAll(true)}
+              className="mt-4"
+            >
+              Ver Todas
+            </Button>
           </div>
         ) : entities.length === 0 ? (
           <div className="text-center py-12 animate-in fade-in duration-300">
