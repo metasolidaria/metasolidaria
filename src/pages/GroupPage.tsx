@@ -542,16 +542,35 @@ export default function GroupPage() {
                     )}
                   </h2>
 
-                  {/* Hidden members notice for regular members */}
+                  {/* Hidden members notice with aggregated totals for regular members */}
                   {!showAllMembers && (
-                    <div className="text-center py-4 mb-4 bg-muted/30 rounded-lg">
-                      <div className="flex items-center justify-center gap-2 text-muted-foreground mb-1">
+                    <div className="mb-4 bg-muted/30 rounded-lg p-4 space-y-3">
+                      <div className="flex items-center justify-center gap-2 text-muted-foreground">
                         <EyeOff className="w-4 h-4" />
                         <span className="text-sm">Lista de membros oculta pelo líder</span>
                       </div>
-                      <p className="text-sm text-muted-foreground">
-                        {members?.length || 0} participante{(members?.length || 0) !== 1 ? 's' : ''} no total
-                      </p>
+                      
+                      {/* Aggregated totals */}
+                      <div className="grid grid-cols-3 gap-2 text-center pt-2 border-t border-border/50">
+                        <div>
+                          <div className="text-lg font-bold text-foreground">
+                            {members?.length || 0}
+                          </div>
+                          <div className="text-xs text-muted-foreground">Participantes</div>
+                        </div>
+                        <div>
+                          <div className="text-lg font-bold text-primary">
+                            {members?.reduce((sum, m) => sum + ((m.commitments || []).reduce((s, c) => s + (c.personal_goal || 0), 0)), 0) || 0}
+                          </div>
+                          <div className="text-xs text-muted-foreground">Meta Total</div>
+                        </div>
+                        <div>
+                          <div className="text-lg font-bold text-secondary">
+                            {members?.reduce((sum, m) => sum + (m.total_contributed || 0), 0) || 0}
+                          </div>
+                          <div className="text-xs text-muted-foreground">Doações</div>
+                        </div>
+                      </div>
                     </div>
                   )}
 
