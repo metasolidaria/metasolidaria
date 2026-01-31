@@ -71,13 +71,14 @@ export const GroupsSection = ({ onRequireAuth }: GroupsSectionProps) => {
 
   const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
 
-  const handleGroupAction = (groupId: string, isPrivate: boolean) => {
+  const handleGroupAction = (groupId: string, isPrivate: boolean, leaderId: string) => {
     if (!user) {
       onRequireAuth();
       return;
     }
 
-    if (isUserMember(groupId)) {
+    // Allow access if user is member OR leader
+    if (isUserMember(groupId) || user.id === leaderId) {
       navigate(`/grupo/${groupId}`);
       return;
     }
@@ -281,11 +282,11 @@ export const GroupsSection = ({ onRequireAuth }: GroupsSectionProps) => {
                       )}
                       <Button 
                         className={isGroupLeader(group.leader_id) ? "flex-1" : "w-full"} 
-                        variant={isUserMember(group.id) ? "default" : "outline"} 
-                        onClick={() => handleGroupAction(group.id, group.is_private)} 
-                        disabled={joinGroup.isPending || (group.is_private && !isUserMember(group.id))}
+                        variant={isUserMember(group.id) || isGroupLeader(group.leader_id) ? "default" : "outline"} 
+                        onClick={() => handleGroupAction(group.id, group.is_private, group.leader_id)} 
+                        disabled={joinGroup.isPending || (group.is_private && !isUserMember(group.id) && !isGroupLeader(group.leader_id))}
                       >
-                        {isUserMember(group.id) ? <>
+                        {isUserMember(group.id) || isGroupLeader(group.leader_id) ? <>
                             <Users className="w-4 h-4 mr-1" />
                             Acessar Grupo
                           </> : group.is_private ? <>
