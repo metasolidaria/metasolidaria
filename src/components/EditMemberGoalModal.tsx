@@ -90,10 +90,12 @@ export const EditMemberGoalModal = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Filtrar blocos com métrica preenchida
+    // Filtrar blocos com métrica preenchida e garantir valores mínimos
     const validBlocks = blocks.filter(b => b.metric.trim() !== "").map(b => ({
       ...b,
       name: b.name || `Meta de ${b.metric}`,
+      ratio: b.ratio || 1, // Mínimo 1
+      donation_amount: b.donation_amount || 1, // Mínimo 1
       personal_goal: b.personal_goal || 0,
       penalty_donation: b.penalty_donation || null,
     }));
@@ -200,9 +202,9 @@ export const EditMemberGoalModal = ({
                         <div className="flex items-center gap-2">
                           <Input
                             type="number"
-                            value={block.personal_goal || ""}
-                            onChange={(e) => updateBlock(index, 'personal_goal', parseInt(e.target.value) || 0)}
-                            placeholder="10"
+                            value={block.personal_goal === 0 ? "" : block.personal_goal}
+                            onChange={(e) => updateBlock(index, 'personal_goal', e.target.value === "" ? 0 : parseInt(e.target.value) || 0)}
+                            placeholder="Ex: 10"
                             className="w-24 h-9"
                             min="0"
                           />
@@ -219,8 +221,9 @@ export const EditMemberGoalModal = ({
                           <span className="text-muted-foreground">A cada</span>
                           <Input
                             type="number"
-                            value={block.ratio}
-                            onChange={(e) => updateBlock(index, 'ratio', parseInt(e.target.value) || 1)}
+                            value={block.ratio === 0 ? "" : block.ratio}
+                            onChange={(e) => updateBlock(index, 'ratio', e.target.value === "" ? 0 : parseInt(e.target.value) || 0)}
+                            placeholder="1"
                             className="w-14 text-center h-9"
                             min="1"
                           />
@@ -234,8 +237,9 @@ export const EditMemberGoalModal = ({
                           <span className="text-muted-foreground">=</span>
                           <Input
                             type="number"
-                            value={block.donation_amount}
-                            onChange={(e) => updateBlock(index, 'donation_amount', parseInt(e.target.value) || 1)}
+                            value={block.donation_amount === 0 ? "" : block.donation_amount}
+                            onChange={(e) => updateBlock(index, 'donation_amount', e.target.value === "" ? 0 : parseInt(e.target.value) || 0)}
+                            placeholder="1"
                             className="w-14 text-center h-9"
                             min="1"
                           />
