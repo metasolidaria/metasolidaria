@@ -37,13 +37,18 @@ const Index = () => {
   // Scroll to partners section if parceiros param is present
   useEffect(() => {
     if (searchParams.get("parceiros") === "true") {
-      // Small delay to ensure DOM is ready
-      setTimeout(() => {
+      // Retry scroll until element is found (lazy loaded components)
+      const attemptScroll = (attempts = 0) => {
         const partnersSection = document.getElementById("parceiros");
         if (partnersSection) {
           partnersSection.scrollIntoView({ behavior: "smooth" });
+        } else if (attempts < 10) {
+          // Retry up to 10 times with increasing delay
+          setTimeout(() => attemptScroll(attempts + 1), 150);
         }
-      }, 100);
+      };
+      // Start after initial render
+      setTimeout(() => attemptScroll(), 300);
     }
   }, [searchParams]);
 
