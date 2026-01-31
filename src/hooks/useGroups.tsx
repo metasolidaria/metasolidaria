@@ -114,6 +114,11 @@ export const useGroups = () => {
       description?: string;
       end_date?: string;
       entity_id?: string | null;
+      default_commitment_name?: string | null;
+      default_commitment_metric?: string | null;
+      default_commitment_ratio?: number;
+      default_commitment_donation?: number;
+      default_commitment_goal?: number;
     }) => {
       // Usar função SECURITY DEFINER que cria grupo E adiciona líder como membro
       const { data, error } = await supabase.rpc('create_group_with_leader', {
@@ -127,6 +132,11 @@ export const useGroups = () => {
         _description: newGroup.description || '',
         _end_date: newGroup.end_date || '2026-12-31',
         _entity_id: newGroup.entity_id || null,
+        _default_commitment_name: newGroup.default_commitment_name || null,
+        _default_commitment_metric: newGroup.default_commitment_metric || null,
+        _default_commitment_ratio: newGroup.default_commitment_ratio ?? 1,
+        _default_commitment_donation: newGroup.default_commitment_donation ?? 1,
+        _default_commitment_goal: newGroup.default_commitment_goal ?? 0,
       });
 
       if (error) throw error;
@@ -179,6 +189,13 @@ export const useGroups = () => {
         .single();
 
       if (error) throw error;
+
+      // Aplicar meta padrão ao novo membro
+      await supabase.rpc('apply_default_commitment', {
+        _member_id: data.id,
+        _group_id: groupId,
+      });
+
       return data;
     },
     onSuccess: () => {

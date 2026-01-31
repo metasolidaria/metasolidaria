@@ -79,6 +79,13 @@ export const AddMemberModal = ({ open, onOpenChange, groupId, groupName }: AddMe
         .single();
 
       if (error) throw error;
+
+      // Aplicar meta padrão ao novo membro
+      await supabase.rpc('apply_default_commitment', {
+        _member_id: data.id,
+        _group_id: groupId,
+      });
+
       return data;
     },
     onSuccess: (data) => {

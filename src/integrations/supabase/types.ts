@@ -367,6 +367,11 @@ export type Database = {
         Row: {
           city: string
           created_at: string
+          default_commitment_donation: number | null
+          default_commitment_goal: number | null
+          default_commitment_metric: string | null
+          default_commitment_name: string | null
+          default_commitment_ratio: number | null
           description: string | null
           donation_type: string
           end_date: string | null
@@ -386,6 +391,11 @@ export type Database = {
         Insert: {
           city: string
           created_at?: string
+          default_commitment_donation?: number | null
+          default_commitment_goal?: number | null
+          default_commitment_metric?: string | null
+          default_commitment_name?: string | null
+          default_commitment_ratio?: number | null
           description?: string | null
           donation_type: string
           end_date?: string | null
@@ -405,6 +415,11 @@ export type Database = {
         Update: {
           city?: string
           created_at?: string
+          default_commitment_donation?: number | null
+          default_commitment_goal?: number | null
+          default_commitment_metric?: string | null
+          default_commitment_name?: string | null
+          default_commitment_ratio?: number | null
           description?: string | null
           donation_type?: string
           end_date?: string | null
@@ -834,6 +849,10 @@ export type Database = {
         Args: { _invite_code: string }
         Returns: string
       }
+      apply_default_commitment: {
+        Args: { _group_id: string; _member_id: string }
+        Returns: undefined
+      }
       approve_join_request: { Args: { _request_id: string }; Returns: string }
       create_group_with_leader:
         | {
@@ -881,6 +900,27 @@ export type Database = {
         | {
             Args: {
               _city: string
+              _description: string
+              _donation_type: string
+              _end_date?: string
+              _entity_id?: string
+              _goal_2026: number
+              _is_private: boolean
+              _leader_name: string
+              _leader_whatsapp: string
+              _members_visible?: boolean
+              _name: string
+            }
+            Returns: string
+          }
+        | {
+            Args: {
+              _city: string
+              _default_commitment_donation?: number
+              _default_commitment_goal?: number
+              _default_commitment_metric?: string
+              _default_commitment_name?: string
+              _default_commitment_ratio?: number
               _description: string
               _donation_type: string
               _end_date?: string
