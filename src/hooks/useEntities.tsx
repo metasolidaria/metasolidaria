@@ -22,6 +22,7 @@ export const DONATION_OPTIONS = [
   { value: "moveis", label: "Móveis" },
   { value: "eletrodomesticos", label: "Eletrodomésticos" },
   { value: "dinheiro", label: "Dinheiro" },
+  { value: "outros", label: "Outros (especificar nas observações)" },
 ] as const;
 
 export const useEntities = () => {
