@@ -1,75 +1,115 @@
 
-# Plano: Corrigir Cards de "Meus Grupos" Não Aparecendo
+# Plano: Corrigir Problema de "Meus Grupos" Não Aparecendo
 
-## Problema Identificado
+## Diagnóstico
 
-A view `groups_public` tem uma cláusula `WHERE g.is_private = false` que exclui todos os grupos privados. Como **todos os grupos no sistema são privados** (`is_private = true`), a view sempre retorna vazio.
+Após análise detalhada dos logs de rede e do código, identifiquei uma **race condition** entre dois estados:
 
-Quando você vai em "Meus Grupos", o contador mostra "1" (pois o hook `useUserMemberships` consulta diretamente a tabela `group_members`), mas o card não aparece porque a query de grupos usa a view `groups_public` que filtra grupos privados.
+1. Quando o usuário loga, o `useEffect` na linha 60-64 muda automaticamente o filtro para "mine"
+2. Porém, a query `useUserMemberships` pode ainda não ter completado
+3. Isso faz com que `userMemberships.length === 0` seja verdadeiro temporariamente
+4. A lógica na linha 70-72 do hook retorna array vazio quando `filter === "mine"` e memberships está vazio
 
-## Solução Proposta
+A API está funcionando corretamente - o grupo "Gerando futuro" aparece na resposta de `groups_public`. O problema é puramente de timing no frontend.
 
-Atualizar a view `groups_public` para incluir grupos privados **apenas quando o usuário autenticado é membro ou líder** do grupo. Isso mantém a segurança (não expõe grupos privados para não-membros) mas permite que membros vejam seus próprios grupos.
+## Solução
 
-## Detalhes Técnicos
+Modificar a lógica do hook `usePaginatedGroups` para lidar melhor com o estado de carregamento inicial dos memberships, além de usar `leader_id` como fallback para identificar grupos do usuário.
 
-### 1. Atualizar a View `groups_public`
+### 1. Corrigir Hook `usePaginatedGroups`
 
-Modificar a definição da view para usar a função `is_group_member()` já existente:
+**Arquivo**: `src/hooks/usePaginatedGroups.tsx`
 
-```sql
-CREATE OR REPLACE VIEW groups_public
-WITH (security_invoker = on) AS
-SELECT 
-    g.id,
-    g.name,
-    g.city,
-    g.donation_type,
-    g.goal_2026,
-    g.is_private,
-    g.leader_id,
-    g.leader_name,
-    g.description,
-    g.entity_id,
-    g.image_url,
-    g.end_date,
-    g.created_at,
-    g.updated_at,
-    COALESCE(gs.member_count, 0::bigint) AS member_count,
-    COALESCE(gs.total_donations, 0::bigint) AS total_donations,
-    COALESCE(gs.total_goals, 0::bigint) AS total_goals,
-    g.view_count,
-    g.members_visible
-FROM groups g
-LEFT JOIN group_stats gs ON gs.group_id = g.id
-WHERE 
-    g.is_private = false  -- Grupos públicos visíveis para todos
-    OR g.leader_id = auth.uid()  -- Líder pode ver seu grupo privado
-    OR is_group_member(auth.uid(), g.id);  -- Membros podem ver o grupo
+Alterações:
+- Adicionar verificação do estado de loading do `useUserMemberships`
+- Incluir grupos onde o usuário é líder no filtro "mine" (mesmo se não estiver na tabela `group_members`)
+- Melhorar a queryKey para incluir o estado de loading
+
+```typescript
+// Hook to get user memberships - agora com status de loading
+export const useUserMemberships = () => {
+  const { data: userMemberships, isLoading } = useQuery({
+    queryKey: ["userMemberships"],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return [];
+
+      const { data, error } = await supabase
+        .from("group_members")
+        .select("group_id")
+        .eq("user_id", user.id);
+
+      if (error) throw error;
+      return data?.map(m => m.group_id) || [];
+    },
+  });
+
+  return { userMemberships: userMemberships || [], isLoading };
+};
 ```
 
-### 2. Permissões de Acesso
+### 2. Atualizar `usePaginatedGroups`
 
-A view já usa `security_invoker = on`, então as policies RLS da tabela base `groups` são respeitadas. A tabela `groups` já tem a policy:
+Modificar para:
+- Aguardar o carregamento de memberships antes de renderizar "lista vazia"
+- No filtro "mine", buscar todos os grupos e filtrar localmente por `leader_id` ou membership
 
-```sql
-"Authenticated users can view accessible groups"
-WHERE (auth.uid() IS NOT NULL) AND (
-    is_private = false 
-    OR leader_id = auth.uid() 
-    OR is_group_member(auth.uid(), id)
-)
+```typescript
+// Na query, para o filtro "mine", em vez de passar IDs,
+// buscar grupos onde leader_id = user.id OU id IN userMemberships
+if (filter === "mine") {
+  // Se ainda está carregando memberships, aguardar
+  if (membershipsLoading) return { groups: [], count: 0, isLoadingMemberships: true };
+  
+  // Buscar grupos do usuário (líder OU membro)
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { groups: [], count: 0 };
+  
+  // Construir query para incluir grupos onde é líder ou membro
+  let query = supabase
+    .from("groups_public")
+    .select("*", { count: "exact" });
+  
+  if (userMemberships.length > 0) {
+    // Líder OU membro
+    query = query.or(`leader_id.eq.${user.id},id.in.(${userMemberships.join(',')})`);
+  } else {
+    // Apenas líder
+    query = query.eq("leader_id", user.id);
+  }
+  
+  // ...resto da query
+}
 ```
 
-Isso garante que a lógica esteja consistente.
+### 3. Atualizar `GroupsSection`
+
+**Arquivo**: `src/components/GroupsSection.tsx`
+
+Modificar para:
+- Receber o estado de loading de memberships
+- Mostrar loading enquanto memberships estiver carregando
+- Não mudar automaticamente para "mine" até que memberships esteja carregado
+
+```typescript
+const { userMemberships, isLoading: membershipsLoading } = useUserMemberships();
+
+// Não mudar para "mine" automaticamente até memberships carregar
+useEffect(() => {
+  if (user && !membershipsLoading) {
+    setFilter("mine");
+  }
+}, [user, membershipsLoading]);
+```
 
 ## Arquivos Alterados
 
-Nenhum arquivo de código precisa ser alterado - apenas uma migração SQL para atualizar a view.
+1. `src/hooks/usePaginatedGroups.tsx` - Ajustar hooks para lidar com loading state
+2. `src/components/GroupsSection.tsx` - Aguardar carregamento de memberships
 
 ## Resultado Esperado
 
-- O contador "Meus Grupos (1)" continuará correto
-- O card do grupo privado aparecerá para os membros
-- Grupos privados continuam invisíveis para não-membros
-- A listagem "Todos" mostra apenas grupos públicos para usuários não autenticados
+- Não haverá mais flash de "Você ainda não faz parte de nenhum grupo" ao logar
+- O card do grupo "Gerando futuro" aparecerá corretamente
+- Grupos onde o usuário é líder sempre aparecerão em "Meus Grupos"
+- A experiência será mais fluida, sem estados intermediários incorretos
