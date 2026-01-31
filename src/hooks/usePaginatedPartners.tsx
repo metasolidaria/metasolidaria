@@ -21,6 +21,7 @@ export interface Partner {
   referrer_name: string | null;
   referrer_phone: string | null;
   logo_url: string | null;
+  is_test: boolean;
 }
 
 interface UsePaginatedPartnersOptions {
@@ -79,7 +80,7 @@ export const useAllPartnersForProximity = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("partners_public")
-        .select("id, name, specialty, city, latitude, longitude, tier, logo_url, whatsapp, instagram, description")
+        .select("id, name, specialty, city, latitude, longitude, tier, logo_url, whatsapp, instagram, description, is_test")
         .eq("is_approved", true)
         .not("latitude", "is", null)
         .not("longitude", "is", null);

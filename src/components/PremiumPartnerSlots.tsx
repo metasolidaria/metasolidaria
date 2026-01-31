@@ -18,7 +18,7 @@ const useAllPremiumPartners = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("partners_public")
-        .select("id, name, logo_url, specialty, instagram")
+        .select("id, name, logo_url, specialty, instagram, is_test")
         .eq("is_approved", true)
         .eq("tier", "premium")
         .order("name", { ascending: true });
@@ -56,8 +56,8 @@ export const PremiumPartnerSlots = () => {
     return logoImage;
   };
 
-  const handleInstagramClick = (partner: { instagram?: string | null }) => {
-    if (!partner.instagram) return;
+  const handleInstagramClick = (partner: { instagram?: string | null; is_test?: boolean | null }) => {
+    if (!partner.instagram || partner.is_test) return;
     // Clean Instagram handle (remove @ if present)
     const handle = partner.instagram.replace(/^@/, "").trim();
     window.open(`https://instagram.com/${handle}`, "_blank");
@@ -107,9 +107,14 @@ export const PremiumPartnerSlots = () => {
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <div
-                      className={`relative rounded-xl p-4 bg-primary-foreground/15 min-w-[180px] animate-in fade-in zoom-in-95 duration-300 ${partner.instagram ? "cursor-pointer hover:bg-primary-foreground/25" : ""} transition-colors`}
+                      className={`relative rounded-xl p-4 bg-primary-foreground/15 min-w-[180px] animate-in fade-in zoom-in-95 duration-300 ${partner.instagram && !partner.is_test ? "cursor-pointer hover:bg-primary-foreground/25" : partner.is_test ? "opacity-70" : ""} transition-colors`}
                       onClick={() => handleInstagramClick(partner)}
                     >
+                      {partner.is_test && (
+                        <span className="absolute top-2 right-2 inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-gray-500/80 text-white">
+                          🧪 Teste
+                        </span>
+                      )}
                       <div className="flex flex-col items-center text-center gap-2">
                         <Avatar className="w-16 h-16 rounded-full border-2 border-yellow-400/50 bg-white">
                           <AvatarImage 
@@ -132,9 +137,11 @@ export const PremiumPartnerSlots = () => {
                     {partner.specialty && (
                       <p className="text-xs text-primary-foreground/80">{partner.specialty}</p>
                     )}
-                    {partner.instagram && (
+                    {partner.is_test ? (
+                      <p className="text-xs text-primary-foreground/70 mt-1">Parceiro de demonstração</p>
+                    ) : partner.instagram ? (
                       <p className="text-xs text-primary-foreground/70 mt-1">Clique para ver o Instagram</p>
-                    )}
+                    ) : null}
                   </TooltipContent>
                 </Tooltip>
               </CarouselItem>

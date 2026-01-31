@@ -50,8 +50,8 @@ export const GoldPartnersCarousel = ({ groupCity, groupId, groupName }: GoldPart
     return null;
   }
 
-  const handleWhatsAppClick = (partner: { name: string; whatsapp?: string | null }) => {
-    if (!partner.whatsapp) return;
+  const handleWhatsAppClick = (partner: { name: string; whatsapp?: string | null; is_test?: boolean }) => {
+    if (!partner.whatsapp || partner.is_test) return;
     const cleanNumber = partner.whatsapp.replace(/\D/g, "");
     const message = encodeURIComponent(`Olá ${partner.name}! Encontrei seu contato no Meta Solidária.`);
     window.open(`https://wa.me/55${cleanNumber}?text=${message}`, "_blank");
@@ -91,7 +91,11 @@ export const GoldPartnersCarousel = ({ groupCity, groupId, groupName }: GoldPart
           {partners.map((partner) => (
             <CarouselItem key={partner.id} className="pl-2 md:pl-4 basis-full sm:basis-1/2 lg:basis-1/3">
               <Card 
-                className={`backdrop-blur transition-all cursor-pointer group ${
+                className={`backdrop-blur transition-all group ${
+                  partner.is_test 
+                    ? "opacity-70 cursor-default" 
+                    : "cursor-pointer"
+                } ${
                   isPremium(partner.tier)
                     ? "bg-gradient-to-br from-purple-500/20 to-purple-600/10 border-purple-500/40 hover:border-purple-500/60 shadow-purple-500/10 shadow-md"
                     : "bg-card/80 border-amber-500/20 hover:border-amber-500/40"
@@ -113,13 +117,20 @@ export const GoldPartnersCarousel = ({ groupCity, groupId, groupName }: GoldPart
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between">
                         <div className="flex-1 min-w-0">
-                          <h3 className={`text-xs font-medium truncate transition-colors ${
-                            isPremium(partner.tier)
-                              ? "text-purple-700 dark:text-purple-300 group-hover:text-purple-600 dark:group-hover:text-purple-200"
-                              : "text-foreground group-hover:text-amber-600 dark:group-hover:text-amber-400"
-                          }`}>
-                            {partner.name}
-                          </h3>
+                          <div className="flex items-center gap-1.5">
+                            <h3 className={`text-xs font-medium truncate transition-colors ${
+                              isPremium(partner.tier)
+                                ? "text-purple-700 dark:text-purple-300 group-hover:text-purple-600 dark:group-hover:text-purple-200"
+                                : "text-foreground group-hover:text-amber-600 dark:group-hover:text-amber-400"
+                            }`}>
+                              {partner.name}
+                            </h3>
+                            {partner.is_test && (
+                              <span className="inline-flex items-center gap-0.5 text-[9px] font-medium px-1 py-0.5 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 whitespace-nowrap">
+                                🧪 Teste
+                              </span>
+                            )}
+                          </div>
                           {partner.specialty && (
                             <p className="text-[10px] text-muted-foreground truncate">
                               {partner.specialty}
@@ -132,7 +143,9 @@ export const GoldPartnersCarousel = ({ groupCity, groupId, groupName }: GoldPart
                           ) : (
                             <Star className="w-3 h-3 text-amber-500 fill-amber-500" />
                           )}
-                          <ExternalLink className="w-2.5 h-2.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                          {!partner.is_test && (
+                            <ExternalLink className="w-2.5 h-2.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                          )}
                         </div>
                       </div>
                     </div>
@@ -158,6 +171,12 @@ export const GoldPartnersCarousel = ({ groupCity, groupId, groupName }: GoldPart
                   {partner.description && (
                     <p className="text-xs text-muted-foreground mt-2 line-clamp-2">
                       {partner.description}
+                    </p>
+                  )}
+                  
+                  {partner.is_test && (
+                    <p className="text-[10px] text-muted-foreground mt-2 italic">
+                      Contato indisponível (parceiro de demonstração)
                     </p>
                   )}
                 </CardContent>

@@ -22,6 +22,7 @@ export interface Partner {
   referrer_name: string | null;
   referrer_phone: string | null;
   logo_url: string | null;
+  is_test: boolean;
 }
 
 export const usePartners = () => {
