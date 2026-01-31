@@ -168,8 +168,8 @@ export const GoldPartnersCarousel = ({ groupCity, groupId, groupName }: GoldPart
         
         {partners.length > 3 && (
           <>
-            <CarouselPrevious className="hidden md:flex -left-4 bg-background/80 backdrop-blur border-amber-500/30 hover:bg-amber-500/10" />
-            <CarouselNext className="hidden md:flex -right-4 bg-background/80 backdrop-blur border-amber-500/30 hover:bg-amber-500/10" />
+            <CarouselPrevious className="hidden md:flex left-2 bg-background/80 backdrop-blur border-amber-500/30 hover:bg-amber-500/10" />
+            <CarouselNext className="hidden md:flex right-2 bg-background/80 backdrop-blur border-amber-500/30 hover:bg-amber-500/10" />
           </>
         )}
       </Carousel>

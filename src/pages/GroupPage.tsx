@@ -409,7 +409,7 @@ export default function GroupPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="bg-card rounded-2xl p-6 shadow-soft overflow-hidden"
+              className="bg-card rounded-2xl p-6 shadow-soft"
             >
               <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
                 <Target className="w-5 h-5 text-primary shrink-0" />
@@ -461,7 +461,7 @@ export default function GroupPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="bg-card rounded-2xl p-6 shadow-soft overflow-hidden"
+              className="bg-card rounded-2xl p-6 shadow-soft"
             >
               <h2 className="text-xl font-bold text-foreground mb-4 truncate">
                 Histórico de Doações
@@ -531,7 +531,7 @@ export default function GroupPage() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3 }}
-                  className="bg-card rounded-2xl p-6 shadow-soft overflow-hidden"
+                  className="bg-card rounded-2xl p-6 shadow-soft"
                 >
                   <div className="mb-4 flex flex-wrap items-center gap-2">
                     <h2 className="text-xl font-bold text-foreground flex items-center gap-2 min-w-0">
@@ -589,7 +589,7 @@ export default function GroupPage() {
                           className="p-3 bg-muted/30 rounded-lg"
                         >
                           {/* Header: Avatar + Name + Edit Button */}
-                          <div className="flex items-center gap-3">
+                          <div className="flex flex-wrap items-center gap-3">
                             <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                               <span className="text-primary font-medium">
                                 {member.name.charAt(0).toUpperCase()}
@@ -609,18 +609,20 @@ export default function GroupPage() {
                               </p>
                             </div>
                             {member.user_id === user?.id && (
-                              <Button
-                                variant={(member.commitments || []).length === 0 ? "default" : "ghost"}
-                                size="sm"
-                                onClick={() => setEditGoalOpen(true)}
-                                className={`flex-shrink-0 ${(member.commitments || []).length === 0
-                                  ? "bg-primary text-primary-foreground hover:bg-primary/90" 
-                                  : "text-primary hover:text-primary hover:bg-primary/10"
-                                }`}
-                              >
-                                <Target className="w-4 h-4" />
-                                <span className="ml-1 hidden sm:inline">{(member.commitments || []).length === 0 ? "DEFINIR" : "EDITAR"}</span>
-                              </Button>
+                              <div className="w-full sm:w-auto flex justify-end">
+                                <Button
+                                  variant={(member.commitments || []).length === 0 ? "default" : "ghost"}
+                                  size="sm"
+                                  onClick={() => setEditGoalOpen(true)}
+                                  className={`flex-shrink-0 w-full sm:w-auto justify-center ${(member.commitments || []).length === 0
+                                    ? "bg-primary text-primary-foreground hover:bg-primary/90" 
+                                    : "text-primary hover:text-primary hover:bg-primary/10"
+                                  }`}
+                                >
+                                  <Target className="w-4 h-4" />
+                                  <span className="ml-1 hidden sm:inline">{(member.commitments || []).length === 0 ? "DEFINIR" : "EDITAR"}</span>
+                                </Button>
+                              </div>
                             )}
                           </div>
                           
