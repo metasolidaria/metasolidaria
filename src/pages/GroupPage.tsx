@@ -270,7 +270,7 @@ export default function GroupPage() {
   const isLeader = user?.id === group.leader_id;
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background overflow-x-hidden">
       {/* Header */}
       <div className="bg-gradient-to-r from-primary/10 to-secondary/10 py-8">
         <div className="container mx-auto px-4">
@@ -389,7 +389,7 @@ export default function GroupPage() {
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-8 space-y-8 overflow-hidden">
+      <div className="container mx-auto px-4 py-8 space-y-8 overflow-x-hidden">
         {/* Gold Partners Carousel - Full Width */}
         {group.city && (
           <GoldPartnersCarousel groupCity={group.city} groupId={group.id} groupName={group.name} />
@@ -459,9 +459,9 @@ export default function GroupPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="bg-card rounded-2xl p-6 shadow-soft"
+              className="bg-card rounded-2xl p-6 shadow-soft overflow-hidden"
             >
-              <h2 className="text-xl font-bold text-foreground mb-4">
+              <h2 className="text-xl font-bold text-foreground mb-4 truncate">
                 Histórico de Doações
               </h2>
 
@@ -529,7 +529,7 @@ export default function GroupPage() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3 }}
-                  className="bg-card rounded-2xl p-6 shadow-soft"
+                  className="bg-card rounded-2xl p-6 shadow-soft overflow-hidden"
                 >
                   <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
                     <Users className="w-5 h-5 text-primary" />
