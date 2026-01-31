@@ -675,7 +675,7 @@ export default function GroupPage() {
                                         className="h-7 px-2 text-green-600 hover:text-green-700 hover:bg-green-50 flex-shrink-0 w-full sm:w-auto justify-center"
                                       >
                                         <Plus className="w-3 h-3" />
-                                        <span className="ml-1 text-xs">Realizado</span>
+                                        <span className="ml-1 text-xs">Incluir Evolução</span>
                                       </Button>
                                     )}
                                   </div>
