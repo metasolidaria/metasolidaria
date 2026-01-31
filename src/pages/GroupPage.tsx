@@ -620,7 +620,7 @@ export default function GroupPage() {
                                   }`}
                                 >
                                   <Target className="w-4 h-4" />
-                                  <span className="ml-1 hidden sm:inline">{(member.commitments || []).length === 0 ? "DEFINIR" : "EDITAR"}</span>
+                                  <span className="ml-1">{(member.commitments || []).length === 0 ? "Definir Meta" : "Editar Meta"}</span>
                                 </Button>
                               </div>
                             )}
