@@ -475,6 +475,36 @@ export type Database = {
           },
         ]
       }
+      notification_preferences: {
+        Row: {
+          created_at: string
+          id: string
+          join_requests: boolean
+          new_donations: boolean
+          new_members: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          join_requests?: boolean
+          new_donations?: boolean
+          new_members?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          join_requests?: boolean
+          new_donations?: boolean
+          new_members?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       partners: {
         Row: {
           city: string
@@ -565,6 +595,42 @@ export type Database = {
           updated_at?: string
           user_id?: string
           whatsapp?: string
+        }
+        Relationships: []
+      }
+      push_subscriptions: {
+        Row: {
+          auth: string | null
+          created_at: string
+          device_token: string | null
+          endpoint: string | null
+          id: string
+          p256dh: string | null
+          platform: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          auth?: string | null
+          created_at?: string
+          device_token?: string | null
+          endpoint?: string | null
+          id?: string
+          p256dh?: string | null
+          platform?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          auth?: string | null
+          created_at?: string
+          device_token?: string | null
+          endpoint?: string | null
+          id?: string
+          p256dh?: string | null
+          platform?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -1000,6 +1066,15 @@ export type Database = {
           group_name: string
           member_id: string
         }[]
+      }
+      notify_group_leader: {
+        Args: {
+          _actor_name: string
+          _details?: Json
+          _event_type: string
+          _group_id: string
+        }
+        Returns: undefined
       }
       reject_join_request: { Args: { _request_id: string }; Returns: undefined }
       renew_invitation: { Args: { _invitation_id: string }; Returns: string }
