@@ -46,8 +46,10 @@ export const usePaginatedPartners = ({ page, limit, category, city }: UsePaginat
       }
 
       // Apply city filter server-side (partial match)
+      // Extract just the city name without state (e.g., "Campinas, SP" -> "Campinas")
       if (city) {
-        query = query.ilike("city", `%${city}%`);
+        const cityName = city.split(",")[0].trim();
+        query = query.ilike("city", `%${cityName}%`);
       }
 
       const { data: partnersData, error, count } = await query

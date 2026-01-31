@@ -19,9 +19,10 @@ export const usePartnersCategories = ({ city }: UsePartnersCategoriesOptions) =>
         .eq("is_approved", true)
         .not("specialty", "is", null);
 
-      // Apply city filter if provided
+      // Apply city filter if provided (extract just city name without state)
       if (city) {
-        query = query.ilike("city", `%${city}%`);
+        const cityName = city.split(",")[0].trim();
+        query = query.ilike("city", `%${cityName}%`);
       }
 
       const { data, error } = await query;
