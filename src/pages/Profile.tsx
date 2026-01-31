@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CityAutocomplete } from "@/components/CityAutocomplete";
+import { NotificationSettings } from "@/components/NotificationSettings";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { supabase } from "@/integrations/supabase/client";
@@ -167,6 +168,11 @@ const Profile = () => {
                 Salvar Alterações
               </Button>
             </form>
+          </div>
+
+          {/* Notification Settings */}
+          <div className="bg-card rounded-2xl p-6 shadow-soft border border-border mt-6">
+            <NotificationSettings />
           </div>
         </motion.div>
       </main>
