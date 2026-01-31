@@ -156,10 +156,13 @@ export const usePaginatedGroups = ({ page, limit, filter, userMemberships, membe
 
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["paginatedGroups"] });
       queryClient.invalidateQueries({ queryKey: ["userMemberships"] });
       queryClient.invalidateQueries({ queryKey: ["impactStats"] });
+      // Invalidar cache de membros do grupo específico para garantir dados frescos na página do grupo
+      queryClient.invalidateQueries({ queryKey: ["groupMembers", variables.groupId] });
+      queryClient.invalidateQueries({ queryKey: ["group", variables.groupId] });
       toast({
         title: "Você entrou no grupo! 🎉",
         description: "Agora você faz parte desta jornada solidária.",
