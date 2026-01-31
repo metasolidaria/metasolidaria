@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Users, Target, MapPin, Plus, Heart, Loader2, Lock, Globe, Mail, ChevronLeft, ChevronRight, Crown } from "lucide-react";
+import { Users, Target, MapPin, Plus, Heart, Loader2, Lock, Globe, Mail, ChevronLeft, ChevronRight, Crown, EyeOff } from "lucide-react";
 import { Button } from "./ui/button";
 import { CreateGroupModal } from "./CreateGroupModal";
 import { InviteMemberModal } from "./InviteMemberModal";
@@ -180,7 +180,7 @@ export const GroupsSection = ({ onRequireAuth }: GroupsSectionProps) => {
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" 
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-foreground/60 to-transparent" />
-                    <div className="absolute top-3 left-3 flex gap-2">
+                    <div className="absolute top-3 left-3 flex flex-wrap gap-1.5">
                       {isGroupLeader(group.leader_id) && (
                         <span className="bg-amber-500/90 backdrop-blur-sm px-2 py-1 rounded-full text-xs text-white flex items-center gap-1">
                           <Crown className="w-3 h-3" />
@@ -194,6 +194,12 @@ export const GroupsSection = ({ onRequireAuth }: GroupsSectionProps) => {
                           <Globe className="w-3 h-3" />
                           Público
                         </span>}
+                      {group.members_visible === false && (
+                        <span className="bg-muted/80 backdrop-blur-sm px-2 py-1 rounded-full text-xs text-muted-foreground flex items-center gap-1">
+                          <EyeOff className="w-3 h-3" />
+                          Membros ocultos
+                        </span>
+                      )}
                     </div>
                     <div className="absolute top-3 right-3">
                       <span className="bg-primary-foreground/20 backdrop-blur-sm px-2 py-1 rounded-full text-xs text-primary-foreground flex items-center gap-1">
