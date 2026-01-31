@@ -1,133 +1,183 @@
 
-# Plano: Configurar Capacitor para Android
+# Plano: Sistema de Notificações Push para Líderes de Grupos
 
 ## Objetivo
-Configurar o Capacitor no projeto Meta Solidária para converter o PWA em um app Android nativo que possa ser publicado na Google Play Store como arquivo `.aab` (Android App Bundle).
+Implementar um sistema de notificações push que alerte os líderes de grupos sobre eventos importantes como novas solicitações de entrada, doações registradas e novos membros. O sistema funcionará tanto no app nativo (Android/iOS via Capacitor) quanto no navegador (PWA via Web Push).
 
 ---
 
-## O Que Será Feito
+## Arquitetura da Solução
 
-### 1. Instalar dependências do Capacitor
-Adicionar os pacotes necessários:
-- `@capacitor/core` - Núcleo do Capacitor
-- `@capacitor/cli` - Ferramenta de linha de comando (devDependency)
-- `@capacitor/android` - Plataforma Android
+O sistema será composto por 4 partes principais:
 
-### 2. Criar arquivo de configuração `capacitor.config.ts`
-Configuração com:
-- **appId**: `app.lovable.48cb3c9479794c0abe1669aa41076de9`
-- **appName**: `Meta Solidária`
-- **webDir**: `dist` (pasta de build do Vite)
-- **server.url**: URL do preview para hot-reload durante desenvolvimento
-
-### 3. Adicionar scripts no `package.json`
-Scripts para facilitar o workflow:
-- `cap:sync` - Sincronizar projeto web com plataforma nativa
-- `cap:open` - Abrir projeto no Android Studio
-- `cap:build` - Build + sync em um comando
+1. **Tabela de tokens de dispositivo** - Armazena os tokens de push de cada usuário
+2. **Edge function para enviar notificações** - Processa e envia as notificações
+3. **Database triggers** - Detectam eventos e chamam a edge function
+4. **Código frontend** - Registra dispositivos e solicita permissão
 
 ---
 
-## Passos Para Publicar na Play Store
+## Eventos que Dispararão Notificações
 
-Após a configuração, você precisará seguir estes passos no seu computador local:
-
-### Passo 1: Exportar o Projeto
-1. Clique em **"Export to GitHub"** no Lovable
-2. Clone o repositório para sua máquina local
-3. Execute `npm install` para instalar dependências
-
-### Passo 2: Adicionar Plataforma Android
-```bash
-npx cap add android
-```
-
-### Passo 3: Sincronizar e Abrir no Android Studio
-```bash
-npm run build
-npx cap sync
-npx cap open android
-```
-
-### Passo 4: Gerar o AAB (Android App Bundle)
-No Android Studio:
-1. Menu **Build** > **Generate Signed Bundle / APK**
-2. Selecione **Android App Bundle**
-3. Crie ou use uma keystore existente
-4. Guarde a keystore em local seguro (necessária para updates futuros)
-5. Selecione **release** como build variant
-6. O arquivo `.aab` será gerado em `android/app/build/outputs/bundle/release/`
-
-### Passo 5: Publicar na Google Play Console
-1. Acesse [Google Play Console](https://play.google.com/console)
-2. Crie uma conta de desenvolvedor ($25 USD)
-3. Crie o app e faça upload do `.aab`
-4. Preencha as informações da listagem (textos já preparados)
-5. Faça upload dos assets (ícone, screenshots, feature graphic)
-6. Complete o questionário de classificação etária
-7. Envie para revisão
+| Evento | Tabela | Gatilho | Notificação |
+|--------|--------|---------|-------------|
+| Nova solicitação de entrada | `group_join_requests` | INSERT | "João solicitou entrada no grupo X" |
+| Nova doação registrada | `goal_progress` | INSERT | "Maria registrou 5kg de alimentos no grupo X" |
+| Novo membro entrou | `group_members` | INSERT | "Pedro entrou no grupo X" |
 
 ---
 
-## Requisitos no Seu Computador
+## Etapas de Implementação
 
-| Ferramenta | Descrição |
-|------------|-----------|
-| Node.js | v18 ou superior |
-| Android Studio | Última versão estável |
-| JDK | Java Development Kit 17+ |
-| Android SDK | API 33+ (instalado via Android Studio) |
+### Etapa 1: Infraestrutura do Banco de Dados
 
----
-
-## Detalhes Técnicos
-
-### Arquivo `capacitor.config.ts`
+**1.1 Criar tabela `push_subscriptions`**
 ```text
-import type { CapacitorConfig } from '@capacitor/cli';
-
-const config: CapacitorConfig = {
-  appId: 'app.lovable.48cb3c9479794c0abe1669aa41076de9',
-  appName: 'Meta Solidária',
-  webDir: 'dist',
-  server: {
-    url: 'https://48cb3c94-7979-4c0a-be16-69aa41076de9.lovableproject.com?forceHideBadge=true',
-    cleartext: true
-  }
-};
-
-export default config;
+- id: uuid (PK)
+- user_id: uuid (FK -> auth.users)
+- endpoint: text (URL do push service)
+- p256dh: text (chave pública)
+- auth: text (chave de autenticação)
+- platform: text ('web' | 'android' | 'ios')
+- device_token: text (para FCM/APNs)
+- created_at: timestamp
+- updated_at: timestamp
 ```
 
-### Scripts `package.json`
+**1.2 Criar tabela `notification_preferences`**
 ```text
-"scripts": {
-  ...
-  "cap:sync": "npx cap sync",
-  "cap:open": "npx cap open android",
-  "cap:build": "npm run build && npx cap sync"
-}
+- id: uuid (PK)
+- user_id: uuid (FK -> auth.users)
+- join_requests: boolean (default: true)
+- new_donations: boolean (default: true)
+- new_members: boolean (default: true)
+- created_at: timestamp
 ```
 
-### Dependências a Instalar
-```text
-dependencies:
-  @capacitor/core: ^7.0.0
-  @capacitor/android: ^7.0.0
+**1.3 Políticas RLS**
+- Usuários podem gerenciar apenas suas próprias inscrições
+- Usuários podem ver/editar apenas suas preferências
 
-devDependencies:
-  @capacitor/cli: ^7.0.0
+### Etapa 2: Edge Function para Envio de Notificações
+
+**2.1 Criar `supabase/functions/send-push-notification/index.ts`**
+
+Funcionalidades:
+- Receber evento (tipo, group_id, actor_name, details)
+- Buscar líder do grupo
+- Verificar preferências de notificação do líder
+- Buscar tokens de dispositivo do líder
+- Enviar notificação via Web Push API e/ou FCM
+
+**2.2 Dependências necessárias**
+- `web-push` para Web Push API
+- Integração com Firebase Cloud Messaging (FCM) para Android/iOS
+
+### Etapa 3: Database Triggers
+
+**3.1 Trigger para `group_join_requests`**
+```text
+Após INSERT:
+- Buscar group_id e user_name
+- Chamar edge function com tipo 'join_request'
+```
+
+**3.2 Trigger para `goal_progress`**
+```text
+Após INSERT:
+- Buscar group_id, member_name, amount
+- Chamar edge function com tipo 'new_donation'
+```
+
+**3.3 Trigger para `group_members`**
+```text
+Após INSERT:
+- Verificar se não é o líder
+- Chamar edge function com tipo 'new_member'
+```
+
+### Etapa 4: Frontend - Registro de Dispositivos
+
+**4.1 Criar hook `usePushNotifications.tsx`**
+- Solicitar permissão do usuário
+- Registrar service worker (PWA)
+- Obter token do dispositivo
+- Salvar na tabela `push_subscriptions`
+
+**4.2 Capacitor Push Notifications Plugin**
+- Instalar `@capacitor/push-notifications`
+- Configurar para Android (FCM) e iOS (APNs)
+
+**4.3 Componente de Configuração**
+- Adicionar toggle na página de perfil
+- Permitir ativar/desativar tipos de notificação
+
+### Etapa 5: Configuração de Serviços Externos
+
+**5.1 Firebase Cloud Messaging (FCM)**
+- Necessário para push no Android
+- Gerar chave de servidor
+- Adicionar como secret: `FCM_SERVER_KEY`
+
+**5.2 VAPID Keys (Web Push)**
+- Gerar par de chaves VAPID
+- Adicionar como secrets: `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`
+
+---
+
+## Estrutura de Arquivos
+
+```text
+src/
+├── hooks/
+│   └── usePushNotifications.tsx    # Hook para gerenciar push
+├── components/
+│   └── NotificationSettings.tsx    # Configurações de notificação
+└── pages/
+    └── Profile.tsx                  # (atualizar com settings)
+
+supabase/
+├── functions/
+│   └── send-push-notification/
+│       └── index.ts                 # Edge function de envio
+└── migrations/
+    └── XXX_push_notifications.sql   # Tabelas e triggers
 ```
 
 ---
 
-## Notas Importantes
+## Fluxo de Funcionamento
 
-1. **Hot-Reload**: A configuração `server.url` permite testar mudanças em tempo real no dispositivo durante desenvolvimento. Para produção, remova ou comente esta linha.
+1. **Usuário (líder) acessa o app** → Sistema solicita permissão de notificação
+2. **Usuário permite** → Token é salvo na tabela `push_subscriptions`
+3. **Evento ocorre** (ex: nova solicitação) → Trigger é acionado
+4. **Trigger chama edge function** → Função busca tokens do líder
+5. **Edge function envia push** → Notificação aparece no dispositivo
 
-2. **Keystore**: A chave de assinatura (keystore) é essencial. Se perdida, você não poderá publicar atualizações do app.
+---
 
-3. **Ícones Android**: O Capacitor usa os ícones de `android/app/src/main/res/`. Após adicionar a plataforma, você pode customizá-los.
+## Secrets Necessários
 
-4. **Documentação**: Para mais detalhes, consulte o [blog post do Lovable sobre desenvolvimento mobile](https://docs.lovable.dev/features/mobile-development).
+| Nome | Descrição |
+|------|-----------|
+| `VAPID_PUBLIC_KEY` | Chave pública para Web Push |
+| `VAPID_PRIVATE_KEY` | Chave privada para Web Push |
+| `FCM_SERVER_KEY` | Chave do Firebase Cloud Messaging |
+
+---
+
+## Considerações de Segurança
+
+- Tokens são armazenados apenas para o próprio usuário (RLS)
+- Edge function valida que apenas eventos legítimos disparam notificações
+- Preferências respeitam a vontade do usuário
+- Não expõe dados sensíveis nas notificações
+
+---
+
+## Próximos Passos Após Implementação
+
+1. Testar fluxo completo em ambiente de desenvolvimento
+2. Configurar Firebase Console para Android
+3. Configurar APNs para iOS (requer conta Apple Developer)
+4. Adicionar página de configurações de notificação no perfil
