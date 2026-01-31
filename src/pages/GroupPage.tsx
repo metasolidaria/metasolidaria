@@ -628,41 +628,43 @@ export default function GroupPage() {
                           {member.commitments && member.commitments.length > 0 && (
                             <div className="mt-3 space-y-2">
                               {member.commitments.map((c, idx) => (
-                                <div key={c.id || idx} className="flex items-start gap-2 bg-muted/30 rounded-md p-2">
-                                  <div className="flex-1 min-w-0">
-                                    <p className="text-xs text-primary break-words">
-                                      📌 {c.name ? `${c.name}: ` : ''}{c.ratio} {c.metric} = {c.donation_amount} {donationType.unit}
-                                    </p>
-                                    <p className="text-xs text-muted-foreground">
-                                      Meta: {c.personal_goal} {donationType.unit}
-                                    </p>
-                                    {c.penalty_donation && c.penalty_donation > 0 && (
-                                      <p className="text-xs text-amber-600 dark:text-amber-400">
-                                        🔥 Desafio: {c.penalty_donation} {donationType.unit}
+                                <div key={c.id || idx} className="bg-muted/30 rounded-md p-2">
+                                  <div className="flex flex-col sm:flex-row sm:items-start gap-2">
+                                    <div className="flex-1 min-w-0">
+                                      <p className="text-xs text-primary break-words">
+                                        📌 {c.name ? `${c.name}: ` : ''}{c.ratio} {c.metric} = {c.donation_amount} {donationType.unit}
                                       </p>
+                                      <p className="text-xs text-muted-foreground">
+                                        Meta: {c.personal_goal} {donationType.unit}
+                                      </p>
+                                      {c.penalty_donation && c.penalty_donation > 0 && (
+                                        <p className="text-xs text-amber-600 dark:text-amber-400">
+                                          🔥 Desafio: {c.penalty_donation} {donationType.unit}
+                                        </p>
+                                      )}
+                                    </div>
+                                    {member.user_id === user?.id && (
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => {
+                                          setSelectedCommitment({
+                                            id: c.id,
+                                            name: c.name,
+                                            metric: c.metric,
+                                            ratio: c.ratio,
+                                            donation_amount: c.donation_amount,
+                                            personal_goal: c.personal_goal,
+                                          });
+                                          setAddProgressOpen(true);
+                                        }}
+                                        className="h-7 px-2 text-green-600 hover:text-green-700 hover:bg-green-50 flex-shrink-0 w-full sm:w-auto justify-center"
+                                      >
+                                        <Plus className="w-3 h-3" />
+                                        <span className="ml-1 text-xs">Doar</span>
+                                      </Button>
                                     )}
                                   </div>
-                                  {member.user_id === user?.id && (
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      onClick={() => {
-                                        setSelectedCommitment({
-                                          id: c.id,
-                                          name: c.name,
-                                          metric: c.metric,
-                                          ratio: c.ratio,
-                                          donation_amount: c.donation_amount,
-                                          personal_goal: c.personal_goal,
-                                        });
-                                        setAddProgressOpen(true);
-                                      }}
-                                      className="h-7 px-2 text-green-600 hover:text-green-700 hover:bg-green-50 flex-shrink-0"
-                                    >
-                                      <Plus className="w-3 h-3" />
-                                      <span className="ml-1 text-xs">Doar</span>
-                                    </Button>
-                                  )}
                                 </div>
                               ))}
                             </div>
