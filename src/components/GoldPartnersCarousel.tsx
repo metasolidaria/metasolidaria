@@ -57,7 +57,23 @@ export const GoldPartnersCarousel = ({ groupCity, groupId, groupName }: GoldPart
     window.open(`https://wa.me/55${cleanNumber}?text=${message}`, "_blank");
   };
 
+  const handleInstagramClick = (partner: { instagram?: string | null }) => {
+    if (!partner.instagram) return;
+    const handle = partner.instagram.replace(/^@/, "").trim();
+    window.open(`https://instagram.com/${handle}`, "_blank");
+  };
+
   const isPremium = (tier: string | null) => tier === "premium";
+
+  const handlePartnerClick = (partner: { name: string; whatsapp?: string | null; instagram?: string | null; tier?: string | null; is_test?: boolean }) => {
+    if (partner.is_test) return;
+    
+    if (isPremium(partner.tier)) {
+      handleInstagramClick(partner);
+    } else {
+      handleWhatsAppClick(partner);
+    }
+  };
 
   const getPartnerLogo = (partnerName: string) => {
     if (partnerName === "NaturUai") return naturuaiLogo;
@@ -100,7 +116,7 @@ export const GoldPartnersCarousel = ({ groupCity, groupId, groupName }: GoldPart
                     ? "bg-gradient-to-br from-purple-500/20 to-purple-600/10 border-purple-500/40 hover:border-purple-500/60 shadow-purple-500/10 shadow-md"
                     : "bg-card/80 border-amber-500/20 hover:border-amber-500/40"
                 }`}
-                onClick={() => handleWhatsAppClick(partner)}
+                onClick={() => handlePartnerClick(partner)}
               >
                 <CardContent className="p-4">
                   <div className="flex items-start gap-3">
@@ -195,7 +211,7 @@ export const GoldPartnersCarousel = ({ groupCity, groupId, groupName }: GoldPart
 
       <div className="flex items-center justify-between mt-3">
         <p className="text-xs text-muted-foreground">
-          Clique em um parceiro para entrar em contato via WhatsApp
+          Clique em um parceiro para visitar o perfil ou WhatsApp
         </p>
         <Link 
           to={`/?parceiros=true&cidade=${encodeURIComponent(groupCity)}${groupId ? `&grupoId=${groupId}` : ""}${groupName ? `&grupoNome=${encodeURIComponent(groupName)}` : ""}`}
