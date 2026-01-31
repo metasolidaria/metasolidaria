@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Users, Target, MapPin, Plus, Heart, Loader2, Lock, Globe, Mail, ChevronLeft, ChevronRight, Crown, EyeOff } from "lucide-react";
+import { Users, Target, MapPin, Plus, Heart, Loader2, Lock, Globe, Mail, ChevronLeft, ChevronRight, Crown, EyeOff, Eye } from "lucide-react";
 import { Button } from "./ui/button";
 import { CreateGroupModal } from "./CreateGroupModal";
 import { InviteMemberModal } from "./InviteMemberModal";
@@ -47,7 +47,7 @@ export const GroupsSection = ({ onRequireAuth }: GroupsSectionProps) => {
   const [currentPage, setCurrentPage] = useState(1);
   
   const userMemberships = useUserMemberships();
-  const { groups, totalCount, isLoading, joinGroup } = usePaginatedGroups({
+  const { groups, totalCount, isLoading, joinGroup, toggleMembersVisibility } = usePaginatedGroups({
     page: currentPage,
     limit: ITEMS_PER_PAGE,
     filter,
@@ -250,11 +250,40 @@ export const GroupsSection = ({ onRequireAuth }: GroupsSectionProps) => {
                     </div>
 
                     <div className="flex gap-2">
-                      {isGroupLeader(group.leader_id) && group.is_private && <Button variant="outline" size="sm" onClick={() => handleInviteMembers(group)} className="flex-1">
+                      {isGroupLeader(group.leader_id) && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleMembersVisibility.mutate({ 
+                              groupId: group.id, 
+                              visible: group.members_visible === false 
+                            });
+                          }}
+                          disabled={toggleMembersVisibility.isPending}
+                          className="flex-shrink-0"
+                          title={group.members_visible === false ? "Mostrar membros" : "Ocultar membros"}
+                        >
+                          {group.members_visible === false ? (
+                            <Eye className="w-4 h-4" />
+                          ) : (
+                            <EyeOff className="w-4 h-4" />
+                          )}
+                        </Button>
+                      )}
+                      {isGroupLeader(group.leader_id) && group.is_private && (
+                        <Button variant="outline" size="sm" onClick={() => handleInviteMembers(group)} className="flex-1">
                           <Mail className="w-4 h-4 mr-1" />
                           Convidar
-                        </Button>}
-                      <Button className={isGroupLeader(group.leader_id) && group.is_private ? "flex-1" : "w-full"} variant={isUserMember(group.id) ? "default" : "outline"} onClick={() => handleGroupAction(group.id, group.is_private)} disabled={joinGroup.isPending || group.is_private && !isUserMember(group.id)}>
+                        </Button>
+                      )}
+                      <Button 
+                        className={isGroupLeader(group.leader_id) ? "flex-1" : "w-full"} 
+                        variant={isUserMember(group.id) ? "default" : "outline"} 
+                        onClick={() => handleGroupAction(group.id, group.is_private)} 
+                        disabled={joinGroup.isPending || (group.is_private && !isUserMember(group.id))}
+                      >
                         {isUserMember(group.id) ? <>
                             <Users className="w-4 h-4 mr-1" />
                             Acessar Grupo

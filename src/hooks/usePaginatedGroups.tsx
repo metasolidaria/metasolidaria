@@ -150,11 +150,46 @@ export const usePaginatedGroups = ({ page, limit, filter, userMemberships }: Use
     },
   });
 
+  const toggleMembersVisibility = useMutation({
+    mutationFn: async ({ groupId, visible }: { groupId: string; visible: boolean }) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        throw new Error("Você precisa estar logado");
+      }
+
+      const { error } = await supabase
+        .from("groups")
+        .update({ members_visible: visible })
+        .eq("id", groupId)
+        .eq("leader_id", user.id);
+
+      if (error) throw error;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["paginatedGroups"] });
+      toast({
+        title: variables.visible ? "Membros visíveis" : "Membros ocultos",
+        description: variables.visible 
+          ? "A lista de membros agora está visível para todos."
+          : "A lista de membros agora está oculta para outros participantes.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Erro ao alterar visibilidade",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   return {
     groups: data?.groups || [],
     totalCount: data?.count || 0,
     isLoading,
     joinGroup,
+    toggleMembersVisibility,
   };
 };
 
