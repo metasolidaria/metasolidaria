@@ -43,14 +43,25 @@ export const EditMemberGoalModal = ({
 
   useEffect(() => {
     if (open) {
-      setBlocks(currentCommitments && currentCommitments.length > 0 
-        ? currentCommitments.map(c => ({
-            ...c,
-            name: c.name || "",
-            personal_goal: c.personal_goal || 0,
-            penalty_donation: c.penalty_donation || null,
-          }))
-        : []);
+      if (currentCommitments && currentCommitments.length > 0) {
+        setBlocks(currentCommitments.map(c => ({
+          ...c,
+          name: c.name || "",
+          personal_goal: c.personal_goal || 0,
+          penalty_donation: c.penalty_donation || null,
+        })));
+      } else {
+        // Iniciar com um bloco vazio por padrão
+        setBlocks([{ 
+          name: "Meta 1",
+          metric: "", 
+          ratio: 1, 
+          donation_amount: 1,
+          personal_goal: 0,
+          penalty_donation: null,
+          isNew: true 
+        }]);
+      }
     }
   }, [open, currentCommitments]);
 
