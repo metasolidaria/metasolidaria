@@ -2,6 +2,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowLeft, Users, Target, MapPin, Lock, Globe, Plus, Trash2, Loader2, LogOut, TrendingUp, Sparkles, Pencil, CalendarDays, Building2, UserPlus, Mail, Send, Clock, CheckCircle, XCircle, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Progress } from "@/components/ui/progress";
 import { useGroupDetails } from "@/hooks/useGroupDetails";
 import { useAuth } from "@/hooks/useAuth";
@@ -610,18 +611,29 @@ export default function GroupPage() {
                             </div>
                             {member.user_id === user?.id && (
                               <div className="w-full sm:w-auto flex justify-end">
-                                <Button
-                                  variant={(member.commitments || []).length === 0 ? "default" : "ghost"}
-                                  size="sm"
-                                  onClick={() => setEditGoalOpen(true)}
-                                  className={`flex-shrink-0 w-full sm:w-auto justify-center ${(member.commitments || []).length === 0
-                                    ? "bg-primary text-primary-foreground hover:bg-primary/90" 
-                                    : "text-primary hover:text-primary hover:bg-primary/10"
-                                  }`}
-                                >
-                                  <Target className="w-4 h-4" />
-                                  <span className="ml-1">{(member.commitments || []).length === 0 ? "Definir Meta" : "Editar Meta"}</span>
-                                </Button>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      variant={(member.commitments || []).length === 0 ? "default" : "ghost"}
+                                      size="sm"
+                                      onClick={() => setEditGoalOpen(true)}
+                                      className={`flex-shrink-0 w-full sm:w-auto justify-center ${(member.commitments || []).length === 0
+                                        ? "bg-primary text-primary-foreground hover:bg-primary/90" 
+                                        : "text-primary hover:text-primary hover:bg-primary/10"
+                                      }`}
+                                    >
+                                      <Target className="w-4 h-4" />
+                                      <span className="ml-1">{(member.commitments || []).length === 0 ? "Definir Meta" : "Editar Meta"}</span>
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent side="top" className="max-w-xs">
+                                    <p className="text-sm">
+                                      {(member.commitments || []).length === 0 
+                                        ? "Defina sua meta pessoal de doação e compromisso para este grupo" 
+                                        : "Edite sua meta pessoal, valor de compromisso ou métrica de doação"}
+                                    </p>
+                                  </TooltipContent>
+                                </Tooltip>
                               </div>
                             )}
                           </div>
