@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Menu, X, User, LogOut, Settings } from "lucide-react";
 import { Button } from "./ui/button";
 import { useAuth } from "@/hooks/useAuth";
+import { InstallAppButton } from "./InstallAppButton";
 const logo = "/logo.jpg";
 
 interface HeaderProps {
@@ -70,6 +71,7 @@ export const Header = ({ onAuthClick }: HeaderProps) => {
                 {item}
               </button>
             ))}
+            <InstallAppButton variant="header" isScrolled={isScrolled} />
           </nav>
 
           {/* Auth Buttons */}
@@ -145,6 +147,7 @@ export const Header = ({ onAuthClick }: HeaderProps) => {
                   {item}
                 </button>
               ))}
+              <InstallAppButton variant="menu" />
               {user ? (
                 <>
                   <div className="border-t border-border mt-2 pt-2">
