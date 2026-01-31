@@ -34,27 +34,33 @@ export type Database = {
       }
       entities: {
         Row: {
+          accepted_donations: string[] | null
           city: string
           created_at: string
           created_by: string | null
           id: string
           name: string
+          observations: string | null
           phone: string | null
         }
         Insert: {
+          accepted_donations?: string[] | null
           city: string
           created_at?: string
           created_by?: string | null
           id?: string
           name: string
+          observations?: string | null
           phone?: string | null
         }
         Update: {
+          accepted_donations?: string[] | null
           city?: string
           created_at?: string
           created_by?: string | null
           id?: string
           name?: string
+          observations?: string | null
           phone?: string | null
         }
         Relationships: []
@@ -618,22 +624,28 @@ export type Database = {
     Views: {
       entities_public: {
         Row: {
+          accepted_donations: string[] | null
           city: string | null
           created_at: string | null
           id: string | null
           name: string | null
+          observations: string | null
         }
         Insert: {
+          accepted_donations?: string[] | null
           city?: string | null
           created_at?: string | null
           id?: string | null
           name?: string | null
+          observations?: string | null
         }
         Update: {
+          accepted_donations?: string[] | null
           city?: string | null
           created_at?: string | null
           id?: string | null
           name?: string | null
+          observations?: string | null
         }
         Relationships: []
       }

@@ -1,16 +1,25 @@
 import { useState, useMemo } from "react";
-import { Building2, Plus, MapPin, Loader2, Search } from "lucide-react";
+import { Building2, Plus, MapPin, Loader2, Search, Package } from "lucide-react";
 import { Button } from "./ui/button";
 import { Card, CardContent } from "./ui/card";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
+import { Checkbox } from "./ui/checkbox";
+import { Textarea } from "./ui/textarea";
+import { Badge } from "./ui/badge";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "./ui/dialog";
-import { useEntities } from "@/hooks/useEntities";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "./ui/tooltip";
+import { useEntities, DONATION_OPTIONS } from "@/hooks/useEntities";
 import { useAuth } from "@/hooks/useAuth";
 import { CityAutocomplete } from "./CityAutocomplete";
 import { CitySearchAutocomplete } from "./CitySearchAutocomplete";
@@ -19,11 +28,27 @@ interface EntitiesSectionProps {
   onRequireAuth: () => void;
 }
 
+interface NewEntityState {
+  name: string;
+  city: string;
+  phone: string;
+  accepted_donations: string[];
+  observations: string;
+}
+
+const initialEntityState: NewEntityState = {
+  name: "",
+  city: "",
+  phone: "",
+  accepted_donations: [],
+  observations: "",
+};
+
 export const EntitiesSection = ({ onRequireAuth }: EntitiesSectionProps) => {
   const { entities, isLoading, createEntity } = useEntities();
   const { user } = useAuth();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [newEntity, setNewEntity] = useState({ name: "", city: "", phone: "" });
+  const [newEntity, setNewEntity] = useState<NewEntityState>(initialEntityState);
   const [searchCity, setSearchCity] = useState("");
   const [showAll, setShowAll] = useState(false);
 
@@ -52,12 +77,27 @@ export const EntitiesSection = ({ onRequireAuth }: EntitiesSectionProps) => {
         name: newEntity.name,
         city: newEntity.city,
         phone: newEntity.phone,
+        accepted_donations: newEntity.accepted_donations,
+        observations: newEntity.observations,
       });
-      setNewEntity({ name: "", city: "", phone: "" });
+      setNewEntity(initialEntityState);
       setIsModalOpen(false);
     } catch (error) {
       // Error is handled by the hook
     }
+  };
+
+  const toggleDonation = (value: string) => {
+    setNewEntity((prev) => ({
+      ...prev,
+      accepted_donations: prev.accepted_donations.includes(value)
+        ? prev.accepted_donations.filter((d) => d !== value)
+        : [...prev.accepted_donations, value],
+    }));
+  };
+
+  const getDonationLabel = (value: string) => {
+    return DONATION_OPTIONS.find((opt) => opt.value === value)?.label || value;
   };
 
   return (
@@ -145,6 +185,57 @@ export const EntitiesSection = ({ onRequireAuth }: EntitiesSectionProps) => {
                           <MapPin className="w-3 h-3 flex-shrink-0" />
                           <span className="truncate">{entity.city}</span>
                         </div>
+                        
+                        {/* Tipos de doação aceitos */}
+                        {entity.accepted_donations && entity.accepted_donations.length > 0 && (
+                          <div className="mt-3">
+                            <div className="flex items-center gap-1 text-xs text-muted-foreground mb-1.5">
+                              <Package className="w-3 h-3" />
+                              <span>Aceita:</span>
+                            </div>
+                            <div className="flex flex-wrap gap-1">
+                              {entity.accepted_donations.slice(0, 3).map((donation) => (
+                                <Badge key={donation} variant="secondary" className="text-xs">
+                                  {getDonationLabel(donation)}
+                                </Badge>
+                              ))}
+                              {entity.accepted_donations.length > 3 && (
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Badge variant="outline" className="text-xs cursor-help">
+                                        +{entity.accepted_donations.length - 3}
+                                      </Badge>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <div className="flex flex-col gap-1">
+                                        {entity.accepted_donations.slice(3).map((donation) => (
+                                          <span key={donation}>{getDonationLabel(donation)}</span>
+                                        ))}
+                                      </div>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              )}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Observações */}
+                        {entity.observations && (
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <p className="text-xs text-muted-foreground mt-2 line-clamp-2 cursor-help">
+                                  {entity.observations}
+                                </p>
+                              </TooltipTrigger>
+                              <TooltipContent className="max-w-xs">
+                                <p>{entity.observations}</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        )}
                       </div>
                     </div>
                   </CardContent>
@@ -157,7 +248,7 @@ export const EntitiesSection = ({ onRequireAuth }: EntitiesSectionProps) => {
 
       {/* Modal de Cadastro */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Building2 className="w-5 h-5 text-primary" />
@@ -166,7 +257,7 @@ export const EntitiesSection = ({ onRequireAuth }: EntitiesSectionProps) => {
           </DialogHeader>
           <div className="space-y-4 pt-4">
             <div className="space-y-2">
-              <Label htmlFor="entity-name">Nome da Entidade</Label>
+              <Label htmlFor="entity-name">Nome da Entidade *</Label>
               <Input
                 id="entity-name"
                 placeholder="Ex: Lar dos Idosos"
@@ -177,7 +268,7 @@ export const EntitiesSection = ({ onRequireAuth }: EntitiesSectionProps) => {
               />
             </div>
             <div className="space-y-2">
-              <Label>Cidade</Label>
+              <Label>Cidade *</Label>
               <CityAutocomplete
                 value={newEntity.city}
                 onChange={(city) =>
@@ -197,11 +288,51 @@ export const EntitiesSection = ({ onRequireAuth }: EntitiesSectionProps) => {
                 }
               />
             </div>
+
+            {/* Tipos de doação aceitos */}
+            <div className="space-y-3">
+              <Label>O que a entidade aceita receber? (opcional)</Label>
+              <div className="grid grid-cols-2 gap-2">
+                {DONATION_OPTIONS.map((option) => (
+                  <div
+                    key={option.value}
+                    className="flex items-center space-x-2"
+                  >
+                    <Checkbox
+                      id={`donation-${option.value}`}
+                      checked={newEntity.accepted_donations.includes(option.value)}
+                      onCheckedChange={() => toggleDonation(option.value)}
+                    />
+                    <Label
+                      htmlFor={`donation-${option.value}`}
+                      className="text-sm font-normal cursor-pointer"
+                    >
+                      {option.label}
+                    </Label>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Observações */}
+            <div className="space-y-2">
+              <Label htmlFor="entity-observations">Observações (opcional)</Label>
+              <Textarea
+                id="entity-observations"
+                placeholder="Ex: Aceita apenas arroz e macarrão, prefere roupas de inverno..."
+                value={newEntity.observations}
+                onChange={(e) =>
+                  setNewEntity((prev) => ({ ...prev, observations: e.target.value }))
+                }
+                className="min-h-[80px]"
+              />
+            </div>
+
             <div className="flex justify-end gap-3 pt-4">
               <Button
                 variant="outline"
                 onClick={() => {
-                  setNewEntity({ name: "", city: "", phone: "" });
+                  setNewEntity(initialEntityState);
                   setIsModalOpen(false);
                 }}
               >
