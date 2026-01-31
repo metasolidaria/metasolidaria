@@ -46,22 +46,23 @@ export const GroupsSection = ({ onRequireAuth }: GroupsSectionProps) => {
   const [filter, setFilter] = useState<"all" | "mine">("all");
   const [currentPage, setCurrentPage] = useState(1);
   
-  const userMemberships = useUserMemberships();
+  const { userMemberships, isLoading: membershipsLoading } = useUserMemberships();
   const { groups, totalCount, isLoading, joinGroup, toggleMembersVisibility } = usePaginatedGroups({
     page: currentPage,
     limit: ITEMS_PER_PAGE,
     filter,
     userMemberships,
+    membershipsLoading,
   });
 
   const isUserMember = (groupId: string) => userMemberships.includes(groupId);
 
-  // Ativar filtro "Meus Grupos" quando usuário logar
+  // Ativar filtro "Meus Grupos" quando usuário logar e memberships carregarem
   useEffect(() => {
-    if (user) {
+    if (user && !membershipsLoading) {
       setFilter("mine");
     }
-  }, [user]);
+  }, [user, membershipsLoading]);
 
   // Reset page when filter changes
   useEffect(() => {

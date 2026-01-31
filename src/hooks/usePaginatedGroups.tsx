@@ -27,21 +27,40 @@ interface UsePaginatedGroupsOptions {
   limit: number;
   filter: "all" | "mine";
   userMemberships: string[];
+  membershipsLoading?: boolean;
 }
 
-export const usePaginatedGroups = ({ page, limit, filter, userMemberships }: UsePaginatedGroupsOptions) => {
+export const usePaginatedGroups = ({ page, limit, filter, userMemberships, membershipsLoading }: UsePaginatedGroupsOptions) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const { data, isLoading } = useQuery({
-    queryKey: ["paginatedGroups", page, limit, filter, userMemberships],
+    queryKey: ["paginatedGroups", page, limit, filter, userMemberships, membershipsLoading],
     queryFn: async () => {
-      // For "mine" filter, we need to filter by user memberships
-      if (filter === "mine" && userMemberships.length > 0) {
-        const { data: groupsData, error, count } = await supabase
+      // For "mine" filter
+      if (filter === "mine") {
+        // If still loading memberships, return empty but signal loading
+        if (membershipsLoading) {
+          return { groups: [], count: 0 };
+        }
+
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return { groups: [], count: 0 };
+
+        // Build query to include groups where user is leader OR member
+        let query = supabase
           .from("groups_public" as any)
-          .select("*", { count: "exact", head: false })
-          .in("id", userMemberships)
+          .select("*", { count: "exact", head: false });
+
+        if (userMemberships.length > 0) {
+          // Leader OR member - use .or() filter
+          query = query.or(`leader_id.eq.${user.id},id.in.(${userMemberships.join(',')})`);
+        } else {
+          // Only leader (no memberships yet or user only created groups)
+          query = query.eq("leader_id", user.id);
+        }
+
+        const { data: groupsData, error, count } = await query
           .order("created_at", { ascending: false })
           .range((page - 1) * limit, page * limit - 1) as { data: any[] | null, error: any, count: number | null };
 
@@ -67,9 +86,6 @@ export const usePaginatedGroups = ({ page, limit, filter, userMemberships }: Use
         } as Group));
 
         return { groups, count: count || 0 };
-      } else if (filter === "mine" && userMemberships.length === 0) {
-        // No memberships, return empty
-        return { groups: [], count: 0 };
       }
 
       // For "all" filter
@@ -193,9 +209,9 @@ export const usePaginatedGroups = ({ page, limit, filter, userMemberships }: Use
   };
 };
 
-// Hook to get user memberships - keeps same API
+// Hook to get user memberships - now with loading state
 export const useUserMemberships = () => {
-  const { data: userMemberships } = useQuery({
+  const { data: userMemberships, isLoading } = useQuery({
     queryKey: ["userMemberships"],
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -211,5 +227,5 @@ export const useUserMemberships = () => {
     },
   });
 
-  return userMemberships || [];
+  return { userMemberships: userMemberships || [], isLoading };
 };
