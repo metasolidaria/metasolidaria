@@ -691,6 +691,11 @@ export type Database = {
         Row: {
           city: string | null
           created_at: string | null
+          default_commitment_donation: number | null
+          default_commitment_goal: number | null
+          default_commitment_metric: string | null
+          default_commitment_name: string | null
+          default_commitment_ratio: number | null
           description: string | null
           donation_type: string | null
           end_date: string | null
