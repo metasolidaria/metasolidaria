@@ -19,6 +19,7 @@ export interface Group {
   total_goals?: number;
   total_donations?: number;
   image_url?: string | null;
+  members_visible?: boolean;
 }
 
 interface UsePaginatedGroupsOptions {
@@ -62,6 +63,7 @@ export const usePaginatedGroups = ({ page, limit, filter, userMemberships }: Use
           total_goals: group.total_goals || 0,
           total_donations: group.total_donations || 0,
           image_url: group.image_url || null,
+          members_visible: group.members_visible !== false,
         } as Group));
 
         return { groups, count: count || 0 };
@@ -95,6 +97,7 @@ export const usePaginatedGroups = ({ page, limit, filter, userMemberships }: Use
         total_goals: group.total_goals || 0,
         total_donations: group.total_donations || 0,
         image_url: group.image_url || null,
+        members_visible: group.members_visible !== false,
       } as Group));
 
       return { groups, count: count || 0 };
