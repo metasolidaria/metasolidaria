@@ -274,10 +274,11 @@ export default function GroupPage() {
       {/* Header */}
       <div className="bg-gradient-to-r from-primary/10 to-secondary/10 py-8">
         <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex flex-wrap items-center gap-2 mb-4">
             <Button 
               variant="ghost" 
               onClick={() => navigate("/")}
+              className="flex-shrink-0"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
               Voltar
@@ -289,6 +290,7 @@ export default function GroupPage() {
                 size="sm"
                 onClick={() => setLeaveDialogOpen(true)}
                 disabled={leaveGroup.isPending}
+                className="ml-auto flex-shrink-0"
               >
                 <LogOut className="w-4 h-4 mr-2" />
                 Sair do Grupo
@@ -531,16 +533,18 @@ export default function GroupPage() {
                   transition={{ delay: 0.3 }}
                   className="bg-card rounded-2xl p-6 shadow-soft overflow-hidden"
                 >
-                  <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
-                    <Users className="w-5 h-5 text-primary" />
-                    Membros ({members?.length || 0})
+                  <div className="mb-4 flex flex-wrap items-center gap-2">
+                    <h2 className="text-xl font-bold text-foreground flex items-center gap-2 min-w-0">
+                      <Users className="w-5 h-5 text-primary shrink-0" />
+                      <span className="truncate">Membros ({members?.length || 0})</span>
+                    </h2>
                     {!membersVisible && isLeader && (
-                      <span className="text-xs bg-muted px-2 py-0.5 rounded-full text-muted-foreground flex items-center gap-1">
+                      <span className="text-xs bg-muted px-2 py-0.5 rounded-full text-muted-foreground flex items-center gap-1 whitespace-nowrap">
                         <EyeOff className="w-3 h-3" />
                         Oculto para outros
                       </span>
                     )}
-                  </h2>
+                  </div>
 
                   {/* Hidden members notice with aggregated totals for regular members */}
                   {!showAllMembers && (
