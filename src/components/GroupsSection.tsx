@@ -128,7 +128,7 @@ export const GroupsSection = ({ onRequireAuth }: GroupsSectionProps) => {
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
               Grupos Ativos
             </h2>
-            <p className="text-muted-foreground max-w-xl text-sm">Encontre um grupo perto de você ou crie o seu próprio.<br />Os grupos privados só aparecerão se enviado convite pelo líder.</p>
+            <p className="text-muted-foreground max-w-xl text-sm">Encontre um grupo perto de você ou crie o seu próprio.<br />Os grupos privados só aparecerão por convite do líder ou pela busca e solicitação para participar.</p>
           </div>
           <Button size="lg" variant="hero" onClick={handleCreateGroup}>
             <Plus className="w-5 h-5" />
