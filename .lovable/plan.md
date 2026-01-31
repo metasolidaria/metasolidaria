@@ -1,84 +1,100 @@
 
-
-# Plano: Corrigir o Bug de Entrada em Grupos Públicos
+# Plano: Corrigir Exibição de Grupos Privados na Aba "Todos"
 
 ## Diagnóstico do Problema
 
-Ao clicar em "Participar" num grupo público, o usuário é redirecionado para a página do grupo, mas não aparece como membro. A análise revelou:
+A aba "Todos os Grupos" está mostrando grupos privados dos quais o usuário não é líder nem membro. Isso acontece porque:
 
-### Fluxo Atual (Problemático)
-1. Usuário clica "Participar" em grupo público
-2. `joinGroup.mutate()` insere o membro no banco (funciona corretamente)
-3. `apply_default_commitment` aplica meta padrão (funciona)
-4. `onSuccess` invalida apenas: `paginatedGroups`, `userMemberships`, `impactStats`
-5. Navegação para `/grupo/{id}` acontece
-6. `useGroupDetails` usa query `["groupMembers", groupId]` **que NÃO foi invalidado**
-7. Dados em cache retornam sem o novo membro
+1. A view `groups_public` foi criada com `security_invoker=false` (padrão)
+2. Sem `security_invoker`, a view ignora as políticas RLS da tabela `groups`
+3. Resultado: todos os grupos (incluindo privados) são retornados para qualquer usuário autenticado
 
-### Causa Raiz
-O cache `["groupMembers", groupId]` não é invalidado após a entrada bem-sucedida no grupo, resultando em dados desatualizados na página de destino.
+### Dados do Banco
+- Grupos públicos: 1
+- Grupos privados: 5
+- A RLS da tabela `groups` filtra corretamente por: `is_private = false` OU `leader_id = user` OU `is_group_member()`
 
 ---
 
 ## Solução Proposta
 
-### 1. Adicionar Invalidação do Cache de Membros
+### Opção 1: Recriar a View com `security_invoker=on` (Recomendado)
 
-Modificar o `onSuccess` do `joinGroup.mutate()` em **dois arquivos**:
+Recriar a view `groups_public` com a opção `security_invoker=on`, fazendo com que ela herde automaticamente as políticas RLS da tabela `groups`.
 
-**Arquivo: `src/hooks/usePaginatedGroups.tsx`**
-- Adicionar invalidação de `["groupMembers"]` no callback de sucesso
-- Também invalidar `["group"]` para garantir dados frescos
+```sql
+DROP VIEW IF EXISTS groups_public;
 
-**Arquivo: `src/hooks/useGroups.tsx`**  
-- Aplicar a mesma correção no hook legado
+CREATE VIEW groups_public
+WITH (security_invoker=on) AS
+SELECT 
+    g.id,
+    g.name,
+    g.city,
+    g.donation_type,
+    g.goal_2026,
+    g.is_private,
+    g.leader_id,
+    g.leader_name,
+    g.description,
+    g.entity_id,
+    g.end_date,
+    g.created_at,
+    g.updated_at,
+    g.image_url,
+    g.members_visible,
+    g.view_count,
+    g.default_commitment_name,
+    g.default_commitment_metric,
+    g.default_commitment_ratio,
+    g.default_commitment_donation,
+    g.default_commitment_goal,
+    COALESCE(gs.member_count, 0) AS member_count,
+    COALESCE(gs.total_goals, 0) AS total_goals,
+    COALESCE(gs.total_donations, 0) AS total_donations
+FROM groups g
+LEFT JOIN group_stats gs ON gs.group_id = g.id;
 
-### 2. Aguardar Invalidação Antes de Navegar
+-- Conceder permissões à view
+GRANT SELECT ON groups_public TO anon, authenticated;
+```
 
-Modificar o callback em `src/components/GroupsSection.tsx`:
-- Usar `mutateAsync` ao invés de `mutate` com callback
-- Ou passar o `groupId` no `onSuccess` para invalidar especificamente
+### Benefícios
+- A view passa a respeitar as políticas RLS existentes na tabela `groups`
+- Grupos privados só aparecem para líderes e membros
+- Não precisa alterar código frontend
+
+### Validação do Comportamento Esperado
+
+Após a correção:
+
+| Usuário | Grupo Público | Grupo Privado (não membro) | Grupo Privado (membro/líder) |
+|---------|---------------|----------------------------|------------------------------|
+| Logado  | Vê            | Não vê                     | Vê                          |
+| Anon    | Não vê*       | Não vê                     | N/A                         |
+
+*A RLS atual exige `auth.uid() IS NOT NULL`, então usuários anônimos não veem nenhum grupo.
 
 ---
 
 ## Detalhes Técnicos
 
-### Mudança em `src/hooks/usePaginatedGroups.tsx` (linhas 159-166)
+### Por que isso aconteceu?
 
-```typescript
-// ANTES:
-onSuccess: () => {
-  queryClient.invalidateQueries({ queryKey: ["paginatedGroups"] });
-  queryClient.invalidateQueries({ queryKey: ["userMemberships"] });
-  queryClient.invalidateQueries({ queryKey: ["impactStats"] });
-  toast({...});
-}
+Por padrão, views no PostgreSQL executam com as permissões do **criador** da view (SECURITY DEFINER implícito), não do usuário que está fazendo a consulta. Isso significa que as políticas RLS são verificadas para o owner da view, não para o usuário final.
 
-// DEPOIS:
-onSuccess: (_, variables) => {
-  queryClient.invalidateQueries({ queryKey: ["paginatedGroups"] });
-  queryClient.invalidateQueries({ queryKey: ["userMemberships"] });
-  queryClient.invalidateQueries({ queryKey: ["impactStats"] });
-  // NOVO: Invalidar cache de membros do grupo específico
-  queryClient.invalidateQueries({ queryKey: ["groupMembers", variables.groupId] });
-  queryClient.invalidateQueries({ queryKey: ["group", variables.groupId] });
-  toast({...});
-}
-```
+Com `security_invoker=on`, a view passa a executar com as permissões do **usuário que está consultando**, fazendo com que as políticas RLS sejam aplicadas corretamente.
 
-### Mudança similar em `src/hooks/useGroups.tsx` (linhas 201-208)
+### Impacto
 
-Adicionar as mesmas invalidações de `groupMembers` e `group`.
+- A mudança afeta apenas a visibilidade dos grupos na listagem
+- Não há impacto em outras funcionalidades (criar grupo, entrar em grupo, etc.)
+- Os dados de membros/metas/doações continuarão sendo agregados corretamente
 
 ---
 
-## Benefícios da Solução
+## Passos de Implementação
 
-1. Quando o usuário navegar para a página do grupo, o cache será invalidado
-2. O `useGroupDetails` fará uma nova requisição e receberá dados atualizados
-3. O novo membro aparecerá corretamente na lista
-
-## Risco
-
-Nenhum risco identificado - apenas adiciona invalidações de cache adicionais que são necessárias para manter a consistência dos dados.
-
+1. Criar migração SQL para recriar a view com `security_invoker=on`
+2. Verificar que a view `groups_admin` (usada pelos admins) continua funcionando
+3. Testar a listagem de grupos como usuário comum
