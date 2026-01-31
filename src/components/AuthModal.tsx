@@ -411,6 +411,15 @@ export const AuthModal = ({ open, onOpenChange, defaultMode = "login" }: AuthMod
                 >
                   Política de Privacidade
                 </a>
+                {" "}e{" "}
+                <a
+                  href="/termos"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline"
+                >
+                  Termos de Uso
+                </a>
               </p>
             )}
           </form>
