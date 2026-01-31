@@ -1,97 +1,61 @@
 
-# Plano: Esconder Cards de Entidades até Aplicar Filtro
+# Plano: Criar Página de Termos de Uso
 
-## Resumo
-
-Modificar a seção de Entidades Beneficiárias para mostrar os cards apenas quando:
-1. O usuário selecionar uma cidade no filtro, **OU**
-2. O usuário clicar em um botão "Ver Todas"
+## Objetivo
+Criar uma página de Termos de Uso (/termos) seguindo o mesmo padrão visual da Política de Privacidade existente, incluindo links no rodapé e no modal de cadastro.
 
 ---
 
-## Comportamento Proposto
+## Alterações a Serem Feitas
 
-### Estado Inicial (sem filtro)
-- Título e descrição da seção visíveis
-- Campo de busca por cidade visível
-- Botão "Cadastrar Entidade" visível
-- **Novo:** Botão "Ver Todas" para mostrar todas as entidades
-- Cards **escondidos** com uma mensagem convidativa
+### 1. Criar nova página `src/pages/TermsOfService.tsx`
+Uma página completa com seções sobre:
+- **Aceitação dos Termos** - Condições de uso da plataforma
+- **Descrição do Serviço** - O que é a Meta Solidária
+- **Elegibilidade** - Requisitos para uso (18+ anos, etc.)
+- **Cadastro e Conta** - Responsabilidades do usuário
+- **Doações** - Natureza voluntária, sem transações financeiras
+- **Conteúdo do Usuário** - Responsabilidade sobre informações enviadas
+- **Uso Aceitável** - Proibições (spam, fraude, conteúdo ofensivo)
+- **Propriedade Intelectual** - Direitos da Meta Solidária
+- **Limitação de Responsabilidade** - Isenções legais
+- **Alterações nos Termos** - Como serão comunicadas
+- **Contato** - WhatsApp e Instagram
 
-### Após Aplicar Filtro ou Clicar "Ver Todas"
-- Cards aparecem normalmente
-- Se filtro por cidade: mostra entidades da cidade selecionada
-- Se "Ver Todas": mostra todas as entidades
+### 2. Atualizar `src/App.tsx`
+- Importar `TermsOfService` com lazy loading
+- Adicionar rota `/termos`
 
----
+### 3. Atualizar `src/components/Footer.tsx`
+- Adicionar link "Termos de Uso" ao lado de "Política de Privacidade"
 
-## Mudanças Técnicas
-
-### Arquivo: `src/components/EntitiesSection.tsx`
-
-1. **Novo estado `showAll`:**
-   ```tsx
-   const [showAll, setShowAll] = useState(false);
-   ```
-
-2. **Lógica de exibição:**
-   ```tsx
-   const shouldShowEntities = showAll || searchCity.trim().length > 0;
-   ```
-
-3. **Novo botão "Ver Todas":**
-   - Aparece apenas quando `!shouldShowEntities`
-   - Ao clicar, define `showAll = true`
-
-4. **Estado inicial (cards escondidos):**
-   - Quando `!shouldShowEntities`, exibir mensagem:
-     > "Busque por uma cidade ou clique em 'Ver Todas' para visualizar as entidades cadastradas."
-
-5. **Reset ao limpar filtro:**
-   - Quando o usuário limpar o campo de cidade e `showAll` for false, volta ao estado inicial
+### 4. Atualizar `src/components/AuthModal.tsx`
+- Adicionar link para Termos de Uso no texto de consentimento do cadastro
 
 ---
 
-## Fluxo Visual
-
-```text
-┌─────────────────────────────────────────┐
-│       Entidades Beneficiárias           │
-│  Organizações que recebem as doações... │
-│                                         │
-│   [+ Cadastrar Entidade]                │
-│                                         │
-│   🔍 [Buscar por cidade...]             │
-│                                         │
-│   [Ver Todas]                           │
-│                                         │
-│   ℹ️ Busque por uma cidade ou clique    │
-│      em "Ver Todas" para visualizar     │
-│      as entidades cadastradas.          │
-└─────────────────────────────────────────┘
-
-         ↓ Após filtrar ou "Ver Todas"
-
-┌─────────────────────────────────────────┐
-│   [Card 1] [Card 2] [Card 3] [Card 4]   │
-│   [Card 5] [Card 6] ...                 │
-└─────────────────────────────────────────┘
-```
+## Estrutura Visual
+O design seguirá exatamente o padrão da página de Política de Privacidade:
+- Botão "Voltar" no topo
+- Título principal
+- Seções numeradas com títulos em destaque
+- Listas com bullets para itens detalhados
+- Rodapé com copyright
 
 ---
 
-## Benefícios
+## Detalhes Técnicos
 
-- **Performance:** Não renderiza dezenas de cards desnecessariamente
-- **UX:** Página inicial mais limpa e focada
-- **Clareza:** Incentiva o usuário a buscar pela cidade de interesse
+| Arquivo | Alteração |
+|---------|-----------|
+| `src/pages/TermsOfService.tsx` | Criar novo arquivo |
+| `src/App.tsx` | Adicionar import + rota |
+| `src/components/Footer.tsx` | Adicionar link |
+| `src/components/AuthModal.tsx` | Atualizar texto de consentimento |
 
----
+### Rotas
+- Nova rota: `/termos` → `TermsOfService`
 
-## Implementação
-
-1. Adicionar estado `showAll` no componente
-2. Criar condição `shouldShowEntities`
-3. Adicionar botão "Ver Todas" com estilo outline
-4. Criar componente de mensagem inicial quando cards estão escondidos
-5. Manter lógica existente de filtro funcionando
+### Navegação
+- Footer: "Política de Privacidade" | "Termos de Uso"
+- AuthModal: "...concorda com nossa Política de Privacidade e Termos de Uso"
