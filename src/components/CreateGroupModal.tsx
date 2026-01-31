@@ -7,6 +7,7 @@ import { Switch } from "./ui/switch";
 import { Textarea } from "./ui/textarea";
 import { CityAutocomplete } from "./CityAutocomplete";
 import { EntitySelect } from "./EntitySelect";
+import { DefaultCommitmentSection, DefaultCommitmentData } from "./DefaultCommitmentSection";
 import { useAuth } from "@/hooks/useAuth";
 import { useGroups } from "@/hooks/useGroups";
 import { supabase } from "@/integrations/supabase/client";
@@ -51,6 +52,13 @@ export const CreateGroupModal = ({ open, onOpenChange, onRequireAuth }: CreateGr
     description: "",
     endDate: new Date("2026-12-31"),
     entityId: null as string | null,
+  });
+  const [defaultCommitment, setDefaultCommitment] = useState<DefaultCommitmentData>({
+    name: "",
+    metric: "",
+    ratio: 1,
+    donation: 1,
+    goal: 0,
   });
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -205,6 +213,11 @@ export const CreateGroupModal = ({ open, onOpenChange, onRequireAuth }: CreateGr
       description: formData.description.trim(),
       end_date: format(formData.endDate, "yyyy-MM-dd"),
       entity_id: formData.entityId,
+      default_commitment_name: defaultCommitment.metric.trim() ? defaultCommitment.name.trim() || null : null,
+      default_commitment_metric: defaultCommitment.metric.trim() || null,
+      default_commitment_ratio: defaultCommitment.ratio,
+      default_commitment_donation: defaultCommitment.donation,
+      default_commitment_goal: defaultCommitment.goal,
     }, {
       onSuccess: async (result) => {
         const groupId = result.id;
@@ -221,11 +234,18 @@ export const CreateGroupModal = ({ open, onOpenChange, onRequireAuth }: CreateGr
         }
         
         // Reset form
+        setDefaultCommitment({
+          name: "",
+          metric: "",
+          ratio: 1,
+          donation: 1,
+          goal: 0,
+        });
         setFormData({ 
           groupName: "", 
           city: "", 
           donationType: "",
-          isPrivate: false,
+          isPrivate: true,
           membersVisible: true,
           leaderName: "",
           leaderWhatsapp: "",
@@ -478,9 +498,10 @@ export const CreateGroupModal = ({ open, onOpenChange, onRequireAuth }: CreateGr
                 </div>
               </div>
 
-              <EntitySelect
-                value={formData.entityId}
-                onChange={(entityId) => setFormData({ ...formData, entityId })}
+              <DefaultCommitmentSection
+                data={defaultCommitment}
+                onChange={setDefaultCommitment}
+                donationType={formData.donationType}
               />
 
               <div className="flex items-center justify-between p-4 rounded-xl border border-border bg-muted/30">

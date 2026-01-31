@@ -8,6 +8,7 @@ import { Textarea } from "./ui/textarea";
 import { Calendar } from "./ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { EntitySelect } from "./EntitySelect";
+import { DefaultCommitmentSection, DefaultCommitmentData } from "./DefaultCommitmentSection";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
@@ -28,6 +29,11 @@ interface Group {
   end_date: string | null;
   entity_id: string | null;
   image_url?: string | null;
+  default_commitment_name?: string | null;
+  default_commitment_metric?: string | null;
+  default_commitment_ratio?: number;
+  default_commitment_donation?: number;
+  default_commitment_goal?: number;
 }
 
 interface EditGroupModalProps {
@@ -44,6 +50,11 @@ interface EditGroupModalProps {
     end_date: string;
     entity_id: string | null;
     image_url?: string | null;
+    default_commitment_name?: string | null;
+    default_commitment_metric?: string | null;
+    default_commitment_ratio?: number;
+    default_commitment_donation?: number;
+    default_commitment_goal?: number;
   }) => void;
   isPending?: boolean;
 }
@@ -82,6 +93,14 @@ export const EditGroupModal = ({
     entityId: group.entity_id,
     imageUrl: group.image_url || null,
   });
+  
+  const [defaultCommitment, setDefaultCommitment] = useState<DefaultCommitmentData>({
+    name: group.default_commitment_name || "",
+    metric: group.default_commitment_metric || "",
+    ratio: group.default_commitment_ratio ?? 1,
+    donation: group.default_commitment_donation ?? 1,
+    goal: group.default_commitment_goal ?? 0,
+  });
 
   useEffect(() => {
     if (open) {
@@ -95,6 +114,13 @@ export const EditGroupModal = ({
         endDate: group.end_date ? new Date(group.end_date) : new Date("2026-12-31"),
         entityId: group.entity_id,
         imageUrl: group.image_url || null,
+      });
+      setDefaultCommitment({
+        name: group.default_commitment_name || "",
+        metric: group.default_commitment_metric || "",
+        ratio: group.default_commitment_ratio ?? 1,
+        donation: group.default_commitment_donation ?? 1,
+        goal: group.default_commitment_goal ?? 0,
       });
       setPreviewUrl(group.image_url || null);
     }
@@ -189,6 +215,11 @@ export const EditGroupModal = ({
       end_date: format(formData.endDate, "yyyy-MM-dd"),
       entity_id: formData.entityId,
       image_url: formData.imageUrl,
+      default_commitment_name: defaultCommitment.metric.trim() ? defaultCommitment.name.trim() || null : null,
+      default_commitment_metric: defaultCommitment.metric.trim() || null,
+      default_commitment_ratio: defaultCommitment.ratio,
+      default_commitment_donation: defaultCommitment.donation,
+      default_commitment_goal: defaultCommitment.goal,
     });
   };
 
@@ -406,6 +437,12 @@ export const EditGroupModal = ({
               <EntitySelect
                 value={formData.entityId}
                 onChange={(entityId) => setFormData({ ...formData, entityId })}
+              />
+
+              <DefaultCommitmentSection
+                data={defaultCommitment}
+                onChange={setDefaultCommitment}
+                donationType={formData.donationType}
               />
 
               <div className="flex items-center justify-between p-4 rounded-xl border border-border bg-muted/30">

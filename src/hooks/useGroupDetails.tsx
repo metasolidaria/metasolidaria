@@ -318,6 +318,11 @@ export const useGroupDetails = (groupId: string | undefined) => {
       end_date: string;
       entity_id: string | null;
       image_url?: string | null;
+      default_commitment_name?: string | null;
+      default_commitment_metric?: string | null;
+      default_commitment_ratio?: number;
+      default_commitment_donation?: number;
+      default_commitment_goal?: number;
     }) => {
       if (!groupId) throw new Error("Grupo não encontrado");
 
