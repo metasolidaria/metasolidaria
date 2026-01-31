@@ -19,7 +19,7 @@ const isSafari = () => {
 };
 
 export const InstallPWAPrompt = forwardRef<HTMLDivElement>((_, ref) => {
-  const { isInstallable, isInstalled, installApp } = usePWAInstall();
+  const { isInstallable, isInstalled, isIOSDevice, installApp } = usePWAInstall();
   const [isDismissed, setIsDismissed] = useState(true);
   const [showManualInstructions, setShowManualInstructions] = useState(false);
 
@@ -51,13 +51,18 @@ export const InstallPWAPrompt = forwardRef<HTMLDivElement>((_, ref) => {
   };
 
   // Don't show if already installed or dismissed
-  if (isInstalled || isDismissed) {
+  // On iOS, we show even without isInstallable since beforeinstallprompt never fires
+  const shouldRender = !isInstalled && !isDismissed && (isInstallable || isIOSDevice);
+  
+  if (!shouldRender) {
     return null;
   }
 
-  // Show manual instructions for iOS Safari or when native prompt isn't available
-  const shouldShowManual = !isInstallable || showManualInstructions;
-  const isiOSDevice = isIOS();
+  // Show manual instructions when:
+  // - Is iOS (always needs manual instructions)
+  // - Or native prompt isn't available
+  // - Or user clicked install and it failed
+  const shouldShowManual = isIOSDevice || !isInstallable || showManualInstructions;
   const isAndroidDevice = isAndroid();
 
   return (
@@ -75,7 +80,7 @@ export const InstallPWAPrompt = forwardRef<HTMLDivElement>((_, ref) => {
             
             {shouldShowManual ? (
               <div className="text-muted-foreground text-xs mt-1 space-y-2">
-                {isiOSDevice ? (
+                {isIOSDevice ? (
                   <>
                     <p className="flex items-center gap-1">
                       Toque em <Share className="w-3 h-3 inline" /> <strong>Compartilhar</strong> e depois em <strong>"Adicionar à Tela Inicial"</strong>
