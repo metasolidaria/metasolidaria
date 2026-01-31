@@ -389,7 +389,7 @@ export default function GroupPage() {
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-8 space-y-8">
+      <div className="container mx-auto px-4 py-8 space-y-8 overflow-hidden">
         {/* Gold Partners Carousel - Full Width */}
         {group.city && (
           <GoldPartnersCarousel groupCity={group.city} groupId={group.id} groupName={group.name} />
@@ -407,22 +407,22 @@ export default function GroupPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="bg-card rounded-2xl p-6 shadow-soft"
+              className="bg-card rounded-2xl p-6 shadow-soft overflow-hidden"
             >
               <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
-                <Target className="w-5 h-5 text-primary" />
-                Meta do grupo
+                <Target className="w-5 h-5 text-primary shrink-0" />
+                <span className="truncate">Meta do grupo</span>
               </h2>
               
               <div className="mb-4">
-                <div className="flex justify-between text-sm mb-2">
+                <div className="flex flex-wrap justify-between text-sm mb-2 gap-2">
                   <span className="text-muted-foreground">Progresso</span>
                   <span className="font-medium text-foreground">
                     {totalProgress} / {effectiveGoal} {donationType.unit}
                   </span>
                 </div>
                 <Progress value={progressPercentage} className="h-3" />
-                <div className="flex justify-between text-sm text-muted-foreground mt-1">
+                <div className="flex flex-wrap justify-between text-sm text-muted-foreground mt-1 gap-2">
                   <span>
                     {members?.filter(m => m.commitments?.some(c => c.personal_goal > 0)).length || 0} membro(s) com meta definida
                   </span>
