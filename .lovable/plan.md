@@ -1,17 +1,40 @@
 
-# Plano: Identificar e Rotular Parceiros de Teste
+# Plano: Corrigir Indicadores Zerados nos Cards de Grupos
 
-## Objetivo
-Adicionar identificação visual para parceiros de teste (seed data), desabilitando os botões de contato (WhatsApp e Instagram) e exibindo um rótulo "Parceiro Teste" para que os usuários saibam que são dados de demonstração.
+## Problema Identificado
+
+Os indicadores dos cards de grupos (membros, metas, doações) estão zerados para grupos novos porque:
+
+1. A view `groups_public` faz JOIN com a view materializada `group_stats`
+2. **Views materializadas não atualizam automaticamente** - elas armazenam dados em cache
+3. Quando um grupo é criado, ele não existe em `group_stats` até que um `REFRESH` seja executado
+4. Resultado: `member_count`, `total_goals` e `total_donations` retornam `0`
+
+### Evidência do Problema
+
+```text
+┌─────────────────────┬─────────────────────────────────────────────────┐
+│ Tabela              │ Situação                                        │
+├─────────────────────┼─────────────────────────────────────────────────┤
+│ groups              │ ✅ Contém os 2 grupos novos                     │
+│ group_members       │ ✅ Contém o líder como membro                   │
+│ member_commitments  │ ✅ Contém a meta do líder                       │
+│ group_stats (MV)    │ ❌ NÃO contém os grupos novos                   │
+│ groups_public       │ ❌ Retorna zeros (depende de group_stats)       │
+└─────────────────────┴─────────────────────────────────────────────────┘
+```
 
 ---
 
-## Abordagem
+## Solução Proposta
 
-A melhor estratégia é adicionar uma coluna `is_test` na tabela `partners` para marcar os parceiros de teste. Isso permite:
-- Identificação precisa no banco de dados
-- Flexibilidade para adicionar/remover parceiros de teste facilmente
-- Lógica simples no frontend
+**Converter `group_stats` de MATERIALIZED VIEW para VIEW regular**
+
+Esta é a melhor abordagem porque:
+- Dados sempre atualizados em tempo real
+- Sem necessidade de triggers ou jobs de refresh
+- Simplicidade de manutenção
+- Volume de dados ainda é pequeno (não impacta performance significativamente)
 
 ---
 
@@ -19,137 +42,111 @@ A melhor estratégia é adicionar uma coluna `is_test` na tabela `partners` para
 
 ### Etapa 1: Migração do Banco de Dados
 
-Adicionar coluna `is_test` na tabela `partners`:
+Executar SQL para:
+1. Remover a view `groups_public` (depende de `group_stats`)
+2. Remover a view materializada `group_stats`
+3. Recriar `group_stats` como **VIEW regular**
+4. Recriar `groups_public` com a mesma definição
+5. Conceder permissões de leitura
 
 ```text
-ALTER TABLE partners ADD COLUMN is_test BOOLEAN DEFAULT false;
+-- 1. Remover views dependentes
+DROP VIEW IF EXISTS groups_public CASCADE;
+DROP VIEW IF EXISTS groups_admin CASCADE;
 
--- Marcar os parceiros existentes do seed como teste
-UPDATE partners SET is_test = true WHERE id IN (
-  'a1111111-1111-1111-1111-111111111111',
-  'a2222222-2222-2222-2222-222222222222',
-  'a3333333-3333-3333-3333-333333333333',
-  'a4444444-4444-4444-4444-444444444444',
-  'a5555555-5555-5555-5555-555555555555',
-  'a6666666-6666-6666-6666-666666666666',
-  'a7777777-7777-7777-7777-777777777777',
-  'a8888888-8888-8888-8888-888888888888',
-  'a9999999-9999-9999-9999-999999999999',
-  'aa000000-0000-0000-0000-000000000000'
-);
+-- 2. Remover a materialized view
+DROP MATERIALIZED VIEW IF EXISTS group_stats CASCADE;
+
+-- 3. Recriar como VIEW regular
+CREATE VIEW group_stats AS
+SELECT 
+  g.id AS group_id,
+  COUNT(gm.id) AS member_count,
+  COALESCE(SUM(mc.personal_goal), 0) AS total_goals,
+  COALESCE((
+    SELECT SUM(gp.amount) 
+    FROM goal_progress gp 
+    WHERE gp.group_id = g.id
+  ), 0) AS total_donations
+FROM groups g
+LEFT JOIN group_members gm ON gm.group_id = g.id
+LEFT JOIN member_commitments mc ON mc.member_id = gm.id
+GROUP BY g.id;
+
+-- 4. Conceder permissões
+GRANT SELECT ON group_stats TO anon, authenticated;
+
+-- 5. Recriar groups_public (mesma definição anterior)
+CREATE VIEW groups_public WITH (security_invoker=on) AS
+SELECT 
+  g.id, g.name, g.city, g.donation_type, g.goal_2026,
+  g.is_private, g.leader_id, g.leader_name, g.description,
+  g.entity_id, g.end_date, g.created_at, g.updated_at,
+  g.image_url, g.members_visible, g.view_count,
+  g.default_commitment_name, g.default_commitment_metric,
+  g.default_commitment_ratio, g.default_commitment_donation,
+  g.default_commitment_goal,
+  COALESCE(gs.member_count, 0) AS member_count,
+  COALESCE(gs.total_goals, 0) AS total_goals,
+  COALESCE(gs.total_donations, 0) AS total_donations
+FROM groups g
+LEFT JOIN group_stats gs ON gs.group_id = g.id;
+
+-- 6. Recriar groups_admin
+CREATE VIEW groups_admin WITH (security_invoker=on) AS
+SELECT 
+  g.id, g.name, g.city, g.donation_type, g.goal_2026,
+  g.is_private, g.leader_id, g.leader_name, g.leader_whatsapp,
+  u.email as leader_email, g.description, g.entity_id, 
+  g.image_url, g.end_date, g.created_at, g.updated_at,
+  COALESCE(gs.member_count, 0) as member_count,
+  COALESCE(gs.total_donations, 0) as total_donations,
+  COALESCE(gs.total_goals, 0) as total_goals,
+  g.view_count, g.members_visible
+FROM groups g
+LEFT JOIN group_stats gs ON gs.group_id = g.id
+LEFT JOIN auth.users u ON u.id = g.leader_id;
 ```
 
-Atualizar a view `partners_public` para incluir `is_test`.
+### Etapa 2: Remover Função de Refresh (Opcional)
 
-### Etapa 2: Atualizar Interface Partner
-
-Adicionar o campo `is_test` ao tipo `Partner`:
-
-```text
-interface Partner {
-  // ... campos existentes
-  is_test: boolean;
-}
-```
-
-### Etapa 3: Modificar PartnersSection.tsx
-
-Alterar a renderização dos cards de parceiros:
-
-1. **Badge "Parceiro Teste"**: Exibir quando `partner.is_test === true`
-2. **Desabilitar WhatsApp**: Não mostrar botão ou mostrar desabilitado
-3. **Desabilitar Instagram**: Não mostrar ícone ou mostrar desabilitado
-4. **Estilo visual diferenciado**: Opacidade reduzida ou borda tracejada
-
-Exemplo de modificação no card:
-
-```text
-{partner.is_test && (
-  <span className="inline-flex items-center gap-1 text-xs font-medium 
-    px-2 py-0.5 rounded-full bg-gray-200 text-gray-600">
-    🧪 Parceiro Teste
-  </span>
-)}
-
-{/* Botão WhatsApp - desabilitado para teste */}
-<Button
-  disabled={partner.is_test}
-  title={partner.is_test ? "Contato indisponível (parceiro teste)" : undefined}
-  ...
->
-  Entrar em Contato
-</Button>
-
-{/* Instagram - não exibir para teste */}
-{partner.instagram && !partner.is_test && (
-  <Button ...>
-    <Instagram />
-  </Button>
-)}
-```
-
-### Etapa 4: Modificar GoldPartnersCarousel.tsx
-
-Aplicar a mesma lógica no carrossel de parceiros solidários:
-
-1. Adicionar badge "Teste" se `partner.is_test`
-2. Desabilitar clique no WhatsApp para parceiros de teste
-3. Mostrar tooltip informando que é parceiro de demonstração
-
-### Etapa 5: Modificar PremiumPartnerSlots.tsx
-
-Para parceiros premium de teste:
-
-1. Desabilitar clique no Instagram
-2. Adicionar indicação visual de teste no tooltip
+Se existir, remover a função `refresh_group_stats()` que não será mais necessária.
 
 ---
 
-## Arquivos a Modificar
+## Arquivos Afetados
+
+Apenas migração SQL - não há alterações no código frontend.
 
 | Arquivo | Mudança |
 |---------|---------|
-| `supabase/migrations/` | Nova migração para `is_test` |
-| `src/hooks/usePartners.tsx` | Atualizar tipo Partner |
-| `src/hooks/usePaginatedPartners.tsx` | Incluir `is_test` na query |
-| `src/hooks/useGoldPartners.tsx` | Incluir `is_test` na query |
-| `src/components/PartnersSection.tsx` | Renderização condicional |
-| `src/components/GoldPartnersCarousel.tsx` | Renderização condicional |
-| `src/components/PremiumPartnerSlots.tsx` | Renderização condicional |
+| `supabase/migrations/` | Nova migração para recriar views |
 
 ---
 
-## Resultado Visual Esperado
+## Resultado Esperado
 
-**Card de Parceiro Teste:**
-- Badge cinza "🧪 Parceiro Teste" no topo
-- Botão "Entrar em Contato" desabilitado (cinza)
-- Ícone do Instagram não aparece
-- Visual levemente mais apagado para indicar que é demonstração
-
-**Tooltip em Parceiros Premium Teste:**
-- Mostra "Parceiro de demonstração" 
-- Não abre Instagram ao clicar
+Após a migração:
+- Grupos novos aparecerão imediatamente com os indicadores corretos
+- `member_count` mostrará o líder (1 membro)
+- `total_goals` mostrará a soma das metas dos commitments
+- `total_donations` mostrará 0 (nenhuma doação ainda)
 
 ---
 
-## Detalhes Técnicos
+## Considerações de Performance
 
-### Migração SQL Completa
+Para o volume atual de dados (~5-10 grupos), uma VIEW regular não terá impacto perceptível. Se no futuro houver milhares de grupos, podemos:
+1. Adicionar índices otimizados
+2. Implementar cache no frontend
+3. Voltar para MATERIALIZED VIEW com triggers de refresh
 
-A migração deve:
-1. Adicionar coluna `is_test` com default `false`
-2. Atualizar parceiros seed existentes
-3. Recriar view `partners_public` incluindo o novo campo
+---
 
-### Lógica de Identificação
+## Alternativa Considerada (Descartada)
 
-Os parceiros de teste podem ser identificados pelo padrão de UUID usado no seed:
-- `aXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX`
-
-Alternativamente, podemos marcar manualmente ou por descrição contendo palavras-chave específicas.
-
-### Considerações de Segurança
-
-- A coluna `is_test` será exposta na view pública (não é dado sensível)
-- Parceiros de teste continuam aparecendo nas listagens, apenas com tratamento visual diferenciado
+**Trigger para REFRESH automático**:
+- Mais complexo de manter
+- Pode causar lentidão em operações de INSERT/UPDATE
+- Risco de deadlocks em alta concorrência
+- Não resolve o problema imediatamente (refresh acontece após o INSERT)
