@@ -1,100 +1,97 @@
 
-# Plano: Corrigir Exibição de Grupos Privados na Aba "Todos"
+# Plano: Esconder Cards de Entidades até Aplicar Filtro
 
-## Diagnóstico do Problema
+## Resumo
 
-A aba "Todos os Grupos" está mostrando grupos privados dos quais o usuário não é líder nem membro. Isso acontece porque:
-
-1. A view `groups_public` foi criada com `security_invoker=false` (padrão)
-2. Sem `security_invoker`, a view ignora as políticas RLS da tabela `groups`
-3. Resultado: todos os grupos (incluindo privados) são retornados para qualquer usuário autenticado
-
-### Dados do Banco
-- Grupos públicos: 1
-- Grupos privados: 5
-- A RLS da tabela `groups` filtra corretamente por: `is_private = false` OU `leader_id = user` OU `is_group_member()`
+Modificar a seção de Entidades Beneficiárias para mostrar os cards apenas quando:
+1. O usuário selecionar uma cidade no filtro, **OU**
+2. O usuário clicar em um botão "Ver Todas"
 
 ---
 
-## Solução Proposta
+## Comportamento Proposto
 
-### Opção 1: Recriar a View com `security_invoker=on` (Recomendado)
+### Estado Inicial (sem filtro)
+- Título e descrição da seção visíveis
+- Campo de busca por cidade visível
+- Botão "Cadastrar Entidade" visível
+- **Novo:** Botão "Ver Todas" para mostrar todas as entidades
+- Cards **escondidos** com uma mensagem convidativa
 
-Recriar a view `groups_public` com a opção `security_invoker=on`, fazendo com que ela herde automaticamente as políticas RLS da tabela `groups`.
+### Após Aplicar Filtro ou Clicar "Ver Todas"
+- Cards aparecem normalmente
+- Se filtro por cidade: mostra entidades da cidade selecionada
+- Se "Ver Todas": mostra todas as entidades
 
-```sql
-DROP VIEW IF EXISTS groups_public;
+---
 
-CREATE VIEW groups_public
-WITH (security_invoker=on) AS
-SELECT 
-    g.id,
-    g.name,
-    g.city,
-    g.donation_type,
-    g.goal_2026,
-    g.is_private,
-    g.leader_id,
-    g.leader_name,
-    g.description,
-    g.entity_id,
-    g.end_date,
-    g.created_at,
-    g.updated_at,
-    g.image_url,
-    g.members_visible,
-    g.view_count,
-    g.default_commitment_name,
-    g.default_commitment_metric,
-    g.default_commitment_ratio,
-    g.default_commitment_donation,
-    g.default_commitment_goal,
-    COALESCE(gs.member_count, 0) AS member_count,
-    COALESCE(gs.total_goals, 0) AS total_goals,
-    COALESCE(gs.total_donations, 0) AS total_donations
-FROM groups g
-LEFT JOIN group_stats gs ON gs.group_id = g.id;
+## Mudanças Técnicas
 
--- Conceder permissões à view
-GRANT SELECT ON groups_public TO anon, authenticated;
+### Arquivo: `src/components/EntitiesSection.tsx`
+
+1. **Novo estado `showAll`:**
+   ```tsx
+   const [showAll, setShowAll] = useState(false);
+   ```
+
+2. **Lógica de exibição:**
+   ```tsx
+   const shouldShowEntities = showAll || searchCity.trim().length > 0;
+   ```
+
+3. **Novo botão "Ver Todas":**
+   - Aparece apenas quando `!shouldShowEntities`
+   - Ao clicar, define `showAll = true`
+
+4. **Estado inicial (cards escondidos):**
+   - Quando `!shouldShowEntities`, exibir mensagem:
+     > "Busque por uma cidade ou clique em 'Ver Todas' para visualizar as entidades cadastradas."
+
+5. **Reset ao limpar filtro:**
+   - Quando o usuário limpar o campo de cidade e `showAll` for false, volta ao estado inicial
+
+---
+
+## Fluxo Visual
+
+```text
+┌─────────────────────────────────────────┐
+│       Entidades Beneficiárias           │
+│  Organizações que recebem as doações... │
+│                                         │
+│   [+ Cadastrar Entidade]                │
+│                                         │
+│   🔍 [Buscar por cidade...]             │
+│                                         │
+│   [Ver Todas]                           │
+│                                         │
+│   ℹ️ Busque por uma cidade ou clique    │
+│      em "Ver Todas" para visualizar     │
+│      as entidades cadastradas.          │
+└─────────────────────────────────────────┘
+
+         ↓ Após filtrar ou "Ver Todas"
+
+┌─────────────────────────────────────────┐
+│   [Card 1] [Card 2] [Card 3] [Card 4]   │
+│   [Card 5] [Card 6] ...                 │
+└─────────────────────────────────────────┘
 ```
 
-### Benefícios
-- A view passa a respeitar as políticas RLS existentes na tabela `groups`
-- Grupos privados só aparecem para líderes e membros
-- Não precisa alterar código frontend
+---
 
-### Validação do Comportamento Esperado
+## Benefícios
 
-Após a correção:
-
-| Usuário | Grupo Público | Grupo Privado (não membro) | Grupo Privado (membro/líder) |
-|---------|---------------|----------------------------|------------------------------|
-| Logado  | Vê            | Não vê                     | Vê                          |
-| Anon    | Não vê*       | Não vê                     | N/A                         |
-
-*A RLS atual exige `auth.uid() IS NOT NULL`, então usuários anônimos não veem nenhum grupo.
+- **Performance:** Não renderiza dezenas de cards desnecessariamente
+- **UX:** Página inicial mais limpa e focada
+- **Clareza:** Incentiva o usuário a buscar pela cidade de interesse
 
 ---
 
-## Detalhes Técnicos
+## Implementação
 
-### Por que isso aconteceu?
-
-Por padrão, views no PostgreSQL executam com as permissões do **criador** da view (SECURITY DEFINER implícito), não do usuário que está fazendo a consulta. Isso significa que as políticas RLS são verificadas para o owner da view, não para o usuário final.
-
-Com `security_invoker=on`, a view passa a executar com as permissões do **usuário que está consultando**, fazendo com que as políticas RLS sejam aplicadas corretamente.
-
-### Impacto
-
-- A mudança afeta apenas a visibilidade dos grupos na listagem
-- Não há impacto em outras funcionalidades (criar grupo, entrar em grupo, etc.)
-- Os dados de membros/metas/doações continuarão sendo agregados corretamente
-
----
-
-## Passos de Implementação
-
-1. Criar migração SQL para recriar a view com `security_invoker=on`
-2. Verificar que a view `groups_admin` (usada pelos admins) continua funcionando
-3. Testar a listagem de grupos como usuário comum
+1. Adicionar estado `showAll` no componente
+2. Criar condição `shouldShowEntities`
+3. Adicionar botão "Ver Todas" com estilo outline
+4. Criar componente de mensagem inicial quando cards estão escondidos
+5. Manter lógica existente de filtro funcionando
