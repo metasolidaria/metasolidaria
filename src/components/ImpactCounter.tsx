@@ -134,31 +134,47 @@ export const ImpactCounter = () => {
               </p>
             </div>
 
-            {/* Breakdown by Type */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-4">
-              {donationTypeConfig.map((type, index) => (
-                <div
-                  key={type.key}
-                  className={`bg-primary-foreground/10 backdrop-blur-sm rounded-xl p-4 text-center border border-primary-foreground/20 ${isInView ? 'animate-in fade-in slide-in-from-bottom-4 duration-400' : 'opacity-0'}`}
-                  style={{ animationDelay: `${300 + index * 50}ms` }}
-                >
-                  <type.icon className="w-6 h-6 text-primary-foreground mx-auto mb-2" />
-                  <div className="text-2xl md:text-3xl font-bold text-primary-foreground mb-1">
-                    {isLoading ? (
-                      <Skeleton className="h-8 w-16 mx-auto bg-primary-foreground/20" />
-                    ) : isInView ? (
-                      <AnimatedNumber 
-                        value={impactData?.donationsByType?.[type.key] || 0} 
-                        suffix="" 
-                      />
-                    ) : null}
-                  </div>
-                  <div className="text-xs text-primary-foreground/60">
-                    {type.label}
-                  </div>
+            {/* Breakdown by Type - Only show types with values */}
+            {(() => {
+              const typesWithValues = donationTypeConfig.filter(
+                (type) => (impactData?.donationsByType?.[type.key] || 0) > 0
+              );
+              
+              if (isLoading || typesWithValues.length === 0) return null;
+              
+              return (
+                <div className={`grid gap-4 ${
+                  typesWithValues.length === 1 ? 'grid-cols-1 max-w-xs mx-auto' :
+                  typesWithValues.length === 2 ? 'grid-cols-2 max-w-md mx-auto' :
+                  typesWithValues.length === 3 ? 'grid-cols-3 max-w-lg mx-auto' :
+                  typesWithValues.length === 4 ? 'grid-cols-2 sm:grid-cols-4 max-w-2xl mx-auto' :
+                  typesWithValues.length === 5 ? 'grid-cols-2 sm:grid-cols-3 md:grid-cols-5 max-w-3xl mx-auto' :
+                  typesWithValues.length === 6 ? 'grid-cols-2 sm:grid-cols-3 md:grid-cols-6 max-w-4xl mx-auto' :
+                  'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7'
+                }`}>
+                  {typesWithValues.map((type, index) => (
+                    <div
+                      key={type.key}
+                      className={`bg-primary-foreground/10 backdrop-blur-sm rounded-xl p-4 text-center border border-primary-foreground/20 ${isInView ? 'animate-in fade-in slide-in-from-bottom-4 duration-400' : 'opacity-0'}`}
+                      style={{ animationDelay: `${300 + index * 50}ms` }}
+                    >
+                      <type.icon className="w-6 h-6 text-primary-foreground mx-auto mb-2" />
+                      <div className="text-2xl md:text-3xl font-bold text-primary-foreground mb-1">
+                        {isInView ? (
+                          <AnimatedNumber 
+                            value={impactData?.donationsByType?.[type.key] || 0} 
+                            suffix="" 
+                          />
+                        ) : null}
+                      </div>
+                      <div className="text-xs text-primary-foreground/60">
+                        {type.label}
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+              );
+            })()}
           </div>
 
           {/* Premium Partners Section - Centered below */}
