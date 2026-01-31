@@ -1,115 +1,177 @@
 
-# Plano: Corrigir Problema de "Meus Grupos" Não Aparecendo
+# Plano: Meta Padrão para Novos Membros
 
-## Diagnóstico
+## Objetivo
+Permitir que o líder defina uma meta padrão ao criar o grupo. Quando um novo membro entrar, ele automaticamente receberá essa meta como um "commitment block" inicial, podendo alterá-la posteriormente.
 
-Após análise detalhada dos logs de rede e do código, identifiquei uma **race condition** entre dois estados:
+## Exemplo do Usuário
+> "O líder parametrizar que cada 1 corrida que finalizar vai doar 1 kg de alimento. Depois o membro se quiser pode alterar."
 
-1. Quando o usuário loga, o `useEffect` na linha 60-64 muda automaticamente o filtro para "mine"
-2. Porém, a query `useUserMemberships` pode ainda não ter completado
-3. Isso faz com que `userMemberships.length === 0` seja verdadeiro temporariamente
-4. A lógica na linha 70-72 do hook retorna array vazio quando `filter === "mine"` e memberships está vazio
+---
 
-A API está funcionando corretamente - o grupo "Gerando futuro" aparece na resposta de `groups_public`. O problema é puramente de timing no frontend.
+## Visão Geral da Implementação
 
-## Solução
+### 1. Adicionar Campos de Meta Padrão na Tabela `groups`
 
-Modificar a lógica do hook `usePaginatedGroups` para lidar melhor com o estado de carregamento inicial dos memberships, além de usar `leader_id` como fallback para identificar grupos do usuário.
+Novos campos na tabela `groups`:
+- `default_commitment_name` (text, nullable) - Nome da meta padrão (ex: "Meta de Corridas")
+- `default_commitment_metric` (text, nullable) - Métrica (ex: "corrida")
+- `default_commitment_ratio` (integer, default 1) - Proporção (ex: 1)
+- `default_commitment_donation` (integer, default 1) - Quantidade de doação (ex: 1 kg)
+- `default_commitment_goal` (integer, default 0) - Meta inicial sugerida (ex: 10)
 
-### 1. Corrigir Hook `usePaginatedGroups`
+### 2. Atualizar o Modal de Criação de Grupo
 
-**Arquivo**: `src/hooks/usePaginatedGroups.tsx`
+**Arquivos:** `src/components/CreateGroupModal.tsx`, `src/components/admin/CreateGroupAdminModal.tsx`
 
-Alterações:
-- Adicionar verificação do estado de loading do `useUserMemberships`
-- Incluir grupos onde o usuário é líder no filtro "mine" (mesmo se não estiver na tabela `group_members`)
-- Melhorar a queryKey para incluir o estado de loading
+Adicionar seção "Meta Padrão para Membros" com campos:
+- Nome da meta (opcional)
+- Regra: "A cada X [métrica] = Y [unidade de doação]"
+- Meta inicial sugerida (quantidade de unidades)
 
-```typescript
-// Hook to get user memberships - agora com status de loading
-export const useUserMemberships = () => {
-  const { data: userMemberships, isLoading } = useQuery({
-    queryKey: ["userMemberships"],
-    queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return [];
+O líder verá um preview como:
+> "A cada 1 corrida = 1 kg de alimento | Meta sugerida: 10 kg"
 
-      const { data, error } = await supabase
-        .from("group_members")
-        .select("group_id")
-        .eq("user_id", user.id);
+### 3. Atualizar Função `create_group_with_leader`
 
-      if (error) throw error;
-      return data?.map(m => m.group_id) || [];
-    },
-  });
+Adicionar parâmetros para os campos de meta padrão.
 
-  return { userMemberships: userMemberships || [], isLoading };
-};
+### 4. Criar Função para Aplicar Meta Padrão a Novo Membro
+
+Nova função no banco: `apply_default_commitment(_member_id uuid, _group_id uuid)`
+
+Esta função:
+1. Busca os dados de meta padrão do grupo
+2. Se existir uma métrica padrão definida, cria um registro em `member_commitments` para o novo membro
+
+### 5. Modificar Pontos de Entrada de Membros
+
+**Locais onde membros são adicionados:**
+1. `accept_link_invitation` - Convite por link
+2. `accept_group_invitation` - Convite por email
+3. `joinGroup` (useGroups) - Entrada direta em grupo público
+4. `addMember` (AddMemberModal) - Líder adicionando membro manualmente
+5. `create_group_with_leader` - O próprio líder ao criar
+
+Cada um desses pontos chamará `apply_default_commitment` após inserir o membro.
+
+### 6. Permitir Edição da Meta Padrão no Modal de Edição do Grupo
+
+**Arquivo:** `src/components/EditGroupModal.tsx`
+
+Adicionar a mesma seção de "Meta Padrão" para que o líder possa alterar posteriormente.
+
+---
+
+## Detalhes Técnicos
+
+### Migração SQL
+
+```sql
+-- Adicionar campos de meta padrão na tabela groups
+ALTER TABLE groups ADD COLUMN IF NOT EXISTS default_commitment_name text;
+ALTER TABLE groups ADD COLUMN IF NOT EXISTS default_commitment_metric text;
+ALTER TABLE groups ADD COLUMN IF NOT EXISTS default_commitment_ratio integer DEFAULT 1;
+ALTER TABLE groups ADD COLUMN IF NOT EXISTS default_commitment_donation integer DEFAULT 1;
+ALTER TABLE groups ADD COLUMN IF NOT EXISTS default_commitment_goal integer DEFAULT 0;
+
+-- Função para aplicar meta padrão ao membro
+CREATE OR REPLACE FUNCTION apply_default_commitment(_member_id uuid, _group_id uuid)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $$
+DECLARE
+  _group record;
+BEGIN
+  -- Buscar configuração de meta padrão do grupo
+  SELECT 
+    default_commitment_name,
+    default_commitment_metric,
+    default_commitment_ratio,
+    default_commitment_donation,
+    default_commitment_goal
+  INTO _group
+  FROM groups
+  WHERE id = _group_id;
+
+  -- Se tem métrica definida, criar commitment
+  IF _group.default_commitment_metric IS NOT NULL 
+     AND _group.default_commitment_metric != '' THEN
+    INSERT INTO member_commitments (
+      member_id,
+      name,
+      metric,
+      ratio,
+      donation_amount,
+      personal_goal
+    ) VALUES (
+      _member_id,
+      COALESCE(_group.default_commitment_name, 'Meta de ' || _group.default_commitment_metric),
+      _group.default_commitment_metric,
+      COALESCE(_group.default_commitment_ratio, 1),
+      COALESCE(_group.default_commitment_donation, 1),
+      COALESCE(_group.default_commitment_goal, 0)
+    );
+  END IF;
+END;
+$$;
 ```
 
-### 2. Atualizar `usePaginatedGroups`
+### Atualizar Funções de Entrada de Membros
 
-Modificar para:
-- Aguardar o carregamento de memberships antes de renderizar "lista vazia"
-- No filtro "mine", buscar todos os grupos e filtrar localmente por `leader_id` ou membership
+As funções `accept_link_invitation`, `accept_group_invitation` e `create_group_with_leader` serão atualizadas para chamar `apply_default_commitment` após inserir o membro.
 
-```typescript
-// Na query, para o filtro "mine", em vez de passar IDs,
-// buscar grupos onde leader_id = user.id OU id IN userMemberships
-if (filter === "mine") {
-  // Se ainda está carregando memberships, aguardar
-  if (membershipsLoading) return { groups: [], count: 0, isLoadingMemberships: true };
-  
-  // Buscar grupos do usuário (líder OU membro)
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { groups: [], count: 0 };
-  
-  // Construir query para incluir grupos onde é líder ou membro
-  let query = supabase
-    .from("groups_public")
-    .select("*", { count: "exact" });
-  
-  if (userMemberships.length > 0) {
-    // Líder OU membro
-    query = query.or(`leader_id.eq.${user.id},id.in.(${userMemberships.join(',')})`);
-  } else {
-    // Apenas líder
-    query = query.eq("leader_id", user.id);
-  }
-  
-  // ...resto da query
-}
+### UI do Modal de Criação
+
+Nova seção no formulário:
+
+```
+┌─────────────────────────────────────────────┐
+│ 🎯 Meta Padrão para Membros (opcional)      │
+│                                             │
+│ Regra de Doação:                            │
+│ A cada [1] [corrida] = [1] kg              │
+│                                             │
+│ Meta inicial sugerida: [10] kg              │
+│                                             │
+│ 📌 Preview: "1 corrida = 1 kg"              │
+│    Membros entrarão com meta de 10 kg       │
+└─────────────────────────────────────────────┘
 ```
 
-### 3. Atualizar `GroupsSection`
+---
 
-**Arquivo**: `src/components/GroupsSection.tsx`
+## Fluxo do Usuário
 
-Modificar para:
-- Receber o estado de loading de memberships
-- Mostrar loading enquanto memberships estiver carregando
-- Não mudar automaticamente para "mine" até que memberships esteja carregado
+1. **Líder cria grupo** → Define "1 corrida = 1 kg, meta 10 kg"
+2. **Novo membro entra** → Automaticamente recebe commitment com:
+   - Métrica: "corrida"
+   - Regra: 1 corrida = 1 kg
+   - Meta: 10 kg
+3. **Membro acessa grupo** → Vê sua meta pré-configurada
+4. **Membro pode editar** → Altera valores conforme preferência
 
-```typescript
-const { userMemberships, isLoading: membershipsLoading } = useUserMemberships();
+---
 
-// Não mudar para "mine" automaticamente até memberships carregar
-useEffect(() => {
-  if (user && !membershipsLoading) {
-    setFilter("mine");
-  }
-}, [user, membershipsLoading]);
-```
+## Arquivos a Modificar
 
-## Arquivos Alterados
+| Arquivo | Alteração |
+|---------|-----------|
+| `supabase/migrations/` | Nova migração com campos e funções |
+| `src/components/CreateGroupModal.tsx` | Adicionar seção de meta padrão |
+| `src/components/admin/CreateGroupAdminModal.tsx` | Adicionar seção de meta padrão |
+| `src/components/EditGroupModal.tsx` | Adicionar edição de meta padrão |
+| `src/hooks/useGroups.tsx` | Passar parâmetros de meta padrão na criação |
+| `src/hooks/usePaginatedGroups.tsx` | Atualizar joinGroup para chamar apply_default_commitment |
+| `src/components/AddMemberModal.tsx` | Chamar apply_default_commitment após adicionar |
 
-1. `src/hooks/usePaginatedGroups.tsx` - Ajustar hooks para lidar com loading state
-2. `src/components/GroupsSection.tsx` - Aguardar carregamento de memberships
+---
 
-## Resultado Esperado
+## Considerações
 
-- Não haverá mais flash de "Você ainda não faz parte de nenhum grupo" ao logar
-- O card do grupo "Gerando futuro" aparecerá corretamente
-- Grupos onde o usuário é líder sempre aparecerão em "Meus Grupos"
-- A experiência será mais fluida, sem estados intermediários incorretos
+- **Retrocompatibilidade**: Grupos existentes não terão meta padrão (campos nullable)
+- **Membros existentes**: Não são afetados, apenas novos membros
+- **Líder como membro**: Ao criar o grupo, o líder também recebe a meta padrão
+- **Segurança**: Função `apply_default_commitment` é SECURITY DEFINER para permitir inserção em `member_commitments`
