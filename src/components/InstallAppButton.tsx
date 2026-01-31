@@ -15,40 +15,62 @@ export const InstallAppButton = ({ variant = "header", isScrolled = false, class
   
   // Não mostrar se já instalou
   if (isInstalled) return null;
-  
-  // Não mostrar se não é instalável E não é iOS
-  if (!isInstallable && !isIOSDevice) return null;
+
+  // Determina se precisa mostrar instruções manuais (iOS ou browser sem suporte)
+  const needsManualInstructions = isIOSDevice || !isInstallable;
 
   const handleInstall = async () => {
-    if (!isIOSDevice) {
+    if (isInstallable) {
       await installApp();
     }
+    // Se não for instalável, o Popover vai controlar as instruções
   };
 
-  // Conteúdo do popover iOS
-  const IOSInstructions = () => (
+  // Conteúdo do popover com instruções
+  const InstallInstructions = () => (
     <div className="space-y-3 text-sm">
-      <p className="font-medium text-foreground">Como instalar no iPhone/iPad:</p>
+      <p className="font-medium text-foreground">
+        {isIOSDevice ? "Como instalar no iPhone/iPad:" : "Como instalar:"}
+      </p>
       <div className="space-y-2">
-        <div className="flex items-center gap-2">
-          <div className="flex items-center justify-center w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-bold">1</div>
-          <span className="flex items-center gap-1">
-            Toque em <Share className="w-4 h-4" /> Compartilhar
-          </span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="flex items-center justify-center w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-bold">2</div>
-          <span className="flex items-center gap-1">
-            Toque em <Plus className="w-4 h-4" /> Adicionar à Tela Inicial
-          </span>
-        </div>
+        {isIOSDevice ? (
+          <>
+            <div className="flex items-center gap-2">
+              <div className="flex items-center justify-center w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-bold">1</div>
+              <span className="flex items-center gap-1">
+                Toque em <Share className="w-4 h-4" /> Compartilhar
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="flex items-center justify-center w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-bold">2</div>
+              <span className="flex items-center gap-1">
+                Toque em <Plus className="w-4 h-4" /> Adicionar à Tela Inicial
+              </span>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="flex items-center gap-2">
+              <div className="flex items-center justify-center w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-bold">1</div>
+              <span>Abra este site no Chrome ou Edge</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="flex items-center justify-center w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-bold">2</div>
+              <span>Clique no menu ⋮ do navegador</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="flex items-center justify-center w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-bold">3</div>
+              <span>Selecione "Instalar aplicativo"</span>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
 
   // Variante Header (desktop nav link)
   if (variant === "header") {
-    if (isIOSDevice) {
+    if (needsManualInstructions) {
       return (
         <Popover>
           <PopoverTrigger asChild>
@@ -64,7 +86,7 @@ export const InstallAppButton = ({ variant = "header", isScrolled = false, class
             </button>
           </PopoverTrigger>
           <PopoverContent className="w-64">
-            <IOSInstructions />
+            <InstallInstructions />
           </PopoverContent>
         </Popover>
       );
@@ -87,7 +109,7 @@ export const InstallAppButton = ({ variant = "header", isScrolled = false, class
 
   // Variante Menu (mobile menu item)
   if (variant === "menu") {
-    if (isIOSDevice) {
+    if (needsManualInstructions) {
       return (
         <Popover>
           <PopoverTrigger asChild>
@@ -102,7 +124,7 @@ export const InstallAppButton = ({ variant = "header", isScrolled = false, class
             </button>
           </PopoverTrigger>
           <PopoverContent className="w-64">
-            <IOSInstructions />
+            <InstallInstructions />
           </PopoverContent>
         </Popover>
       );
@@ -124,7 +146,7 @@ export const InstallAppButton = ({ variant = "header", isScrolled = false, class
 
   // Variante Footer
   if (variant === "footer") {
-    if (isIOSDevice) {
+    if (needsManualInstructions) {
       return (
         <Popover>
           <PopoverTrigger asChild>
@@ -141,7 +163,7 @@ export const InstallAppButton = ({ variant = "header", isScrolled = false, class
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-64">
-            <IOSInstructions />
+            <InstallInstructions />
           </PopoverContent>
         </Popover>
       );
