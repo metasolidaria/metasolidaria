@@ -1,114 +1,149 @@
 
-# Plano: Corrigir Prompt de Instalação PWA no iOS/Safari
+# Plano: Adicionar Link "Baixar App" no Header e Footer
 
-## Problema Identificado
+## Objetivo
 
-No iPhone/Safari, o prompt de instalação do PWA não aparece. Isso acontece porque:
-
-1. O Safari **não suporta** o evento `beforeinstallprompt` que é usado para detectar se o app pode ser instalado
-2. Por isso, `isInstallable` permanece `false` no iOS
-3. A lógica atual depende dessa flag para decidir se mostra o prompt
-
-### Fluxo Atual (Problemático)
-
-```text
-+-------------------+     +------------------+     +-------------------+
-| iOS/Safari        | --> | beforeinstall    | --> | isInstallable     |
-| acessa o site     |     | prompt NUNCA     |     | = false           |
-+-------------------+     | dispara          |     +-------------------+
-                          +------------------+               |
-                                                             v
-                          +------------------+     +-------------------+
-                          | Prompt NÃO       | <-- | shouldShowManual  |
-                          | aparece          |     | = true, MAS...    |
-                          +------------------+     +-------------------+
-                                                             |
-                          O problema: o prompt não renderiza porque a
-                          condição principal `if (isInstalled || isDismissed)`
-                          bloqueia a renderização quando isDismissed = true
-                          (valor inicial padrão)
-```
-
-### Causa Raiz
-
-O estado `isDismissed` inicia como `true` (linha 23) e só muda para `false` após o `useEffect` rodar. Porém, a lógica do `useEffect` só considera o `localStorage`, não considera que dispositivos iOS precisam de tratamento especial.
+Permitir que usuarios instalem o app PWA diretamente atraves de um link visivel no cabecalho (header) e no rodape (footer), sem depender apenas do prompt automatico que aparece apos 3 segundos.
 
 ---
 
-## Solucao
+## Onde Adicionar
 
-Modificar a lógica para detectar iOS/Safari e garantir que o prompt com instruções manuais apareça para esses usuários.
+| Local | Posicao | Comportamento |
+|-------|---------|---------------|
+| **Header Desktop** | Ao lado de "Impacto" na navegacao | Link discreto que combina com os outros itens |
+| **Header Mobile** | Dentro do menu mobile | Opcao de menu como as outras |
+| **Footer** | Abaixo das redes sociais | Botao ou link destacado |
 
 ---
 
-## Etapas de Implementacao
+## Comportamento do Link
 
-### Etapa 1: Adicionar detecção de iOS no hook
+O link tera comportamento inteligente baseado no dispositivo:
 
-Modificar `usePWAInstall.tsx` para expor uma flag `isIOSDevice`:
+1. **Android/Chrome** (tem prompt nativo): Ao clicar, dispara o prompt de instalacao nativo do navegador
+2. **iOS/Safari** (sem prompt nativo): Ao clicar, abre um modal/tooltip com instrucoes visuais ("Toque em Compartilhar > Adicionar a Tela Inicial")
+3. **Ja instalado**: O link nao aparece (oculto)
+
+---
+
+## Implementacao Tecnica
+
+### Etapa 1: Criar Componente InstallAppButton
+
+Um componente reutilizavel que encapsula a logica de instalacao:
 
 ```typescript
-const [isIOSDevice, setIsIOSDevice] = useState(false);
+// src/components/InstallAppButton.tsx
+import { Download, Share } from "lucide-react";
+import { usePWAInstall } from "@/hooks/usePWAInstall";
+import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 
-useEffect(() => {
-  // Detectar iOS
-  const iOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && 
-              !(window as any).MSStream;
-  setIsIOSDevice(iOS);
+interface InstallAppButtonProps {
+  variant?: "header" | "footer" | "menu";
+  className?: string;
+}
+
+export const InstallAppButton = ({ variant, className }: InstallAppButtonProps) => {
+  const { isInstallable, isInstalled, isIOSDevice, installApp } = usePWAInstall();
   
-  // ... resto do código
-}, []);
+  // Nao mostrar se ja instalou
+  if (isInstalled) return null;
+  
+  // Nao mostrar se nao e instalavel E nao e iOS
+  if (!isInstallable && !isIOSDevice) return null;
 
-return {
-  isInstallable,
-  isInstalled,
-  isIOSDevice, // Nova flag
-  installApp,
+  const handleClick = async () => {
+    if (isIOSDevice) {
+      // Abre popover com instrucoes (controlado pelo Popover)
+      return;
+    }
+    // Dispara prompt nativo
+    await installApp();
+  };
+
+  // Para iOS: mostra popover com instrucoes
+  // Para Android: botao que dispara instalacao
+  // ...renderiza baseado no variant
 };
 ```
 
-### Etapa 2: Ajustar lógica de renderização no componente
+### Etapa 2: Adicionar ao Header
 
-Modificar `InstallPWAPrompt.tsx` para considerar iOS na decisão de mostrar o prompt:
+No componente Header, adicionar "Baixar App" na navegacao desktop e mobile:
 
 ```typescript
-const { isInstallable, isInstalled, isIOSDevice, installApp } = usePWAInstall();
+// Desktop: adicionar na nav junto com Grupos, Entidades, etc.
+<nav className="hidden md:flex items-center gap-4 lg:gap-8 ...">
+  {["Grupos", "Entidades", "Parceiros", "Impacto"].map(...)}
+  <InstallAppButton variant="header" />
+</nav>
 
-// Mudança na condição de renderização
-// No iOS, não depende de isInstallable porque nunca será true
-const shouldRender = !isInstalled && !isDismissed && (isInstallable || isIOSDevice);
-
-if (!shouldRender) {
-  return null;
-}
+// Mobile: adicionar no menu
+{isMobileMenuOpen && (
+  <nav className="flex flex-col gap-2">
+    {["Grupos", "Entidades", "Parceiros", "Impacto"].map(...)}
+    <InstallAppButton variant="menu" />
+    ...
+  </nav>
+)}
 ```
 
-### Etapa 3: Simplificar lógica de instruções manuais
+### Etapa 3: Adicionar ao Footer
 
-Atualizar a variável `shouldShowManual` para ser mais clara:
+No Footer, adicionar abaixo dos icones de redes sociais:
 
 ```typescript
-// Mostrar instruções manuais quando:
-// - É iOS (sempre precisa de instruções manuais)
-// - Ou não tem prompt nativo disponível
-// - Ou usuário clicou em instalar e falhou
-const shouldShowManual = isIOSDevice || !isInstallable || showManualInstructions;
+{/* Social Media Icons */}
+<div className="flex items-center gap-6">
+  {socialLinks.map(...)}
+</div>
+
+{/* Install App Link */}
+<InstallAppButton variant="footer" />
+
+{/* Tagline */}
+<div className="flex items-center gap-1 ...">
 ```
 
 ---
 
-## Arquivos Afetados
+## Design Visual
 
-| Arquivo | Mudanca |
-|---------|---------|
-| `src/hooks/usePWAInstall.tsx` | Adicionar deteccao e exposicao de `isIOSDevice` |
-| `src/components/InstallPWAPrompt.tsx` | Ajustar logica de renderizacao para considerar iOS |
+### Header (Desktop)
+- Aparece como link de texto igual aos outros: "Baixar App" com icone de download
+- Cor adapta ao scroll (branco no hero, escuro apos scroll)
+
+### Header (Mobile Menu)
+- Aparece como item de menu com destaque verde sutil
+- Icone de download + texto "Baixar App"
+
+### Footer
+- Botao pequeno com icone de download
+- Cor verde (primary) para destacar
+
+### Instrucoes iOS (Popover)
+- Quando usuario clica no iOS, aparece um popover explicando:
+  - "Toque no icone Compartilhar"
+  - "Depois toque em 'Adicionar a Tela Inicial'"
+  - Com icones visuais para facilitar
+
+---
+
+## Arquivos a Modificar
+
+| Arquivo | Alteracao |
+|---------|-----------|
+| `src/components/InstallAppButton.tsx` | **Novo** - Componente reutilizavel |
+| `src/components/Header.tsx` | Adicionar InstallAppButton na nav |
+| `src/components/Footer.tsx` | Adicionar InstallAppButton abaixo das redes sociais |
 
 ---
 
 ## Resultado Esperado
 
-- Usuarios de iPhone/Safari verao o prompt com instrucoes: "Toque em Compartilhar e depois em Adicionar a Tela Inicial"
-- Usuarios de Android continuarao vendo o botao "Instalar App" quando disponivel
-- A logica de "dismiss" por 7 dias continuara funcionando normalmente
-- O prompt ainda sera exibido 3 segundos apos o carregamento da pagina (comportamento mantido)
+- Usuarios verao "Baixar App" no cabecalho e rodape
+- No Android: clique dispara instalacao instantanea
+- No iOS: clique mostra instrucoes claras de como instalar
+- Link some automaticamente apos o app ser instalado
+- Funciona independente do prompt automatico que aparece apos 3 segundos
