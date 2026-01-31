@@ -211,21 +211,47 @@ export const usePaginatedGroups = ({ page, limit, filter, userMemberships, membe
 
 // Hook to get user memberships - now with loading state
 export const useUserMemberships = () => {
-  const { data: userMemberships, isLoading } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ["userMemberships"],
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return [];
+      if (!user) return { memberGroupIds: [], myGroupsCount: 0 };
 
-      const { data, error } = await supabase
+      // Get groups where user is a member
+      const { data: memberships, error: membershipsError } = await supabase
         .from("group_members")
         .select("group_id")
         .eq("user_id", user.id);
 
-      if (error) throw error;
-      return data?.map(m => m.group_id) || [];
+      if (membershipsError) throw membershipsError;
+      const memberGroupIds = memberships?.map(m => m.group_id) || [];
+
+      // Get count of groups where user is leader OR member (for badge display)
+      const { count: leaderCount } = await supabase
+        .from("groups_public" as any)
+        .select("id", { count: "exact", head: true })
+        .eq("leader_id", user.id);
+
+      // Calculate unique count (leader + member, but avoiding duplicates)
+      // Groups where user is leader AND member should count once
+      const { data: leaderGroups } = await supabase
+        .from("groups_public" as any)
+        .select("id")
+        .eq("leader_id", user.id);
+      
+      const leaderGroupIds = leaderGroups?.map((g: any) => g.id) || [];
+      const allMyGroupIds = [...new Set([...memberGroupIds, ...leaderGroupIds])];
+
+      return { 
+        memberGroupIds, 
+        myGroupsCount: allMyGroupIds.length 
+      };
     },
   });
 
-  return { userMemberships: userMemberships || [], isLoading };
+  return { 
+    userMemberships: data?.memberGroupIds || [], 
+    myGroupsCount: data?.myGroupsCount || 0,
+    isLoading 
+  };
 };

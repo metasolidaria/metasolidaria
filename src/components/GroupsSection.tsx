@@ -46,7 +46,7 @@ export const GroupsSection = ({ onRequireAuth }: GroupsSectionProps) => {
   const [filter, setFilter] = useState<"all" | "mine">("all");
   const [currentPage, setCurrentPage] = useState(1);
   
-  const { userMemberships, isLoading: membershipsLoading } = useUserMemberships();
+  const { userMemberships, myGroupsCount, isLoading: membershipsLoading } = useUserMemberships();
   const { groups, totalCount, isLoading, joinGroup, toggleMembersVisibility } = usePaginatedGroups({
     page: currentPage,
     limit: ITEMS_PER_PAGE,
@@ -146,8 +146,8 @@ export const GroupsSection = ({ onRequireAuth }: GroupsSectionProps) => {
                 <Button variant={filter === "mine" ? "default" : "outline"} size="sm" onClick={() => setFilter("mine")} className="whitespace-nowrap">
                   <Users className="w-4 h-4 mr-1 shrink-0" />
                   <span className="truncate">Meus Grupos</span>
-                  {userMemberships.length > 0 && <span className="ml-1 bg-primary-foreground/20 px-1.5 py-0.5 rounded-full text-xs shrink-0">
-                      {userMemberships.length}
+                  {myGroupsCount > 0 && <span className="ml-1 bg-primary-foreground/20 px-1.5 py-0.5 rounded-full text-xs shrink-0">
+                      {myGroupsCount}
                     </span>}
                 </Button>
               </div>}
