@@ -639,20 +639,29 @@ export const PartnersSection = () => {
               {displayPartners.map((partner, index) => (
                 <div
                   key={partner.id}
-                  className={`bg-card rounded-2xl overflow-hidden shadow-soft hover:shadow-glow transition-all duration-300 hover:-translate-y-1 animate-in fade-in slide-in-from-bottom-4 duration-400 ${
+                  className={`bg-card rounded-2xl overflow-hidden shadow-soft transition-all duration-300 animate-in fade-in slide-in-from-bottom-4 duration-400 ${
+                    partner.is_test 
+                      ? 'opacity-75' 
+                      : 'hover:shadow-glow hover:-translate-y-1'
+                  } ${
                     (partner.tier === 'ouro' || partner.tier === 'premium') ? 'ring-2 ring-yellow-500/50' : ''
                   }`}
                   style={{ animationDelay: `${index * 100}ms` }}
                 >
-                  {/* Badge de Tier - apenas Ouro (inclui premium) */}
-                  {(partner.tier === 'ouro' || partner.tier === 'premium') && (
-                    <div className="px-5 pt-4">
+                  {/* Badges de Tier e Teste */}
+                  <div className="px-5 pt-4 flex items-center gap-2 flex-wrap">
+                    {(partner.tier === 'ouro' || partner.tier === 'premium') && (
                       <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-yellow-500 text-yellow-900">
                         <Crown className="w-3 h-3" />
                         Ouro
                       </span>
-                    </div>
-                  )}
+                    )}
+                    {partner.is_test && (
+                      <span className="inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300">
+                        🧪 Parceiro Teste
+                      </span>
+                    )}
+                  </div>
                   
                   <div className="flex gap-4 p-5 pt-3">
                     <img
@@ -689,13 +698,15 @@ export const PartnersSection = () => {
                   <div className="px-5 pb-5 flex gap-2">
                     <Button
                       className="flex-1 gap-2"
-                      variant="hero"
-                      onClick={() => handleWhatsAppClick(partner.whatsapp, partner.name)}
+                      variant={partner.is_test ? "secondary" : "hero"}
+                      disabled={partner.is_test}
+                      onClick={() => !partner.is_test && handleWhatsAppClick(partner.whatsapp, partner.name)}
+                      title={partner.is_test ? "Contato indisponível (parceiro de demonstração)" : undefined}
                     >
                       <Phone className="w-4 h-4" />
-                      Entrar em Contato
+                      {partner.is_test ? "Contato Indisponível" : "Entrar em Contato"}
                     </Button>
-                    {partner.instagram && (
+                    {partner.instagram && !partner.is_test && (
                       <Button
                         variant="outline"
                         size="icon"
