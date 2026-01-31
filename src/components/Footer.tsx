@@ -141,13 +141,22 @@ export const Footer = () => {
             <span>para transformar vidas</span>
           </div>
 
-          {/* Privacy Policy Link */}
-          <Link 
-            to="/privacidade" 
-            className="text-primary-foreground/60 hover:text-primary-foreground text-sm transition-colors"
-          >
-            Política de Privacidade
-          </Link>
+          {/* Legal Links */}
+          <div className="flex items-center gap-4">
+            <Link 
+              to="/privacidade" 
+              className="text-primary-foreground/60 hover:text-primary-foreground text-sm transition-colors"
+            >
+              Política de Privacidade
+            </Link>
+            <span className="text-primary-foreground/40">|</span>
+            <Link 
+              to="/termos" 
+              className="text-primary-foreground/60 hover:text-primary-foreground text-sm transition-colors"
+            >
+              Termos de Uso
+            </Link>
+          </div>
 
           {/* Copyright and Admin */}
           <div className="flex items-center gap-4">

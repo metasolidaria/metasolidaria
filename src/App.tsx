@@ -17,6 +17,7 @@ const AdminInvitations = lazy(() => import("./pages/AdminInvitations"));
 const AdminEntities = lazy(() => import("./pages/AdminEntities"));
 const Profile = lazy(() => import("./pages/Profile"));
 const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
+const TermsOfService = lazy(() => import("./pages/TermsOfService"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 // Lazy load PWA prompt - not critical for initial render
@@ -131,6 +132,7 @@ const App = () => (
           <Route path="/admin/entidades" element={<Suspense fallback={<PageLoader />}><AdminEntities /></Suspense>} />
           <Route path="/perfil" element={<Suspense fallback={<PageLoader />}><Profile /></Suspense>} />
           <Route path="/privacidade" element={<Suspense fallback={<PageLoader />}><PrivacyPolicy /></Suspense>} />
+          <Route path="/termos" element={<Suspense fallback={<PageLoader />}><TermsOfService /></Suspense>} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<Suspense fallback={<PageLoader />}><NotFound /></Suspense>} />
         </Routes>
