@@ -20,6 +20,7 @@ export const partnerSpecialties = [
   "Despachante",
   "Eletricista",
   "Emissora",
+  "Engenharia",
   "Encanador",
   "Escola de Idiomas",
   "Escola/Colégio",
