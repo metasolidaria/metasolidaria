@@ -136,6 +136,23 @@ export const GroupsSection = ({ onRequireAuth }: GroupsSectionProps) => {
           </Button>
         </div>
 
+        {/* Aviso para usuários não logados */}
+        {!user && (
+          <div className="mb-8 p-4 rounded-xl bg-muted/50 border border-border animate-in fade-in duration-300">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Lock className="w-5 h-5 text-primary" />
+                <span className="text-sm">
+                  Para ver ou criar grupos, você precisa estar logado.
+                </span>
+              </div>
+              <Button size="sm" onClick={onRequireAuth} className="whitespace-nowrap">
+                Entrar / Cadastrar
+              </Button>
+            </div>
+          </div>
+        )}
+
         {/* Filtros */}
         <div className="flex flex-col gap-4 mb-8">
           <div className="flex flex-col sm:flex-row gap-4">
