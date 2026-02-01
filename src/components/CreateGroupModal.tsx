@@ -34,6 +34,7 @@ const donationTypes = [
   { id: "sopas", label: "Sopas (porções)", icon: "🍲" },
   { id: "brinquedos", label: "Brinquedos (unidades)", icon: "🧸" },
   { id: "higiene", label: "Kits de Higiene (unidades)", icon: "🧴" },
+  { id: "mudas", label: "Mudas de Árvore (unidades)", icon: "🌱" },
   { id: "sangue", label: "Doador de Sangue (doações)", icon: "🩸" },
   { id: "outro", label: "Outro", icon: "📦" },
 ];
