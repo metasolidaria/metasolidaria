@@ -21,6 +21,9 @@ interface CreatePartnerModalProps {
   onCreate: (partner: {
     name: string;
     city: string;
+    cep?: string;
+    latitude?: number | null;
+    longitude?: number | null;
     specialty?: string;
     whatsapp?: string;
     instagram?: string;
@@ -47,6 +50,9 @@ export const CreatePartnerModal = ({
   const [formData, setFormData] = useState({
     name: "",
     city: "",
+    cep: "",
+    latitude: "" as string,
+    longitude: "" as string,
     specialty: "",
     whatsapp: "",
     instagram: "",
@@ -58,7 +64,16 @@ export const CreatePartnerModal = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onCreate({
-      ...formData,
+      name: formData.name,
+      city: formData.city,
+      cep: formData.cep || undefined,
+      latitude: formData.latitude ? parseFloat(formData.latitude) : null,
+      longitude: formData.longitude ? parseFloat(formData.longitude) : null,
+      specialty: formData.specialty || undefined,
+      whatsapp: formData.whatsapp || undefined,
+      instagram: formData.instagram || undefined,
+      description: formData.description || undefined,
+      tier: formData.tier,
       is_approved: true,
       expires_at: formData.expires_at ? format(formData.expires_at, "yyyy-MM-dd") : null,
     });
@@ -68,6 +83,9 @@ export const CreatePartnerModal = ({
     setFormData({
       name: "",
       city: "",
+      cep: "",
+      latitude: "",
+      longitude: "",
       specialty: "",
       whatsapp: "",
       instagram: "",
@@ -102,13 +120,50 @@ export const CreatePartnerModal = ({
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="city">Cidade *</Label>
-            <CityAutocomplete
-              value={formData.city}
-              onChange={(city) => setFormData({ ...formData, city })}
-              required
-            />
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="city">Cidade *</Label>
+              <CityAutocomplete
+                value={formData.city}
+                onChange={(city) => setFormData({ ...formData, city })}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="cep">CEP</Label>
+              <Input
+                id="cep"
+                value={formData.cep}
+                onChange={(e) => setFormData({ ...formData, cep: e.target.value })}
+                placeholder="00000-000"
+                maxLength={9}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="latitude">Latitude</Label>
+              <Input
+                id="latitude"
+                type="number"
+                step="any"
+                value={formData.latitude}
+                onChange={(e) => setFormData({ ...formData, latitude: e.target.value })}
+                placeholder="-23.5505"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="longitude">Longitude</Label>
+              <Input
+                id="longitude"
+                type="number"
+                step="any"
+                value={formData.longitude}
+                onChange={(e) => setFormData({ ...formData, longitude: e.target.value })}
+                placeholder="-46.6333"
+              />
+            </div>
           </div>
 
           <div className="space-y-2">

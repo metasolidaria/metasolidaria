@@ -40,6 +40,9 @@ export const EditPartnerModal = ({
   const [formData, setFormData] = useState({
     name: "",
     city: "",
+    cep: "",
+    latitude: "" as string,
+    longitude: "" as string,
     specialty: "",
     whatsapp: "",
     instagram: "",
@@ -54,6 +57,9 @@ export const EditPartnerModal = ({
       setFormData({
         name: partner.name || "",
         city: partner.city || "",
+        cep: partner.cep || "",
+        latitude: partner.latitude != null ? String(partner.latitude) : "",
+        longitude: partner.longitude != null ? String(partner.longitude) : "",
         specialty: partner.specialty || "",
         whatsapp: partner.whatsapp || "",
         instagram: partner.instagram || "",
@@ -70,7 +76,17 @@ export const EditPartnerModal = ({
     if (partner) {
       onSave({ 
         id: partner.id, 
-        ...formData,
+        name: formData.name,
+        city: formData.city,
+        cep: formData.cep || null,
+        latitude: formData.latitude ? parseFloat(formData.latitude) : null,
+        longitude: formData.longitude ? parseFloat(formData.longitude) : null,
+        specialty: formData.specialty,
+        whatsapp: formData.whatsapp,
+        instagram: formData.instagram,
+        description: formData.description,
+        tier: formData.tier,
+        is_approved: formData.is_approved,
         expires_at: formData.expires_at ? format(formData.expires_at, "yyyy-MM-dd") : null,
       });
     }
@@ -94,13 +110,50 @@ export const EditPartnerModal = ({
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="city">Cidade *</Label>
-            <CityAutocomplete
-              value={formData.city}
-              onChange={(city) => setFormData({ ...formData, city })}
-              required
-            />
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="city">Cidade *</Label>
+              <CityAutocomplete
+                value={formData.city}
+                onChange={(city) => setFormData({ ...formData, city })}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="cep">CEP</Label>
+              <Input
+                id="cep"
+                value={formData.cep}
+                onChange={(e) => setFormData({ ...formData, cep: e.target.value })}
+                placeholder="00000-000"
+                maxLength={9}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="latitude">Latitude</Label>
+              <Input
+                id="latitude"
+                type="number"
+                step="any"
+                value={formData.latitude}
+                onChange={(e) => setFormData({ ...formData, latitude: e.target.value })}
+                placeholder="-23.5505"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="longitude">Longitude</Label>
+              <Input
+                id="longitude"
+                type="number"
+                step="any"
+                value={formData.longitude}
+                onChange={(e) => setFormData({ ...formData, longitude: e.target.value })}
+                placeholder="-46.6333"
+              />
+            </div>
           </div>
 
           <div className="space-y-2">

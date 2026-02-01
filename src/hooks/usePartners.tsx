@@ -9,6 +9,7 @@ export interface Partner {
   name: string;
   specialty: string;
   city: string;
+  cep: string | null;
   whatsapp: string;
   description: string | null;
   is_approved: boolean;
