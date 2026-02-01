@@ -1,61 +1,47 @@
 
-# Plano: Corrigir Exibição de Logos dos Parceiros
+# Plano: Corrigir Campo de Cidade Apagando ao Editar Parceiro
 
 ## Problema Identificado
 
-O parceiro **Diego Felipe de Souza Bueno** (Veterinário) tem uma foto salva no banco de dados (`logo_url`), mas ela não aparece no app porque **os componentes não usam o campo `logo_url`**.
+O componente `CityAutocomplete` não sincroniza seu estado interno (`query`) quando o valor externo (`value`) muda. Isso causa o bug reportado:
 
-O código atual simplesmente exibe o logo padrão (`/logo.jpg`) para todos os parceiros, exceto "NaturUai":
-
-```typescript
-// Código problemático (atual)
-src={partner.name === 'NaturUai' ? naturuaiLogo : logoImage}
-```
-
----
+1. Usuário abre o modal de edição de um parceiro
+2. O `EditPartnerModal` carrega os dados do parceiro via `useEffect`
+3. O `formData.city` é atualizado corretamente com a cidade do parceiro
+4. **Porém**, o `CityAutocomplete` mantém seu estado interno antigo (vazio ou do parceiro anterior)
+5. O campo aparece vazio, obrigando o usuário a digitar novamente
 
 ## Solução
 
-Atualizar a lógica de exibição de logos para seguir esta hierarquia:
+Adicionar um `useEffect` no componente `CityAutocomplete` para sincronizar o estado interno `query` sempre que o `value` prop mudar externamente.
 
-1. Usar `logo_url` do banco de dados se disponível
-2. Usar logo específico para "NaturUai" (asset estático)  
-3. Usar logo padrão como fallback
+## Arquivo a Modificar
 
----
+**`src/components/CityAutocomplete.tsx`**
 
-## Arquivos a Modificar
-
-### 1. `src/components/PartnersSection.tsx`
-
-- Adicionar função `getPartnerLogo` que verifica `partner.logo_url` primeiro
-- Atualizar o elemento `<img>` para usar essa função
-
-### 2. `src/components/GoldPartnersCarousel.tsx`
-
-- Atualizar a função `getPartnerLogo` existente para aceitar o objeto partner completo
-- Verificar `partner.logo_url` antes de usar fallbacks
-
-### 3. `src/components/HeroPremiumLogos.tsx`
-
-- Já usa `partner.logo_url` corretamente (não precisa de alteração)
-
----
-
-## Mudança de Código
-
-Nova lógica para `getPartnerLogo`:
+Adicionar após a linha 33:
 
 ```typescript
-const getPartnerLogo = (partner: { name?: string | null; logo_url?: string | null }) => {
-  if (partner.logo_url) return partner.logo_url;
-  if (partner.name === "NaturUai") return naturuaiLogo;
-  return logoImage;
-};
+// Sync internal query state when external value changes
+useEffect(() => {
+  setQuery(value);
+}, [value]);
 ```
 
----
+## Antes vs Depois
 
-## Resultado Esperado
+**Antes:**
+- Estado `query` definido apenas na montagem inicial
+- Mudanças no prop `value` são ignoradas
 
-Após a correção, a foto do Diego Felipe de Souza Bueno (e de qualquer outro parceiro com `logo_url` cadastrado) aparecerá corretamente no Guia de Parceiros e no Carrossel.
+**Depois:**
+- Estado `query` sincronizado com `value` sempre que este mudar
+- Campo exibe corretamente a cidade do parceiro ao abrir o modal
+
+## Impacto
+
+Esta correção também beneficiará outros componentes que usam `CityAutocomplete`:
+- `CreatePartnerModal`
+- `EditEntityModal`
+- `AuthModal` (registro de usuário)
+- `CreateGroupAdminModal`
