@@ -32,6 +32,11 @@ export const CityAutocomplete = ({
 }: CityAutocompleteProps) => {
   const [query, setQuery] = useState(value);
   const [cities, setCities] = useState<City[]>([]);
+
+  // Sync internal query state when external value changes
+  useEffect(() => {
+    setQuery(value);
+  }, [value]);
   const [filteredCities, setFilteredCities] = useState<{ nome: string; uf: string }[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
