@@ -32,6 +32,8 @@ const getDonationUnit = (donationType: string): string => {
       return "brinquedo(s)";
     case "higiene":
       return "kit(s)";
+    case "mudas":
+      return "muda(s)";
     default:
       return "unidade(s)";
   }
