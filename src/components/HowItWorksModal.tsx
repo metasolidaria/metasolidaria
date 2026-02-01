@@ -32,7 +32,7 @@ const steps = [
     icon: Heart,
     title: "Faça a Diferença",
     description:
-      "Suas metas pessoais se transformam em doações para quem precisa. Todos ganham!",
+      "Suas metas pessoais se transformam em doações reais. O grupo é responsável por organizar e entregar as doações para quem precisa. Todos ganham!",
   },
 ];
 
