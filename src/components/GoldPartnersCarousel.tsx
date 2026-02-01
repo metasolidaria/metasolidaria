@@ -75,8 +75,9 @@ export const GoldPartnersCarousel = ({ groupCity, groupId, groupName }: GoldPart
     }
   };
 
-  const getPartnerLogo = (partnerName: string) => {
-    if (partnerName === "NaturUai") return naturuaiLogo;
+  const getPartnerLogo = (partner: { name?: string | null; logo_url?: string | null }) => {
+    if (partner.logo_url) return partner.logo_url;
+    if (partner.name === "NaturUai") return naturuaiLogo;
     return logoImage;
   };
 
@@ -122,7 +123,7 @@ export const GoldPartnersCarousel = ({ groupCity, groupId, groupName }: GoldPart
                   <div className="flex items-start gap-3">
                     <Avatar className="w-16 h-16 rounded-xl border-2 border-amber-500/30 bg-white">
                       <AvatarImage 
-                        src={getPartnerLogo(partner.name || "")} 
+                        src={getPartnerLogo(partner)} 
                         alt={partner.name || "Parceiro"}
                         className="object-contain p-1.5"
                       />
