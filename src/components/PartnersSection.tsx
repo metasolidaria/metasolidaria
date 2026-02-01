@@ -123,6 +123,7 @@ const categoryIcons: Record<string, LucideIcon> = {
   "Arquiteto": Home,
   "Eletricista": Wrench,
   "Encanador": Wrench,
+  "Engenharia": Home,
   "Marcenaria/Serralheria": Wrench,
   // Criadores & Parceiros Institucionais
   "Influenciador/Criador de Conteúdo": Star,
