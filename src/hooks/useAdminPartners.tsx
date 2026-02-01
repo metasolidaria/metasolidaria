@@ -109,6 +109,9 @@ export const useAdminPartners = () => {
     mutationFn: async (partner: {
       name: string;
       city: string;
+      cep?: string;
+      latitude?: number | null;
+      longitude?: number | null;
       specialty?: string;
       whatsapp?: string;
       instagram?: string;

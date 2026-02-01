@@ -535,6 +535,7 @@ export type Database = {
       }
       partners: {
         Row: {
+          cep: string | null
           city: string
           created_at: string
           description: string | null
@@ -556,6 +557,7 @@ export type Database = {
           whatsapp: string | null
         }
         Insert: {
+          cep?: string | null
           city: string
           created_at?: string
           description?: string | null
@@ -577,6 +579,7 @@ export type Database = {
           whatsapp?: string | null
         }
         Update: {
+          cep?: string | null
           city?: string
           created_at?: string
           description?: string | null
@@ -860,6 +863,7 @@ export type Database = {
       }
       partners_public: {
         Row: {
+          cep: string | null
           city: string | null
           created_at: string | null
           description: string | null
@@ -877,6 +881,7 @@ export type Database = {
           whatsapp: string | null
         }
         Insert: {
+          cep?: string | null
           city?: string | null
           created_at?: string | null
           description?: string | null
@@ -894,6 +899,7 @@ export type Database = {
           whatsapp?: string | null
         }
         Update: {
+          cep?: string | null
           city?: string | null
           created_at?: string | null
           description?: string | null
