@@ -1,56 +1,61 @@
 
-# Plano: Desativar Parceiros de Teste
+# Plano: Corrigir Exibição de Logos dos Parceiros
 
-## Situação Atual
+## Problema Identificado
 
-Existem **10 parceiros de teste** no banco de dados, identificados pelo campo `is_test = true`:
+O parceiro **Diego Felipe de Souza Bueno** (Veterinário) tem uma foto salva no banco de dados (`logo_url`), mas ela não aparece no app porque **os componentes não usam o campo `logo_url`**.
 
-| Nome | Tier |
-|------|------|
-| Supermercado Bom Preço | ouro |
-| Farmácia Saúde Total | ouro |
-| Academia Corpo em Forma | apoiador |
-| Restaurante Sabor da Terra | apoiador |
-| Pet Shop Amigo Fiel | apoiador |
-| Padaria Pão Quente | apoiador |
-| Loja de Roupas Elegância | apoiador |
-| Clínica Dr. Carlos | apoiador |
-| Hamburgueria Artesanal | apoiador |
-| Loja de Móveis Casa Nova | apoiador |
+O código atual simplesmente exibe o logo padrão (`/logo.jpg`) para todos os parceiros, exceto "NaturUai":
 
----
-
-## Opção Recomendada: Desaprovar (manter no banco)
-
-Definir `is_approved = false` para todos os parceiros de teste. Assim eles não aparecem mais no app, mas ficam preservados caso você queira reativá-los no futuro para demonstrações.
-
-### Comando SQL
-
-```sql
-UPDATE partners 
-SET is_approved = false 
-WHERE is_test = true;
+```typescript
+// Código problemático (atual)
+src={partner.name === 'NaturUai' ? naturuaiLogo : logoImage}
 ```
 
 ---
 
-## Opção Alternativa: Deletar permanentemente
+## Solução
 
-Se preferir remover completamente os dados de teste:
+Atualizar a lógica de exibição de logos para seguir esta hierarquia:
 
-```sql
-DELETE FROM partners 
-WHERE is_test = true;
+1. Usar `logo_url` do banco de dados se disponível
+2. Usar logo específico para "NaturUai" (asset estático)  
+3. Usar logo padrão como fallback
+
+---
+
+## Arquivos a Modificar
+
+### 1. `src/components/PartnersSection.tsx`
+
+- Adicionar função `getPartnerLogo` que verifica `partner.logo_url` primeiro
+- Atualizar o elemento `<img>` para usar essa função
+
+### 2. `src/components/GoldPartnersCarousel.tsx`
+
+- Atualizar a função `getPartnerLogo` existente para aceitar o objeto partner completo
+- Verificar `partner.logo_url` antes de usar fallbacks
+
+### 3. `src/components/HeroPremiumLogos.tsx`
+
+- Já usa `partner.logo_url` corretamente (não precisa de alteração)
+
+---
+
+## Mudança de Código
+
+Nova lógica para `getPartnerLogo`:
+
+```typescript
+const getPartnerLogo = (partner: { name?: string | null; logo_url?: string | null }) => {
+  if (partner.logo_url) return partner.logo_url;
+  if (partner.name === "NaturUai") return naturuaiLogo;
+  return logoImage;
+};
 ```
 
 ---
 
-## Resultado
+## Resultado Esperado
 
-Após a execução, os parceiros de teste não aparecerão mais em nenhum lugar do app (guia de parceiros, carrossel, hero, etc.).
-
----
-
-## Arquivos Afetados
-
-Nenhuma alteração de código é necessária. As queries já filtram por `is_approved = true`, então basta atualizar o banco de dados.
+Após a correção, a foto do Diego Felipe de Souza Bueno (e de qualquer outro parceiro com `logo_url` cadastrado) aparecerá corretamente no Guia de Parceiros e no Carrossel.
