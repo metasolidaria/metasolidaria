@@ -30,6 +30,7 @@ export const partnerSpecialties = [
   "Farmácia",
   "Fisioterapeuta",
   "Hamburgueria",
+  "Indústria",
   "Influenciador/Criador de Conteúdo",
   "Jornal",
   "Laboratório/Clínica Popular",
