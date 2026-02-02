@@ -132,6 +132,8 @@ const categoryIcons: Record<string, LucideIcon> = {
   "Emissora": Tv,
   "Jornal": Tv,
   "ONG/Instituição Parceira": Handshake,
+  // Indústria
+  "Indústria": Building2,
 };
 
 // Gera allCategories dinamicamente a partir da lista centralizada
