@@ -1,47 +1,62 @@
 
-# Plano: Corrigir Campo de Cidade Apagando ao Editar Parceiro
+# Plano: Adicionar Selos de Tier nos Cards de Parceiros
 
-## Problema Identificado
+## Situação Atual
 
-O componente `CityAutocomplete` não sincroniza seu estado interno (`query`) quando o valor externo (`value`) muda. Isso causa o bug reportado:
+O código já exibe um selo "Ouro" amarelo para parceiros `ouro` e `premium`, mas:
+- Parceiros **Premium** mostram "Ouro" (incorreto)
+- Parceiros **Apoiador** não têm selo (falta adicionar)
 
-1. Usuário abre o modal de edição de um parceiro
-2. O `EditPartnerModal` carrega os dados do parceiro via `useEffect`
-3. O `formData.city` é atualizado corretamente com a cidade do parceiro
-4. **Porém**, o `CityAutocomplete` mantém seu estado interno antigo (vazio ou do parceiro anterior)
-5. O campo aparece vazio, obrigando o usuário a digitar novamente
+## Alterações no `src/components/PartnersSection.tsx`
 
-## Solução
+Vou modificar a seção de badges (linhas 652-665) para exibir selos diferentes por tier:
 
-Adicionar um `useEffect` no componente `CityAutocomplete` para sincronizar o estado interno `query` sempre que o `value` prop mudar externamente.
+| Tier | Selo | Cor | Ícone |
+|------|------|-----|-------|
+| **premium** | "Premium" | Roxo/Ciano | Crown |
+| **ouro** | "Ouro" | Amarelo | Crown |
+| **apoiador** | "Apoiador" | Rosa | Heart |
+
+### Código Antes:
+```tsx
+{(partner.tier === 'ouro' || partner.tier === 'premium') && (
+  <span className="... bg-yellow-500 text-yellow-900">
+    <Crown /> Ouro
+  </span>
+)}
+```
+
+### Código Depois:
+```tsx
+{partner.tier === 'premium' && (
+  <span className="... bg-purple-500 text-white">
+    <Crown /> Premium
+  </span>
+)}
+{partner.tier === 'ouro' && (
+  <span className="... bg-yellow-500 text-yellow-900">
+    <Crown /> Ouro
+  </span>
+)}
+{partner.tier === 'apoiador' && (
+  <span className="... bg-rose-500 text-white">
+    <Heart /> Apoiador
+  </span>
+)}
+```
+
+## Também Atualizar o Destaque Visual (Ring)
+
+Atualmente, só parceiros Ouro/Premium têm um anel dourado. Vou adicionar um anel rosa suave para apoiadores:
+
+- **Premium**: `ring-purple-500/50`
+- **Ouro**: `ring-yellow-500/50`
+- **Apoiador**: `ring-rose-400/30` (mais sutil)
 
 ## Arquivo a Modificar
 
-**`src/components/CityAutocomplete.tsx`**
+- `src/components/PartnersSection.tsx`
 
-Adicionar após a linha 33:
+## Resultado Visual
 
-```typescript
-// Sync internal query state when external value changes
-useEffect(() => {
-  setQuery(value);
-}, [value]);
-```
-
-## Antes vs Depois
-
-**Antes:**
-- Estado `query` definido apenas na montagem inicial
-- Mudanças no prop `value` são ignoradas
-
-**Depois:**
-- Estado `query` sincronizado com `value` sempre que este mudar
-- Campo exibe corretamente a cidade do parceiro ao abrir o modal
-
-## Impacto
-
-Esta correção também beneficiará outros componentes que usam `CityAutocomplete`:
-- `CreatePartnerModal`
-- `EditEntityModal`
-- `AuthModal` (registro de usuário)
-- `CreateGroupAdminModal`
+Cada card de parceiro terá seu selo correspondente ao tier, tornando fácil identificar o nível de parceria visualmente.
