@@ -38,6 +38,7 @@ import {
   GraduationCap,
   Tv,
   Dog,
+  Heart,
   type LucideIcon
 } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -645,16 +646,30 @@ export const PartnersSection = () => {
                       ? 'opacity-75' 
                       : 'hover:shadow-glow hover:-translate-y-1'
                   } ${
-                    (partner.tier === 'ouro' || partner.tier === 'premium') ? 'ring-2 ring-yellow-500/50' : ''
+                    partner.tier === 'premium' ? 'ring-2 ring-purple-500/50' :
+                    partner.tier === 'ouro' ? 'ring-2 ring-yellow-500/50' :
+                    partner.tier === 'apoiador' ? 'ring-2 ring-rose-400/30' : ''
                   }`}
                   style={{ animationDelay: `${index * 100}ms` }}
                 >
                   {/* Badges de Tier e Teste */}
                   <div className="px-5 pt-4 flex items-center gap-2 flex-wrap">
-                    {(partner.tier === 'ouro' || partner.tier === 'premium') && (
+                    {partner.tier === 'premium' && (
+                      <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-purple-500 text-white">
+                        <Crown className="w-3 h-3" />
+                        Premium
+                      </span>
+                    )}
+                    {partner.tier === 'ouro' && (
                       <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-yellow-500 text-yellow-900">
                         <Crown className="w-3 h-3" />
                         Ouro
+                      </span>
+                    )}
+                    {partner.tier === 'apoiador' && (
+                      <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-rose-500 text-white">
+                        <Heart className="w-3 h-3" />
+                        Apoiador
                       </span>
                     )}
                     {partner.is_test && (
