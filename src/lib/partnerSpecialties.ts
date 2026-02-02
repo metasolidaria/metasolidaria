@@ -2,6 +2,7 @@
 export const partnerSpecialties = [
   "Academia",
   "Açougue",
+  "Adega",
   "Advogado",
   "Arquiteto",
   "Atleta/Personalidade",
