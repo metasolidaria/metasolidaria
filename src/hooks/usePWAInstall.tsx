@@ -5,6 +5,8 @@ interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
 }
 
+const INSTALLED_KEY = 'pwa-installed';
+
 export const usePWAInstall = () => {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [isInstallable, setIsInstallable] = useState(false);
@@ -15,14 +17,23 @@ export const usePWAInstall = () => {
     // Detect iOS devices
     const iOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
     setIsIOSDevice(iOS);
-    // Check if app is already installed
+
+    // Check if already installed via localStorage
+    if (localStorage.getItem(INSTALLED_KEY) === 'true') {
+      setIsInstalled(true);
+      return;
+    }
+
+    // Check if app is already installed via display-mode
     const checkInstalled = () => {
       if (window.matchMedia('(display-mode: standalone)').matches) {
+        localStorage.setItem(INSTALLED_KEY, 'true');
         setIsInstalled(true);
         return true;
       }
       // Check for iOS standalone mode
       if ((navigator as any).standalone === true) {
+        localStorage.setItem(INSTALLED_KEY, 'true');
         setIsInstalled(true);
         return true;
       }
@@ -38,6 +49,7 @@ export const usePWAInstall = () => {
     };
 
     const handleAppInstalled = () => {
+      localStorage.setItem(INSTALLED_KEY, 'true');
       setIsInstalled(true);
       setIsInstallable(false);
       setDeferredPrompt(null);
@@ -60,6 +72,7 @@ export const usePWAInstall = () => {
       const { outcome } = await deferredPrompt.userChoice;
       
       if (outcome === 'accepted') {
+        localStorage.setItem(INSTALLED_KEY, 'true');
         setIsInstalled(true);
         setIsInstallable(false);
       }
