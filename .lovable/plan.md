@@ -1,62 +1,82 @@
 
-# Plano: Adicionar Selos de Tier nos Cards de Parceiros
+# Plano: Persistir Estado de Instalação do PWA no localStorage
 
-## Situação Atual
+## Problema Atual
 
-O código já exibe um selo "Ouro" amarelo para parceiros `ouro` e `premium`, mas:
-- Parceiros **Premium** mostram "Ouro" (incorreto)
-- Parceiros **Apoiador** não têm selo (falta adicionar)
+A detecção de "app instalado" só funciona quando o usuário está **dentro do app** (modo standalone). Quando ele acessa pelo navegador comum depois de já ter instalado, o botão "Baixar App" aparece novamente porque:
 
-## Alterações no `src/components/PartnersSection.tsx`
+- `display-mode: standalone` só é `true` quando abre pelo ícone do app
+- `navigator.standalone` (iOS) também só funciona dentro do PWA
 
-Vou modificar a seção de badges (linhas 652-665) para exibir selos diferentes por tier:
+## Solução
 
-| Tier | Selo | Cor | Ícone |
-|------|------|-----|-------|
-| **premium** | "Premium" | Roxo/Ciano | Crown |
-| **ouro** | "Ouro" | Amarelo | Crown |
-| **apoiador** | "Apoiador" | Rosa | Heart |
+Salvar no `localStorage` quando o usuário instalar o app com sucesso, para que o botão fique oculto mesmo quando acessar pelo navegador.
 
-### Código Antes:
-```tsx
-{(partner.tier === 'ouro' || partner.tier === 'premium') && (
-  <span className="... bg-yellow-500 text-yellow-900">
-    <Crown /> Ouro
-  </span>
-)}
+## Alterações no `src/hooks/usePWAInstall.tsx`
+
+### 1. Adicionar constante para a chave do localStorage
+
+```typescript
+const INSTALLED_KEY = 'pwa-installed';
 ```
 
-### Código Depois:
-```tsx
-{partner.tier === 'premium' && (
-  <span className="... bg-purple-500 text-white">
-    <Crown /> Premium
-  </span>
-)}
-{partner.tier === 'ouro' && (
-  <span className="... bg-yellow-500 text-yellow-900">
-    <Crown /> Ouro
-  </span>
-)}
-{partner.tier === 'apoiador' && (
-  <span className="... bg-rose-500 text-white">
-    <Heart /> Apoiador
-  </span>
-)}
+### 2. Verificar localStorage na inicialização
+
+Dentro do `useEffect`, antes de verificar o `display-mode`:
+
+```typescript
+// Verificar se já foi instalado anteriormente
+if (localStorage.getItem(INSTALLED_KEY) === 'true') {
+  setIsInstalled(true);
+  return;
+}
 ```
 
-## Também Atualizar o Destaque Visual (Ring)
+### 3. Salvar no localStorage quando instalar
 
-Atualmente, só parceiros Ouro/Premium têm um anel dourado. Vou adicionar um anel rosa suave para apoiadores:
+No `handleAppInstalled` e quando `outcome === 'accepted'`:
 
-- **Premium**: `ring-purple-500/50`
-- **Ouro**: `ring-yellow-500/50`
-- **Apoiador**: `ring-rose-400/30` (mais sutil)
+```typescript
+localStorage.setItem(INSTALLED_KEY, 'true');
+```
+
+## Fluxo Atualizado
+
+```text
+┌─────────────────────────────────────────────────────────────┐
+│                    Usuário abre o site                       │
+└─────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+               ┌──────────────────────────────┐
+               │ localStorage tem 'pwa-installed'? │
+               └──────────────────────────────┘
+                    │                    │
+                   Sim                  Não
+                    │                    │
+                    ▼                    ▼
+           isInstalled=true    Verificar display-mode
+           (oculta botão)               │
+                              ┌─────────┴─────────┐
+                             Sim                 Não
+                              │                   │
+                              ▼                   ▼
+                     isInstalled=true     Mostrar botão
+                                                  │
+                                                  ▼
+                                      Usuário clica "Instalar"
+                                                  │
+                                                  ▼
+                                      Salvar 'pwa-installed' = true
+                                                  │
+                                                  ▼
+                                           Ocultar botão
+```
+
+## Benefício
+
+Mesmo que o usuário abra o site pelo navegador depois de já ter instalado, o botão "Baixar App" não aparecerá mais.
 
 ## Arquivo a Modificar
 
-- `src/components/PartnersSection.tsx`
-
-## Resultado Visual
-
-Cada card de parceiro terá seu selo correspondente ao tier, tornando fácil identificar o nível de parceria visualmente.
+- `src/hooks/usePWAInstall.tsx`
