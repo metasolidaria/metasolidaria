@@ -552,6 +552,11 @@ export const PartnersSection = () => {
                   )}
                 </div>
               )}
+              {/* Observação sobre filtro de categorias */}
+              <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
+                <Info className="w-3 h-3" />
+                Ao escolher uma cidade, somente as categorias com parceiros nela ficam disponíveis.
+              </p>
             </div>
 
             {/* Botão de Proximidade */}
