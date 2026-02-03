@@ -8,19 +8,10 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 
-const LAUNCH_SEEN_KEY = "launch-announcement-seen";
-
 export const LaunchAnnouncementModal = () => {
-  const [isOpen, setIsOpen] = useState(false);
-
-  useEffect(() => {
-    if (!localStorage.getItem(LAUNCH_SEEN_KEY)) {
-      setIsOpen(true);
-    }
-  }, []);
+  const [isOpen, setIsOpen] = useState(true);
 
   const handleClose = () => {
-    localStorage.setItem(LAUNCH_SEEN_KEY, "true");
     setIsOpen(false);
   };
 
