@@ -1,113 +1,171 @@
 
-# Plano: Mascote ao Lado do Contador com Animacao Flutuante
+# Plano: Parceiros Dinamicos com Rotacao Automatica
 
 ## Objetivo
-Reposicionar o mascote para ficar ao lado do numero de "doacoes realizadas" (contador central) e adicionar uma animacao flutuante sutil para torna-lo mais dinamico.
+Modificar o componente `PremiumPartnerSlots` para exibir parceiros de forma dinamica, mostrando **um parceiro por vez** no topo com rotacao automatica. A prioridade sera: primeiro todos os parceiros **Premium**, depois os parceiros **Ouro**.
+
+## Comportamento Desejado
+
+1. **Ordenacao por prioridade**: Premium primeiro, Ouro depois
+2. **Rotacao automatica**: A cada X segundos (ex: 4s), muda para o proximo parceiro
+3. **Exibicao individual**: Mostra apenas um parceiro por vez com animacao de transicao suave
+4. **Loop infinito**: Apos o ultimo parceiro, volta ao primeiro
+
+## Layout Visual
+
+```text
+┌─────────────────────────────────────────────────────────────┐
+│                                                             │
+│   ⭐ Parceiros Premium & Ouro                               │
+│                                                             │
+│         ┌─────────────────────────────────────┐             │
+│         │    [Logo]                           │             │
+│         │    Nome do Parceiro                 │             │
+│         │    Especialidade                    │             │
+│         │    [Badge: Premium ou Ouro]         │             │
+│         └─────────────────────────────────────┘             │
+│                                                             │
+│                    • • ○ • •  (indicadores)                 │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+
+Apos 4 segundos: fade-out -> proximo parceiro -> fade-in
+```
 
 ## Alteracoes
 
-### 1. Reorganizar o Layout do Contador Central
+### Arquivo: `src/components/PremiumPartnerSlots.tsx`
 
-Atualmente o contador esta centralizado. Vamos criar um layout flex horizontal que posiciona o numero e texto de doacoes junto com o mascote ao lado:
-
-```text
-Desktop:
-┌─────────────────────────────────────────────────────────────┐
-│                      Doadometro                             │
-│              Impacto social gerado ate o momento            │
-│                                                             │
-│          ┌──────────────────┐   ┌─────────────────┐         │
-│          │      1.234       │   │   [Mascote]     │         │
-│          │ doacoes realizadas│   │   flutuando     │         │
-│          └──────────────────┘   └─────────────────┘         │
-│                                                             │
-│              [Cards de categorias]                          │
-│                                                             │
-│              [Premium Partners]                             │
-└─────────────────────────────────────────────────────────────┘
-
-Mobile:
-┌─────────────────────────────┐
-│       Doadometro            │
-│                             │
-│          1.234              │
-│    doacoes realizadas       │
-│                             │
-│       [Mascote flutuando]   │
-│                             │
-│   [Cards de categorias]     │
-│                             │
-│    [Premium Partners]       │
-└─────────────────────────────┘
-```
-
-### 2. Usar Animacao Flutuante Existente
-
-O projeto ja possui a animacao `animate-float` configurada no tailwind.config.ts:
-```typescript
-"float": {
-  "0%, 100%": { transform: "translateY(0)" },
-  "50%": { transform: "translateY(-10px)" },
-}
-// animation: "float 3s ease-in-out infinite"
-```
-
-## Arquivo a Modificar
-
-| Arquivo | Acao |
-|---------|------|
-| `src/components/ImpactCounter.tsx` | Reorganizar layout e adicionar animacao |
+| Mudanca | Descricao |
+|---------|-----------|
+| Query expandida | Buscar parceiros Premium E Ouro (nao apenas Premium) |
+| Ordenacao | Ordenar por tier (premium primeiro) e depois por nome |
+| Estado de rotacao | Adicionar `currentIndex` com `setInterval` para rotacao automatica |
+| Exibicao individual | Mostrar apenas o parceiro atual (nao carousel) |
+| Animacao de transicao | Usar `animate-in fade-in` para entrada suave |
+| Indicadores | Adicionar pontos indicadores do parceiro atual |
+| Badge de tier | Mostrar se e Premium ou Ouro |
 
 ## Detalhes Tecnicos
 
-### Mudancas no ImpactCounter.tsx:
-
-1. **Remover o mascote da posicao atual** (lado direito em grid separado)
-
-2. **Criar novo layout para o contador central com mascote inline**:
+### 1. Query modificada para buscar Premium e Ouro:
 
 ```typescript
-{/* Central Counter with Mascot */}
-<div
-  className={`flex flex-col lg:flex-row items-center justify-center gap-6 lg:gap-10 mb-6 ${isInView ? 'animate-in fade-in zoom-in-95 duration-500' : 'opacity-0'}`}
-  style={{ animationDelay: '200ms' }}
->
-  {/* Counter */}
-  <div className="text-center">
-    <div className="text-6xl md:text-8xl font-bold text-primary-foreground mb-2">
-      {isLoading ? (
-        <Skeleton className="h-20 md:h-24 w-48 md:w-64 mx-auto bg-primary-foreground/20" />
-      ) : isInView ? (
-        <AnimatedNumber value={impactData?.totalDonations || 0} suffix="" />
-      ) : null}
-    </div>
-    <p className="text-primary-foreground/70 text-xl">
-      doacoes realizadas
-    </p>
-  </div>
+const useAllPremiumAndGoldPartners = () => {
+  return useQuery({
+    queryKey: ["allPremiumGoldPartnersSlots"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("partners_public")
+        .select("id, name, logo_url, specialty, instagram, whatsapp, tier, is_test")
+        .eq("is_approved", true)
+        .in("tier", ["premium", "ouro"])
+        .order("name", { ascending: true });
+
+      if (error) throw error;
+      
+      // Remove duplicatas e ordena: Premium primeiro, depois Ouro
+      const uniquePartners = data?.reduce((acc, partner) => {
+        if (!acc.find(p => p.name === partner.name)) {
+          acc.push(partner);
+        }
+        return acc;
+      }, [] as typeof data) || [];
+      
+      // Ordenar por tier (premium primeiro)
+      return uniquePartners.sort((a, b) => {
+        if (a.tier === "premium" && b.tier !== "premium") return -1;
+        if (a.tier !== "premium" && b.tier === "premium") return 1;
+        return 0;
+      });
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+};
+```
+
+### 2. Estado de rotacao automatica:
+
+```typescript
+const [currentIndex, setCurrentIndex] = useState(0);
+
+useEffect(() => {
+  if (!partners || partners.length <= 1) return;
   
-  {/* Mascot with floating animation */}
-  <img 
-    src="/mascote-meta-solidaria.png" 
-    alt="Mascote Meta Solidaria" 
-    className="w-28 lg:w-40 xl:w-48 h-auto drop-shadow-lg animate-float"
-  />
-</div>
+  const interval = setInterval(() => {
+    setCurrentIndex((prev) => (prev + 1) % partners.length);
+  }, 4000); // Rotacao a cada 4 segundos
+  
+  return () => clearInterval(interval);
+}, [partners]);
 ```
 
-3. **Remover o container do mascote separado** (linhas 139-149 e 194-204)
+### 3. Exibicao individual com animacao:
 
-4. **Ajustar o grid do container principal** para remover a coluna do mascote:
 ```typescript
-// De:
-<div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-8 items-center">
+const currentPartner = partners[currentIndex];
 
-// Para:
-<div className="w-full max-w-5xl">
+return (
+  <div className="space-y-3">
+    <div className="flex items-center gap-2 mb-4">
+      <Crown className="w-5 h-5 text-purple-500" />
+      <Star className="w-5 h-5 text-yellow-400 fill-yellow-400" />
+      <h3 className="text-lg font-semibold text-primary-foreground">
+        Parceiros Solidarios
+      </h3>
+    </div>
+    
+    {/* Parceiro atual com animacao */}
+    <div 
+      key={currentPartner.id}
+      className="animate-in fade-in duration-500 ..."
+    >
+      {/* Card do parceiro */}
+    </div>
+    
+    {/* Indicadores de posicao */}
+    <div className="flex justify-center gap-1.5 mt-4">
+      {partners.map((_, idx) => (
+        <button
+          key={idx}
+          onClick={() => setCurrentIndex(idx)}
+          className={`w-2 h-2 rounded-full transition-colors ${
+            idx === currentIndex 
+              ? "bg-primary-foreground" 
+              : "bg-primary-foreground/30"
+          }`}
+        />
+      ))}
+    </div>
+  </div>
+);
 ```
 
-### Comportamento da Animacao Flutuante:
-- Move o mascote 10px para cima e volta suavemente
-- Duracao de 3 segundos por ciclo
-- Repete infinitamente
-- Efeito sutil que da vida ao mascote sem distrair
+### 4. Diferenciacao visual por tier:
+
+```typescript
+const isPremium = currentPartner.tier === "premium";
+
+// Badge
+<Badge className={isPremium 
+  ? "bg-purple-500/20 text-purple-300 border-purple-500/30" 
+  : "bg-amber-500/20 text-amber-300 border-amber-500/30"
+}>
+  {isPremium ? "Premium" : "Ouro"}
+</Badge>
+
+// Borda do avatar
+<Avatar className={`border-2 ${
+  isPremium ? "border-purple-400/50" : "border-yellow-400/50"
+} ...`}>
+```
+
+### 5. Acao de clique diferenciada:
+- **Premium**: Abre Instagram
+- **Ouro**: Abre WhatsApp
+
+## Resumo das Mudancas
+
+| Componente | Acao |
+|------------|------|
+| `src/components/PremiumPartnerSlots.tsx` | Refatorar completamente para exibicao individual com rotacao |
