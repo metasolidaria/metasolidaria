@@ -14,6 +14,7 @@ const ImpactCounter = lazy(() => import("@/components/ImpactCounter").then(m => 
 const GroupsSection = lazy(() => import("@/components/GroupsSection").then(m => ({ default: m.GroupsSection })));
 const EntitiesSection = lazy(() => import("@/components/EntitiesSection").then(m => ({ default: m.EntitiesSection })));
 const PartnersSection = lazy(() => import("@/components/PartnersSection").then(m => ({ default: m.PartnersSection })));
+const LaunchAnnouncementModal = lazy(() => import("@/components/LaunchAnnouncementModal").then(m => ({ default: m.LaunchAnnouncementModal })));
 
 // Minimal loading placeholder for sections
 const SectionPlaceholder = () => (
@@ -132,6 +133,9 @@ const Index = () => {
       <Footer />
       <Suspense fallback={null}>
         <AuthModal open={isAuthModalOpen} onOpenChange={setIsAuthModalOpen} />
+      </Suspense>
+      <Suspense fallback={null}>
+        <LaunchAnnouncementModal />
       </Suspense>
     </div>
   );
