@@ -1,82 +1,73 @@
 
-# Plano: Persistir Estado de Instalação do PWA no localStorage
+# Plano: Popup de Lançamento Oficial em 07/02
 
-## Problema Atual
+## Objetivo
+Criar um popup que aparece ao abrir o site/app informando sobre o lançamento oficial em 07 de fevereiro.
 
-A detecção de "app instalado" só funciona quando o usuário está **dentro do app** (modo standalone). Quando ele acessa pelo navegador comum depois de já ter instalado, o botão "Baixar App" aparece novamente porque:
+## Implementação
 
-- `display-mode: standalone` só é `true` quando abre pelo ícone do app
-- `navigator.standalone` (iOS) também só funciona dentro do PWA
+### 1. Criar componente `LaunchAnnouncementModal.tsx`
 
-## Solução
+Novo arquivo em `src/components/LaunchAnnouncementModal.tsx`:
 
-Salvar no `localStorage` quando o usuário instalar o app com sucesso, para que o botão fique oculto mesmo quando acessar pelo navegador.
+- Utilizar o componente `Dialog` do Radix UI (já existente no projeto)
+- Exibir data do lançamento: **07/02**
+- Design atrativo com ícone de foguete ou confete
+- Botão para fechar o modal
+- Salvar no `localStorage` para não mostrar novamente após o usuário fechar
 
-## Alterações no `src/hooks/usePWAInstall.tsx`
-
-### 1. Adicionar constante para a chave do localStorage
-
-```typescript
-const INSTALLED_KEY = 'pwa-installed';
-```
-
-### 2. Verificar localStorage na inicialização
-
-Dentro do `useEffect`, antes de verificar o `display-mode`:
-
-```typescript
-// Verificar se já foi instalado anteriormente
-if (localStorage.getItem(INSTALLED_KEY) === 'true') {
-  setIsInstalled(true);
-  return;
-}
-```
-
-### 3. Salvar no localStorage quando instalar
-
-No `handleAppInstalled` e quando `outcome === 'accepted'`:
-
-```typescript
-localStorage.setItem(INSTALLED_KEY, 'true');
-```
-
-## Fluxo Atualizado
+### 2. Estrutura do Modal
 
 ```text
-┌─────────────────────────────────────────────────────────────┐
-│                    Usuário abre o site                       │
-└─────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-               ┌──────────────────────────────┐
-               │ localStorage tem 'pwa-installed'? │
-               └──────────────────────────────┘
-                    │                    │
-                   Sim                  Não
-                    │                    │
-                    ▼                    ▼
-           isInstalled=true    Verificar display-mode
-           (oculta botão)               │
-                              ┌─────────┴─────────┐
-                             Sim                 Não
-                              │                   │
-                              ▼                   ▼
-                     isInstalled=true     Mostrar botão
-                                                  │
-                                                  ▼
-                                      Usuário clica "Instalar"
-                                                  │
-                                                  ▼
-                                      Salvar 'pwa-installed' = true
-                                                  │
-                                                  ▼
-                                           Ocultar botão
+┌─────────────────────────────────────┐
+│              🚀                     │
+│                                     │
+│     LANÇAMENTO OFICIAL              │
+│                                     │
+│         07/02/2025                  │
+│                                     │
+│   Estamos chegando! Prepare-se      │
+│   para fazer parte da maior rede    │
+│   de solidariedade do Brasil.       │
+│                                     │
+│        [ Entendi! ]                 │
+└─────────────────────────────────────┘
 ```
 
-## Benefício
+### 3. Lógica de exibição
 
-Mesmo que o usuário abra o site pelo navegador depois de já ter instalado, o botão "Baixar App" não aparecerá mais.
+- Verificar `localStorage` na inicialização
+- Se `launch-announcement-seen` não existir, mostrar o modal
+- Ao fechar, salvar `launch-announcement-seen = true` no `localStorage`
 
-## Arquivo a Modificar
+### 4. Integrar no Index.tsx
 
-- `src/hooks/usePWAInstall.tsx`
+- Importar com lazy loading para não impactar performance
+- Adicionar ao componente Index junto com os outros modais
+
+## Arquivos a Criar/Modificar
+
+| Arquivo | Ação |
+|---------|------|
+| `src/components/LaunchAnnouncementModal.tsx` | Criar |
+| `src/pages/Index.tsx` | Modificar (adicionar o componente) |
+
+## Detalhes Técnicos
+
+```typescript
+// Constante para localStorage
+const LAUNCH_SEEN_KEY = 'launch-announcement-seen';
+
+// Verificação inicial
+useEffect(() => {
+  if (!localStorage.getItem(LAUNCH_SEEN_KEY)) {
+    setIsOpen(true);
+  }
+}, []);
+
+// Ao fechar
+const handleClose = () => {
+  localStorage.setItem(LAUNCH_SEEN_KEY, 'true');
+  setIsOpen(false);
+};
+```
