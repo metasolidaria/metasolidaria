@@ -1,73 +1,72 @@
 
-# Plano: Popup de Lançamento Oficial em 07/02
+
+# Plano: Atualizar Popup de Lançamento com Logo e Mascote
 
 ## Objetivo
-Criar um popup que aparece ao abrir o site/app informando sobre o lançamento oficial em 07 de fevereiro.
+Corrigir a data para 2026 e adicionar o logo do Meta Solidária junto com o mascote no popup de lançamento.
 
-## Implementação
+## Alterações
 
-### 1. Criar componente `LaunchAnnouncementModal.tsx`
+### 1. Salvar imagem do mascote
+Copiar a imagem enviada para `public/mascote-meta-solidaria.png`.
 
-Novo arquivo em `src/components/LaunchAnnouncementModal.tsx`:
+### 2. Atualizar LaunchAnnouncementModal.tsx
 
-- Utilizar o componente `Dialog` do Radix UI (já existente no projeto)
-- Exibir data do lançamento: **07/02**
-- Design atrativo com ícone de foguete ou confete
-- Botão para fechar o modal
-- Salvar no `localStorage` para não mostrar novamente após o usuário fechar
+- Corrigir data de `07/02/2025` para `07/02/2026`
+- Substituir o ícone de foguete pelo logo do Meta Solidária (`/logo.jpg`)
+- Adicionar o mascote abaixo do texto
 
-### 2. Estrutura do Modal
+### 3. Novo Layout Visual
 
 ```text
-┌─────────────────────────────────────┐
-│              🚀                     │
-│                                     │
-│     LANÇAMENTO OFICIAL              │
-│                                     │
-│         07/02/2025                  │
-│                                     │
-│   Estamos chegando! Prepare-se      │
-│   para fazer parte da maior rede    │
-│   de solidariedade do Brasil.       │
-│                                     │
-│        [ Entendi! ]                 │
-└─────────────────────────────────────┘
+┌─────────────────────────────────────────────┐
+│                                             │
+│        [Logo Meta Solidária - circular]     │
+│                                             │
+│        LANÇAMENTO OFICIAL                   │
+│                                             │
+│            07/02/2026                       │
+│                                             │
+│   Estamos chegando! Prepare-se para fazer   │
+│   parte da maior rede de solidariedade      │
+│   do Brasil.                                │
+│                                             │
+│        [Mascote fazendo joinha]             │
+│                                             │
+│             [ Entendi! ]                    │
+└─────────────────────────────────────────────┘
 ```
 
-### 3. Lógica de exibição
-
-- Verificar `localStorage` na inicialização
-- Se `launch-announcement-seen` não existir, mostrar o modal
-- Ao fechar, salvar `launch-announcement-seen = true` no `localStorage`
-
-### 4. Integrar no Index.tsx
-
-- Importar com lazy loading para não impactar performance
-- Adicionar ao componente Index junto com os outros modais
-
-## Arquivos a Criar/Modificar
+## Arquivos
 
 | Arquivo | Ação |
 |---------|------|
-| `src/components/LaunchAnnouncementModal.tsx` | Criar |
-| `src/pages/Index.tsx` | Modificar (adicionar o componente) |
+| `public/mascote-meta-solidaria.png` | Criar (copiar imagem enviada) |
+| `src/components/LaunchAnnouncementModal.tsx` | Modificar |
 
 ## Detalhes Técnicos
 
 ```typescript
-// Constante para localStorage
-const LAUNCH_SEEN_KEY = 'launch-announcement-seen';
+// Remover import do Rocket
+// import { Rocket } from "lucide-react"; // Remover
 
-// Verificação inicial
-useEffect(() => {
-  if (!localStorage.getItem(LAUNCH_SEEN_KEY)) {
-    setIsOpen(true);
-  }
-}, []);
+// Substituir o ícone pelo logo
+<img 
+  src="/logo.jpg" 
+  alt="Meta Solidária" 
+  className="w-20 h-20 rounded-full object-cover"
+/>
 
-// Ao fechar
-const handleClose = () => {
-  localStorage.setItem(LAUNCH_SEEN_KEY, 'true');
-  setIsOpen(false);
-};
+// Corrigir data
+<div className="text-4xl font-extrabold text-primary my-4">
+  07/02/2026
+</div>
+
+// Adicionar mascote
+<img 
+  src="/mascote-meta-solidaria.png" 
+  alt="Mascote Meta Solidária" 
+  className="w-28 h-auto mx-auto mt-4"
+/>
 ```
+
