@@ -41,6 +41,7 @@ import {
   Heart,
   type LucideIcon
 } from "lucide-react";
+import { FeaturedPartnerSpotlight } from "./FeaturedPartnerSpotlight";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
@@ -511,6 +512,9 @@ export const PartnersSection = () => {
             Recomendar ou Seja Parceiro
           </Button>
         </div>
+
+        {/* Featured Partner Spotlight */}
+        <FeaturedPartnerSpotlight />
 
         {/* Filters */}
         <div
