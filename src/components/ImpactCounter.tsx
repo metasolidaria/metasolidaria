@@ -99,41 +99,54 @@ export const ImpactCounter = () => {
       </div>
 
       <div className="container mx-auto px-4 relative z-10">
-        {/* Main Layout: Vertical Stack */}
+        {/* Main Layout: Grid for Desktop, Stack for Mobile */}
         <div className="flex flex-col items-center">
-          {/* Doadômetro Section */}
-          <div className="w-full max-w-5xl" ref={ref}>
-            {/* Header */}
-            <div
-              className={`text-center mb-8 ${isInView ? 'animate-in fade-in slide-in-from-bottom-4 duration-500' : 'opacity-0'}`}
-            >
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary-foreground/20 mb-4">
-                <Heart className="w-8 h-8 text-primary-foreground" />
+          <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-8 items-center">
+            {/* Doadômetro Section */}
+            <div className="w-full" ref={ref}>
+              {/* Header */}
+              <div
+                className={`text-center mb-8 ${isInView ? 'animate-in fade-in slide-in-from-bottom-4 duration-500' : 'opacity-0'}`}
+              >
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary-foreground/20 mb-4">
+                  <Heart className="w-8 h-8 text-primary-foreground" />
+                </div>
+                <h2 className="text-3xl md:text-4xl font-bold text-primary-foreground mb-2">
+                  Doadômetro
+                </h2>
+                <p className="text-primary-foreground/80 text-lg max-w-2xl mx-auto">
+                  Impacto social gerado até o momento
+                </p>
               </div>
-              <h2 className="text-3xl md:text-4xl font-bold text-primary-foreground mb-2">
-                Doadômetro
-              </h2>
-              <p className="text-primary-foreground/80 text-lg max-w-2xl mx-auto">
-                Impacto social gerado até o momento
-              </p>
-            </div>
 
-            {/* Central Counter */}
-            <div
-              className={`text-center mb-12 ${isInView ? 'animate-in fade-in zoom-in-95 duration-500' : 'opacity-0'}`}
-              style={{ animationDelay: '200ms' }}
-            >
-              <div className="text-6xl md:text-8xl font-bold text-primary-foreground mb-2">
-                {isLoading ? (
-                  <Skeleton className="h-20 md:h-24 w-48 md:w-64 mx-auto bg-primary-foreground/20" />
-                ) : isInView ? (
-                  <AnimatedNumber value={impactData?.totalDonations || 0} suffix="" />
-                ) : null}
+              {/* Central Counter */}
+              <div
+                className={`text-center mb-6 ${isInView ? 'animate-in fade-in zoom-in-95 duration-500' : 'opacity-0'}`}
+                style={{ animationDelay: '200ms' }}
+              >
+                <div className="text-6xl md:text-8xl font-bold text-primary-foreground mb-2">
+                  {isLoading ? (
+                    <Skeleton className="h-20 md:h-24 w-48 md:w-64 mx-auto bg-primary-foreground/20" />
+                  ) : isInView ? (
+                    <AnimatedNumber value={impactData?.totalDonations || 0} suffix="" />
+                  ) : null}
+                </div>
+                <p className="text-primary-foreground/70 text-xl">
+                  doações realizadas
+                </p>
               </div>
-              <p className="text-primary-foreground/70 text-xl">
-                doações realizadas
-              </p>
-            </div>
+
+              {/* Mobile Mascot - between counter and breakdown */}
+              <div 
+                className={`lg:hidden flex justify-center my-6 ${isInView ? 'animate-in fade-in zoom-in-95 duration-500' : 'opacity-0'}`}
+                style={{ animationDelay: '300ms' }}
+              >
+                <img 
+                  src="/mascote-meta-solidaria.png" 
+                  alt="Mascote Meta Solidária" 
+                  className="w-28 h-auto drop-shadow-lg"
+                />
+              </div>
 
             {/* Breakdown by Type - Only show types with values */}
             {(() => {
@@ -176,12 +189,25 @@ export const ImpactCounter = () => {
                 </div>
               );
             })()}
+            </div>
+
+            {/* Desktop Mascot - side by side */}
+            <div 
+              className={`hidden lg:flex items-center justify-center ${isInView ? 'animate-in fade-in zoom-in-95 duration-500' : 'opacity-0'}`}
+              style={{ animationDelay: '400ms' }}
+            >
+              <img 
+                src="/mascote-meta-solidaria.png" 
+                alt="Mascote Meta Solidária" 
+                className="w-40 xl:w-52 h-auto drop-shadow-lg"
+              />
+            </div>
           </div>
 
           {/* Premium Partners Section - Centered below */}
           <div
             className={`mt-12 ${isInView ? 'animate-in fade-in slide-in-from-bottom-4 duration-500' : 'opacity-0'}`}
-            style={{ animationDelay: '400ms' }}
+            style={{ animationDelay: '500ms' }}
           >
             <PremiumPartnerSlots />
           </div>
