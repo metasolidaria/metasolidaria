@@ -10,16 +10,16 @@ import { useState, useEffect } from "react";
 const naturuaiLogo = "/naturuai-logo.jpg";
 const logoImage = "/logo.jpg";
 
-// Hook to fetch ALL premium and gold partners (national scope)
-const useAllPremiumAndGoldPartners = () => {
+// Hook to fetch only Premium partners (national scope)
+const usePremiumPartners = () => {
   return useQuery({
-    queryKey: ["allPremiumGoldPartnersSlots"],
+    queryKey: ["premiumPartnersSlots"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("partners_public")
-        .select("id, name, logo_url, specialty, instagram, whatsapp, tier, is_test")
+        .select("id, name, logo_url, specialty, instagram, is_test")
         .eq("is_approved", true)
-        .in("tier", ["premium", "ouro"])
+        .eq("tier", "premium")
         .order("name", { ascending: true });
 
       if (error) throw error;
@@ -32,19 +32,14 @@ const useAllPremiumAndGoldPartners = () => {
         return acc;
       }, [] as typeof data) || [];
       
-      // Sort by tier: premium first, then ouro
-      return uniquePartners.sort((a, b) => {
-        if (a.tier === "premium" && b.tier !== "premium") return -1;
-        if (a.tier !== "premium" && b.tier === "premium") return 1;
-        return 0;
-      });
+      return uniquePartners;
     },
     staleTime: 5 * 60 * 1000,
   });
 };
 
 export const PremiumPartnerSlots = () => {
-  const { data: partners, isLoading } = useAllPremiumAndGoldPartners();
+  const { data: partners, isLoading } = usePremiumPartners();
   const [currentIndex, setCurrentIndex] = useState(0);
 
   // Auto-rotation every 4 seconds
@@ -73,24 +68,13 @@ export const PremiumPartnerSlots = () => {
 
   const handlePartnerClick = (partner: { 
     instagram?: string | null; 
-    whatsapp?: string | null; 
-    tier?: string | null; 
     is_test?: boolean | null;
-    name?: string | null;
   }) => {
     if (partner.is_test) return;
     
-    const isPremium = partner.tier === "premium";
-    
-    if (isPremium && partner.instagram) {
-      // Premium: Open Instagram
+    if (partner.instagram) {
       const handle = partner.instagram.replace(/^@/, "").trim();
       window.open(`https://instagram.com/${handle}`, "_blank");
-    } else if (!isPremium && partner.whatsapp) {
-      // Gold: Open WhatsApp with default message
-      const phone = partner.whatsapp.replace(/\D/g, "");
-      const message = encodeURIComponent(`Olá ${partner.name}! Encontrei seu contato no Meta Solidária.`);
-      window.open(`https://wa.me/${phone}?text=${message}`, "_blank");
     }
   };
 
@@ -99,9 +83,8 @@ export const PremiumPartnerSlots = () => {
       <div className="space-y-3">
         <div className="flex items-center gap-2 mb-4">
           <Crown className="w-5 h-5 text-purple-400" />
-          <Star className="w-5 h-5 text-yellow-400 fill-yellow-400" />
           <h3 className="text-lg font-semibold text-primary-foreground">
-            Parceiros Solidários
+            Parceiros Premium
           </h3>
         </div>
         <div className="flex justify-center">
@@ -116,18 +99,14 @@ export const PremiumPartnerSlots = () => {
   }
 
   const currentPartner = partners[currentIndex];
-  const isPremium = currentPartner?.tier === "premium";
-  const hasClickAction = isPremium 
-    ? !!currentPartner?.instagram && !currentPartner?.is_test
-    : !!currentPartner?.whatsapp && !currentPartner?.is_test;
+  const hasClickAction = !!currentPartner?.instagram && !currentPartner?.is_test;
 
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-center gap-2 mb-4">
         <Crown className="w-5 h-5 text-purple-400" />
-        <Star className="w-5 h-5 text-yellow-400 fill-yellow-400" />
         <h3 className="text-lg font-semibold text-primary-foreground">
-          Parceiros Solidários
+          Parceiros Premium
         </h3>
       </div>
       
@@ -151,18 +130,14 @@ export const PremiumPartnerSlots = () => {
                 )}
                 
                 <div className="flex flex-col items-center text-center gap-3">
-                  {/* Avatar with tier-specific border */}
-                  <Avatar className={`w-16 h-16 rounded-full border-2 ${
-                    isPremium ? "border-purple-400/50" : "border-yellow-400/50"
-                  } bg-white`}>
+                  {/* Avatar with purple border for Premium */}
+                  <Avatar className="w-16 h-16 rounded-full border-2 border-purple-400/50 bg-white">
                     <AvatarImage 
                       src={getPartnerLogo(currentPartner)} 
                       alt={currentPartner.name || "Parceiro"} 
                       className="object-contain p-1"
                     />
-                    <AvatarFallback className={`rounded-full font-semibold ${
-                      isPremium ? "bg-purple-100 text-purple-700" : "bg-yellow-100 text-yellow-700"
-                    }`}>
+                    <AvatarFallback className="rounded-full font-semibold bg-purple-100 text-purple-700">
                       {currentPartner.name?.charAt(0) || "P"}
                     </AvatarFallback>
                   </Avatar>
@@ -179,19 +154,12 @@ export const PremiumPartnerSlots = () => {
                     </span>
                   )}
                   
-                  {/* Tier Badge */}
+                  {/* Premium Badge */}
                   <Badge 
                     variant="outline"
-                    className={isPremium 
-                      ? "bg-purple-500/20 text-purple-300 border-purple-500/30 text-xs" 
-                      : "bg-amber-500/20 text-amber-300 border-amber-500/30 text-xs"
-                    }
+                    className="bg-purple-500/20 text-purple-300 border-purple-500/30 text-xs"
                   >
-                    {isPremium ? (
-                      <><Crown className="w-3 h-3 mr-1" /> Premium</>
-                    ) : (
-                      <><Star className="w-3 h-3 mr-1 fill-current" /> Ouro</>
-                    )}
+                    <Crown className="w-3 h-3 mr-1" /> Premium
                   </Badge>
                 </div>
               </div>
@@ -203,10 +171,8 @@ export const PremiumPartnerSlots = () => {
               )}
               {currentPartner.is_test ? (
                 <p className="text-xs text-primary-foreground/70 mt-1">Parceiro de demonstração</p>
-              ) : isPremium && currentPartner.instagram ? (
+              ) : currentPartner.instagram ? (
                 <p className="text-xs text-primary-foreground/70 mt-1">Clique para ver o Instagram</p>
-              ) : !isPremium && currentPartner.whatsapp ? (
-                <p className="text-xs text-primary-foreground/70 mt-1">Clique para abrir o WhatsApp</p>
               ) : null}
             </TooltipContent>
           </Tooltip>
