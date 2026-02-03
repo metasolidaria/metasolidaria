@@ -138,11 +138,11 @@ export const ImpactCounter = () => {
                   </p>
                 </div>
                 
-                {/* Mascot with floating animation */}
+                {/* Mascot */}
                 <img 
                   src="/mascote-meta-solidaria.png" 
                   alt="Mascote Meta Solidária" 
-                  className="w-28 lg:w-40 xl:w-48 h-auto drop-shadow-lg animate-float"
+                  className="w-28 lg:w-40 xl:w-48 h-auto drop-shadow-lg"
                 />
               </div>
 
