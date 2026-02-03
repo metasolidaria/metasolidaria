@@ -1,72 +1,87 @@
 
-
-# Plano: Atualizar Popup de Lançamento com Logo e Mascote
+# Plano: Adicionar Mascote ao Lado do Doadômetro
 
 ## Objetivo
-Corrigir a data para 2026 e adicionar o logo do Meta Solidária junto com o mascote no popup de lançamento.
+Posicionar o mascote do Meta Solidária ao lado da seção do Doadômetro, criando um visual mais amigável e alinhado com a identidade visual do projeto.
 
 ## Alterações
 
-### 1. Salvar imagem do mascote
-Copiar a imagem enviada para `public/mascote-meta-solidaria.png`.
+### 1. Modificar o layout do ImpactCounter
 
-### 2. Atualizar LaunchAnnouncementModal.tsx
+Atualmente o layout é centralizado verticalmente. Vamos criar um layout com duas colunas em desktop:
+- **Coluna esquerda**: Conteúdo do Doadômetro (header, contador, breakdown)
+- **Coluna direita**: Mascote
 
-- Corrigir data de `07/02/2025` para `07/02/2026`
-- Substituir o ícone de foguete pelo logo do Meta Solidária (`/logo.jpg`)
-- Adicionar o mascote abaixo do texto
+Em mobile, o mascote ficará abaixo do contador principal.
 
-### 3. Novo Layout Visual
+### 2. Novo Layout Visual
 
 ```text
-┌─────────────────────────────────────────────┐
-│                                             │
-│        [Logo Meta Solidária - circular]     │
-│                                             │
-│        LANÇAMENTO OFICIAL                   │
-│                                             │
-│            07/02/2026                       │
-│                                             │
-│   Estamos chegando! Prepare-se para fazer   │
-│   parte da maior rede de solidariedade      │
-│   do Brasil.                                │
-│                                             │
-│        [Mascote fazendo joinha]             │
-│                                             │
-│             [ Entendi! ]                    │
-└─────────────────────────────────────────────┘
+Desktop:
+┌─────────────────────────────────────────────────────────────┐
+│                                                             │
+│   ┌─────────────────────────────┐    ┌─────────────────┐   │
+│   │         ❤️ Doadômetro       │    │                 │   │
+│   │                             │    │   [Mascote]     │   │
+│   │           1.234             │    │   fazendo       │   │
+│   │      doações realizadas     │    │   joinha        │   │
+│   │                             │    │                 │   │
+│   │   [Cards de categorias]     │    │                 │   │
+│   └─────────────────────────────┘    └─────────────────┘   │
+│                                                             │
+│              [Premium Partners]                             │
+└─────────────────────────────────────────────────────────────┘
+
+Mobile:
+┌─────────────────────────────┐
+│       ❤️ Doadômetro         │
+│                             │
+│           1.234             │
+│      doações realizadas     │
+│                             │
+│       [Mascote]             │
+│                             │
+│   [Cards de categorias]     │
+│                             │
+│    [Premium Partners]       │
+└─────────────────────────────┘
 ```
 
-## Arquivos
+## Arquivo a Modificar
 
 | Arquivo | Ação |
 |---------|------|
-| `public/mascote-meta-solidaria.png` | Criar (copiar imagem enviada) |
-| `src/components/LaunchAnnouncementModal.tsx` | Modificar |
+| `src/components/ImpactCounter.tsx` | Modificar layout para incluir mascote |
 
 ## Detalhes Técnicos
 
 ```typescript
-// Remover import do Rocket
-// import { Rocket } from "lucide-react"; // Remover
-
-// Substituir o ícone pelo logo
-<img 
-  src="/logo.jpg" 
-  alt="Meta Solidária" 
-  className="w-20 h-20 rounded-full object-cover"
-/>
-
-// Corrigir data
-<div className="text-4xl font-extrabold text-primary my-4">
-  07/02/2026
+// Alterar o layout principal de flex-col para grid em desktop
+<div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-8 items-center">
+  {/* Doadômetro Section */}
+  <div className="w-full max-w-5xl" ref={ref}>
+    {/* ... conteúdo existente ... */}
+  </div>
+  
+  {/* Mascote - visível em desktop ao lado, em mobile após o header */}
+  <div className="hidden lg:flex items-center justify-center">
+    <img 
+      src="/mascote-meta-solidaria.png" 
+      alt="Mascote Meta Solidária" 
+      className="w-40 xl:w-52 h-auto drop-shadow-lg"
+    />
+  </div>
 </div>
 
-// Adicionar mascote
-<img 
-  src="/mascote-meta-solidaria.png" 
-  alt="Mascote Meta Solidária" 
-  className="w-28 h-auto mx-auto mt-4"
-/>
+// Versão mobile do mascote (posicionado após o contador central)
+<div className="lg:hidden flex justify-center my-6">
+  <img 
+    src="/mascote-meta-solidaria.png" 
+    alt="Mascote Meta Solidária" 
+    className="w-28 h-auto drop-shadow-lg"
+  />
+</div>
 ```
 
+### Animação do mascote
+O mascote terá animação de entrada junto com os outros elementos, usando as mesmas classes `animate-in fade-in` do projeto.
