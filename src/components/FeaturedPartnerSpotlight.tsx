@@ -138,8 +138,8 @@ export const FeaturedPartnerSpotlight = () => {
             )}
             <Badge 
               className={isPremium 
-                ? "bg-purple-500 text-white border-purple-500" 
-                : "bg-yellow-500 text-yellow-900 border-yellow-500"
+                ? "bg-purple-700 text-white border-purple-700" 
+                : "bg-yellow-600 text-white border-yellow-600"
               }
             >
               {isPremium ? (
