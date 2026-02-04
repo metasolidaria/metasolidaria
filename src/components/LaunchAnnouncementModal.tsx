@@ -25,14 +25,14 @@ export const LaunchAnnouncementModal = () => {
             className="w-20 h-20 rounded-full object-cover mx-auto mb-4"
           />
           <DialogTitle className="text-2xl font-bold text-center">
-            LANÇAMENTO OFICIAL
+            EM FASE DE TESTES
           </DialogTitle>
-          <div className="text-4xl font-extrabold text-primary my-4">
-            07/02/2026
+          <div className="text-2xl font-extrabold text-primary my-4">
+            App/Site em Teste
           </div>
           <DialogDescription className="text-base text-center">
-            Estamos chegando! Prepare-se para fazer parte da maior rede de
-            solidariedade do Brasil.
+            Breve lançamento! Estamos finalizando os últimos ajustes para você
+            fazer parte da maior rede de solidariedade do Brasil.
           </DialogDescription>
           <img 
             src="/mascote-meta-solidaria.png" 
