@@ -666,7 +666,7 @@ export const PartnersSection = () => {
                   {/* Badges de Tier e Teste */}
                   <div className="px-5 pt-4 flex items-center gap-2 flex-wrap">
                     {partner.tier === 'premium' && (
-                      <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-purple-500 text-white">
+                      <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-purple-700 text-white">
                         <Crown className="w-3 h-3" />
                         Premium
                       </span>
@@ -678,7 +678,7 @@ export const PartnersSection = () => {
                       </span>
                     )}
                     {partner.tier === 'apoiador' && (
-                      <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-rose-500 text-white">
+                      <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-rose-700 text-white">
                         <Heart className="w-3 h-3" />
                         Apoiador
                       </span>
