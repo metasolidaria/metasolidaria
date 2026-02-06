@@ -1,4 +1,5 @@
 
+
 # Plano: Remover Pop-up de Teste
 
 ## Objetivo
@@ -22,7 +23,7 @@ O pop-up não aparecerá mais quando os usuários acessarem o site.
 
 ## Detalhes Técnicos
 
-```
+```text
 Antes:
 ├── Index.tsx
 │   ├── import LaunchAnnouncementModal ← remover
@@ -34,3 +35,4 @@ Depois:
 ```
 
 **Nota:** O arquivo `src/components/LaunchAnnouncementModal.tsx` será mantido no projeto caso você queira reativar o modal futuramente.
+
