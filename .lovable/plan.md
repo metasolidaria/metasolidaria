@@ -1,52 +1,36 @@
 
-# Plano: Atualizar Modal de Anúncio
+# Plano: Remover Pop-up de Teste
 
 ## Objetivo
-Alterar o pop-up inicial para mostrar que o app/site está em fase de testes, removendo a data de lançamento específica.
+Remover completamente o modal de anúncio de testes que aparece ao carregar a página inicial.
 
 ---
 
 ## Mudanças
 
-### Arquivo: `src/components/LaunchAnnouncementModal.tsx`
+### Arquivo: `src/pages/Index.tsx`
 
-| Elemento | Antes | Depois |
-|----------|-------|--------|
-| Título | "LANÇAMENTO OFICIAL" | "EM FASE DE TESTES" |
-| Destaque | "07/02/2026" | "App/Site em Teste" |
-| Descrição | "Estamos chegando! Prepare-se..." | "Breve lançamento! Estamos finalizando..." |
+1. **Remover a importação** do `LaunchAnnouncementModal` (linha 17)
+2. **Remover o componente** `<LaunchAnnouncementModal />` do JSX (linhas 109-111)
 
 ---
 
-## Resultado Visual
-
-```text
-┌─────────────────────────────────────┐
-│           [Logo Meta Solidária]     │
-│                                     │
-│        EM FASE DE TESTES            │
-│                                     │
-│        App/Site em Teste            │
-│                                     │
-│   Breve lançamento! Estamos         │
-│   finalizando os últimos ajustes    │
-│   para você fazer parte da maior    │
-│   rede de solidariedade do Brasil.  │
-│                                     │
-│           [Mascote]                 │
-│                                     │
-│         [ Entendi! ]                │
-└─────────────────────────────────────┘
-```
+## Resultado
+O pop-up não aparecerá mais quando os usuários acessarem o site.
 
 ---
 
 ## Detalhes Técnicos
 
-Alterações no arquivo `src/components/LaunchAnnouncementModal.tsx`:
+```
+Antes:
+├── Index.tsx
+│   ├── import LaunchAnnouncementModal ← remover
+│   └── <LaunchAnnouncementModal /> ← remover
 
-1. **Linha 27-29**: Alterar `DialogTitle` de "LANÇAMENTO OFICIAL" para "EM FASE DE TESTES"
+Depois:
+├── Index.tsx
+│   └── (sem modal de anúncio)
+```
 
-2. **Linha 30-32**: Alterar o texto destacado de "07/02/2026" para "App/Site em Teste" (pode reduzir o tamanho da fonte de `text-4xl` para `text-2xl` para melhor legibilidade)
-
-3. **Linha 33-36**: Atualizar `DialogDescription` para refletir a mensagem de que está em testes e o lançamento virá em breve
+**Nota:** O arquivo `src/components/LaunchAnnouncementModal.tsx` será mantido no projeto caso você queira reativar o modal futuramente.
