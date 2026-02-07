@@ -19,6 +19,7 @@ export const partnerSpecialties = [
   "Curso Livre/Profissionalizante",
   "Dentista",
   "Despachante",
+  "E-commerce",
   "Eletricista",
   "Emissora",
   "Engenharia",
