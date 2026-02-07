@@ -59,11 +59,13 @@ export const PremiumLogosCarousel = () => {
     return logoImage;
   };
 
-  const handleInstagramClick = (partner: { instagram?: string | null }) => {
+  const handleInstagramClick = (e: React.MouseEvent, partner: { instagram?: string | null }) => {
+    e.preventDefault();
+    e.stopPropagation();
     if (!partner.instagram) return;
     // Clean Instagram handle (remove @ if present)
     const handle = partner.instagram.replace(/^@/, "").trim();
-    window.open(`https://instagram.com/${handle}`, "_blank");
+    window.open(`https://instagram.com/${handle}`, "_blank", "noopener,noreferrer");
   };
 
   return (
@@ -85,19 +87,25 @@ export const PremiumLogosCarousel = () => {
               <CarouselItem key={partner.id} className="pl-1 basis-auto">
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Avatar 
-                      className={`w-20 h-20 sm:w-16 sm:h-16 rounded-lg border-2 border-primary/50 bg-white transition-colors shadow-sm hover:shadow-md ${partner.instagram ? "cursor-pointer hover:border-primary" : ""}`}
-                      onClick={() => handleInstagramClick(partner)}
+                    <button
+                      type="button"
+                      onClick={(e) => handleInstagramClick(e, partner)}
+                      className="focus:outline-none"
+                      aria-label={`Visitar Instagram de ${partner.name}`}
                     >
-                      <AvatarImage 
-                        src={getPartnerLogo(partner)}
-                        alt={partner.name || "Parceiro Premium"}
-                        className="object-contain p-0.5"
-                      />
-                      <AvatarFallback className="rounded-lg bg-primary/10 text-primary font-semibold text-sm">
-                        {partner.name?.charAt(0) || "P"}
-                      </AvatarFallback>
-                    </Avatar>
+                      <Avatar 
+                        className={`w-20 h-20 sm:w-16 sm:h-16 rounded-lg border-2 border-primary/50 bg-white transition-colors shadow-sm hover:shadow-md ${partner.instagram ? "cursor-pointer hover:border-primary" : ""}`}
+                      >
+                        <AvatarImage 
+                          src={getPartnerLogo(partner)}
+                          alt={partner.name || "Parceiro Premium"}
+                          className="object-contain p-0.5"
+                        />
+                        <AvatarFallback className="rounded-lg bg-primary/10 text-primary font-semibold text-sm">
+                          {partner.name?.charAt(0) || "P"}
+                        </AvatarFallback>
+                      </Avatar>
+                    </button>
                   </TooltipTrigger>
                   <TooltipContent side="bottom" className="bg-primary text-primary-foreground border-primary">
                     <p className="font-medium">{partner.name}</p>
