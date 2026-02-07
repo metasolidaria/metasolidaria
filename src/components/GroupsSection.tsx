@@ -190,13 +190,13 @@ export const GroupsSection = ({ onRequireAuth }: GroupsSectionProps) => {
                   className="bg-card rounded-2xl overflow-hidden shadow-soft hover:shadow-glow transition-all duration-300 hover:-translate-y-1 group animate-in fade-in slide-in-from-bottom-4 duration-400 min-w-0"
                   style={{ animationDelay: `${index * 100}ms` }}
                 >
-                  <div className="relative h-40 overflow-hidden">
+                  <div className="relative h-48 overflow-hidden">
                     <img 
                       src={group.image_url || placeholderImages[index % placeholderImages.length]} 
                       alt={group.name}
                       loading="lazy"
                       decoding="async"
-                      className="w-full h-full object-cover object-center group-hover:scale-110 transition-transform duration-500" 
+                      className="w-full h-full object-cover object-top group-hover:scale-110 transition-transform duration-500" 
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-foreground/60 to-transparent" />
                     <div className="absolute top-3 left-3 flex flex-wrap gap-1.5">
