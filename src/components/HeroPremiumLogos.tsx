@@ -57,7 +57,7 @@ export const HeroPremiumLogos = () => {
   if (isLoading) {
     return (
       <div className="border-l border-primary-foreground/30 pl-3">
-        <Skeleton className="w-[88px] h-[88px] rounded-lg bg-primary-foreground/20" />
+        <Skeleton className="w-[110px] h-[110px] rounded-lg bg-primary-foreground/20" />
       </div>
     );
   }
@@ -95,10 +95,10 @@ export const HeroPremiumLogos = () => {
   return (
     <div className="border-l border-primary-foreground/30 pl-3">
       <TooltipProvider delayDuration={100}>
-        <Carousel
+          <Carousel
           opts={{ align: "center", loop: true }}
           plugins={autoplayPlugin ? [autoplayPlugin] : []}
-          className="w-[130px]"
+          className="w-[150px]"
         >
           <CarouselContent className="-ml-1">
             {premiumPartners.map(partner => (
@@ -113,12 +113,12 @@ export const HeroPremiumLogos = () => {
                       aria-label={`Visitar Instagram de ${partner.name}`}
                     >
                       <Avatar
-                        className={`w-[88px] h-[88px] rounded-lg border-2 border-primary-foreground/30 bg-transparent transition-all shadow-md hover:shadow-lg hover:scale-105 ${partner.instagram ? "cursor-pointer hover:border-primary-foreground/60" : ""}`}
+                        className={`w-[110px] h-[110px] rounded-lg bg-transparent transition-all shadow-md hover:shadow-lg hover:scale-105 ${partner.instagram ? "cursor-pointer" : ""}`}
                       >
                         <AvatarImage
                           src={getPartnerLogo(partner)}
                           alt={partner.name || "Parceiro Premium"}
-                          className="object-contain p-0.5"
+                          className="object-contain p-0.5 mix-blend-multiply"
                         />
                         <AvatarFallback className="rounded-lg bg-primary/10 text-primary font-semibold text-sm">
                           {partner.name?.charAt(0) || "P"}
