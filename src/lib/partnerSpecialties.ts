@@ -43,6 +43,7 @@ export const partnerSpecialties = [
   "Loja de Eletro",
   "Loja de Móveis",
   "Loja de Roupas",
+  "Loja Esportiva",
   "Loja Infantil/Brinquedos",
   "Marcenaria/Serralheria",
   "Material de Construção",
