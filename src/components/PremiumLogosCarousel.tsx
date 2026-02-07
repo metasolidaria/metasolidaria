@@ -91,7 +91,7 @@ export const PremiumLogosCarousel = () => {
             loop: true,
           }}
           plugins={autoplayPlugin ? [autoplayPlugin] : []}
-          className="w-auto max-w-[250px] overflow-hidden"
+          className="w-auto max-w-[280px] overflow-hidden"
         >
           <CarouselContent className="-ml-1">
             {premiumPartners.map((partner) => (
@@ -106,7 +106,7 @@ export const PremiumLogosCarousel = () => {
                       aria-label={`Visitar Instagram de ${partner.name}`}
                     >
                       <Avatar 
-                        className={`w-20 h-20 sm:w-16 sm:h-16 rounded-lg border-2 border-primary/50 bg-white transition-colors shadow-sm hover:shadow-md ${partner.instagram ? "cursor-pointer hover:border-primary" : ""}`}
+                        className={`w-24 h-24 sm:w-20 sm:h-20 rounded-lg border-2 border-primary/50 bg-transparent transition-colors shadow-sm hover:shadow-md ${partner.instagram ? "cursor-pointer hover:border-primary" : ""}`}
                       >
                         <AvatarImage 
                           src={getPartnerLogo(partner)}

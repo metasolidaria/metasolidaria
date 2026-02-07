@@ -57,7 +57,7 @@ export const HeroPremiumLogos = () => {
   if (isLoading) {
     return (
       <div className="border-l border-primary-foreground/30 pl-3">
-        <Skeleton className="w-[72px] h-[72px] rounded-lg bg-primary-foreground/20" />
+        <Skeleton className="w-[88px] h-[88px] rounded-lg bg-primary-foreground/20" />
       </div>
     );
   }
@@ -98,7 +98,7 @@ export const HeroPremiumLogos = () => {
         <Carousel
           opts={{ align: "center", loop: true }}
           plugins={autoplayPlugin ? [autoplayPlugin] : []}
-          className="w-[110px]"
+          className="w-[130px]"
         >
           <CarouselContent className="-ml-1">
             {premiumPartners.map(partner => (
@@ -113,7 +113,7 @@ export const HeroPremiumLogos = () => {
                       aria-label={`Visitar Instagram de ${partner.name}`}
                     >
                       <Avatar
-                        className={`w-[72px] h-[72px] rounded-lg border-2 border-primary-foreground/30 bg-white/90 transition-all shadow-md hover:shadow-lg hover:scale-105 ${partner.instagram ? "cursor-pointer hover:border-primary-foreground/60" : ""}`}
+                        className={`w-[88px] h-[88px] rounded-lg border-2 border-primary-foreground/30 bg-transparent transition-all shadow-md hover:shadow-lg hover:scale-105 ${partner.instagram ? "cursor-pointer hover:border-primary-foreground/60" : ""}`}
                       >
                         <AvatarImage
                           src={getPartnerLogo(partner)}
