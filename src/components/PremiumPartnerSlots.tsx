@@ -183,18 +183,22 @@ export const PremiumPartnerSlots = () => {
 
         {/* Position Indicators */}
         {partners.length > 1 && (
-          <div className="flex justify-center gap-1.5 mt-4">
+          <div className="flex justify-center gap-3 mt-4">
             {partners.map((_, idx) => (
               <button
                 key={idx}
                 onClick={() => setCurrentIndex(idx)}
                 aria-label={`Ver parceiro ${idx + 1}`}
-                className={`w-2 h-2 rounded-full transition-colors ${
-                  idx === currentIndex 
-                    ? "bg-primary-foreground" 
-                    : "bg-primary-foreground/30 hover:bg-primary-foreground/50"
-                }`}
-              />
+                className="w-6 h-6 flex items-center justify-center"
+              >
+                <span 
+                  className={`w-2 h-2 rounded-full transition-colors ${
+                    idx === currentIndex 
+                      ? "bg-primary-foreground" 
+                      : "bg-primary-foreground/30"
+                  }`}
+                />
+              </button>
             ))}
           </div>
         )}
