@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -40,6 +40,7 @@ const usePremiumPartnersHero = () => {
 export const HeroPremiumLogos = () => {
   const { data: premiumPartners, isLoading } = usePremiumPartnersHero();
   const [autoplayPlugin, setAutoplayPlugin] = useState<AutoplayType | null>(null);
+  const pointerStartPos = useRef<{ x: number; y: number } | null>(null);
   
   // Dynamic import for autoplay plugin to reduce initial JS
   useEffect(() => {
@@ -72,13 +73,23 @@ export const HeroPremiumLogos = () => {
     return logoImage;
   };
 
-  const handleInstagramClick = (e: React.MouseEvent, partner: { instagram?: string | null }) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (!partner.instagram) return;
-    // Clean Instagram handle (remove @ if present)
-    const handle = partner.instagram.replace(/^@/, "").trim();
-    window.open(`https://instagram.com/${handle}`, "_blank", "noopener,noreferrer");
+  const handlePointerDown = (e: React.PointerEvent) => {
+    pointerStartPos.current = { x: e.clientX, y: e.clientY };
+  };
+
+  const handlePointerUp = (e: React.PointerEvent, partner: { instagram?: string | null }) => {
+    if (!pointerStartPos.current) return;
+    
+    const dx = Math.abs(e.clientX - pointerStartPos.current.x);
+    const dy = Math.abs(e.clientY - pointerStartPos.current.y);
+    
+    // Se movimento < 5px em ambos eixos, é um clique real
+    if (dx < 5 && dy < 5 && partner.instagram) {
+      const handle = partner.instagram.replace(/^@/, "").trim();
+      window.open(`https://instagram.com/${handle}`, "_blank", "noopener,noreferrer");
+    }
+    
+    pointerStartPos.current = null;
   };
 
   return (
@@ -96,8 +107,9 @@ export const HeroPremiumLogos = () => {
                   <TooltipTrigger asChild>
                     <button
                       type="button"
-                      onClick={(e) => handleInstagramClick(e, partner)}
-                      className="focus:outline-none"
+                      onPointerDown={handlePointerDown}
+                      onPointerUp={(e) => handlePointerUp(e, partner)}
+                      className="focus:outline-none touch-none"
                       aria-label={`Visitar Instagram de ${partner.name}`}
                     >
                       <Avatar
