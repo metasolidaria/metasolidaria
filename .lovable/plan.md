@@ -1,51 +1,89 @@
 
-# Plano: Aumentar Ainda Mais os Logos e Tratar o Fundo Branco
+# Plano: Corrigir Tamanho dos Logos Premium
 
-## Problema Atual
-1. **Tamanho**: Logos ainda estão pequenos para o gosto do usuário
-2. **Fundo branco**: Aparece porque as imagens são JPG (que não suportam transparência) ou porque há backgrounds residuais no CSS
+## Problema Identificado
 
-## Solução Proposta
+O componente `Avatar` base tem classes padrão `h-10 w-10` (40px) que estão competindo com as classes customizadas. No Tailwind CSS, quando há conflito de classes, a que foi gerada por último no CSS ganha, não a que está por último na string de classes.
 
-### 1. Aumentar Tamanho dos Logos
+### Código atual do Avatar base:
+```tsx
+// src/components/ui/avatar.tsx linha 12
+className={cn("relative flex h-10 w-10 shrink-0 overflow-hidden rounded-full", className)}
+```
 
-| Componente | Tamanho Atual | Novo Tamanho |
-|------------|---------------|--------------|
-| **HeroPremiumLogos** | `w-[88px] h-[88px]` | `w-[110px] h-[110px]` |
-| **PremiumLogosCarousel** | `w-24 h-24 sm:w-20 sm:h-20` | `w-28 h-28 sm:w-24 sm:h-24` |
+## Solução
 
-### 2. Remover Qualquer Fundo Residual
-- Garantir que todas as classes de background sejam transparentes
-- Remover bordas que possam criar ilusão de fundo branco
-- Aplicar `mix-blend-mode: multiply` para tentar mascarar fundos brancos nas imagens JPG
+Usar a notação `!important` do Tailwind (`!w-[110px] !h-[110px]`) para forçar o tamanho, ou usar estilos inline que sempre têm precedência.
 
-### 3. Ajustar Containers
-- Expandir largura dos containers para acomodar os logos maiores
-- `HeroPremiumLogos`: Carousel de `w-[130px]` para `w-[150px]`
-- `PremiumLogosCarousel`: Container de `max-w-[280px]` para `max-w-[320px]`
+**Opção escolhida: Estilos inline** - mais confiável e sem efeitos colaterais.
+
+---
+
+## Alterações Propostas
+
+### 1. HeroPremiumLogos.tsx
+
+**Avatar (linha 115-116):**
+```tsx
+// De:
+className={`w-[110px] h-[110px] rounded-lg bg-transparent...`}
+
+// Para:
+style={{ width: 110, height: 110 }}
+className={`rounded-lg bg-transparent...`}
+```
+
+**Skeleton placeholder (linha 60):**
+```tsx
+// De:
+className="w-[110px] h-[110px]..."
+
+// Para:
+style={{ width: 110, height: 110 }}
+className="rounded-lg..."
+```
+
+**LogoPlaceholder no Hero.tsx (linha 19):**
+```tsx
+// De:
+className="w-12 h-12..."
+
+// Para:
+style={{ width: 110, height: 110 }}
+className="rounded-lg..."
+```
+
+### 2. PremiumLogosCarousel.tsx
+
+**Avatar (linha 108-109):**
+```tsx
+// De:
+className={`w-28 h-28 sm:w-24 sm:h-24...`}
+
+// Para usar tamanhos inline com media query via clsx:
+style={{ width: 112, height: 112 }} // 28 * 4 = 112px (w-28)
+className={`rounded-lg bg-transparent...`}
+```
 
 ---
 
 ## Arquivos a Modificar
 
-### src/components/HeroPremiumLogos.tsx
-- Linha 60: Skeleton `w-[88px] h-[88px]` → `w-[110px] h-[110px]`
-- Linha 101: Carousel `w-[130px]` → `w-[150px]`
-- Linha 115-116: Avatar `w-[88px] h-[88px]` → `w-[110px] h-[110px]`, remover borda
-- Linha 121: AvatarImage adicionar `mix-blend-multiply` para mascarar fundo branco
-
-### src/components/PremiumLogosCarousel.tsx
-- Linha 94: Carousel `max-w-[280px]` → `max-w-[320px]`
-- Linha 108-109: Avatar `w-24 h-24 sm:w-20 sm:h-20` → `w-28 h-28 sm:w-24 sm:h-24`, remover borda
-- Linha 114: AvatarImage adicionar `mix-blend-multiply`
+| Arquivo | Alteração |
+|---------|-----------|
+| `src/components/HeroPremiumLogos.tsx` | Usar `style={{ width: 110, height: 110 }}` no Avatar e Skeleton |
+| `src/components/PremiumLogosCarousel.tsx` | Usar `style={{ width: 112, height: 112 }}` no Avatar |
+| `src/components/Hero.tsx` | Atualizar `LogoPlaceholder` para usar mesmo tamanho |
 
 ---
 
-## Nota Importante sobre Fundo Branco
+## Detalhes Técnicos
 
-Se as imagens (`logo.jpg`, `naturuai-logo.jpg`) são arquivos JPG, o fundo branco faz parte da imagem e não pode ser removido via CSS sem efeitos colaterais. 
+### Por que estilos inline?
+1. Estilos inline sempre têm precedência sobre classes CSS
+2. Não dependem da ordem de geração do Tailwind
+3. São mais previsíveis e debugáveis
 
-**Soluções possíveis:**
-1. **CSS `mix-blend-multiply`**: Faz o branco ficar "transparente" em fundos claros
-2. **Substituir por PNG com transparência**: Solução definitiva, mas requer novas imagens
-3. **Remover bordas**: Minimiza a aparência de "caixa branca"
+### Tamanhos finais
+- **HeroPremiumLogos**: 110px x 110px
+- **PremiumLogosCarousel**: 112px x 112px (equivalente a `w-28`)
