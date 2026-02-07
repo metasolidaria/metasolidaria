@@ -1,49 +1,55 @@
 
-# Plano: Aumentar Logos e Remover Fundo Branco
+# Plano: Incluir Parceiros Nacionais (Brasil) em Todos os Filtros de Cidade
 
-## Resumo
-Vou aumentar o tamanho dos logos dos parceiros Premium e remover o fundo branco do Avatar que está aparecendo ao redor das imagens.
+## Problema Identificado
+Quando o usuário seleciona uma cidade específica no filtro de parceiros, os parceiros cadastrados com cidade = "Brasil" não aparecem. Isso acontece porque a query atual usa apenas um filtro `ilike` simples que não considera parceiros nacionais.
 
-## Alterações Propostas
+## Solução Proposta
+Modificar o hook `usePaginatedPartners` para usar uma query OR no Supabase que inclua:
+1. Parceiros da cidade filtrada
+2. Parceiros com cidade = "Brasil" (nacionais)
 
-### 1. HeroPremiumLogos.tsx (Hero Section)
+## Arquivo a Modificar
 
-| Propriedade | Atual | Proposto |
-|-------------|-------|----------|
-| Avatar tamanho | `w-[72px] h-[72px]` | `w-[88px] h-[88px]` |
-| Avatar fundo | `bg-white/90` | `bg-transparent` |
-| Carousel width | `w-[110px]` | `w-[130px]` |
-| Skeleton | `w-[72px] h-[72px]` | `w-[88px] h-[88px]` |
+### src/hooks/usePaginatedPartners.tsx
 
-### 2. PremiumLogosCarousel.tsx (Header)
+**Antes:**
+```typescript
+if (city) {
+  const cityName = city.split(",")[0].trim();
+  query = query.ilike("city", `%${cityName}%`);
+}
+```
 
-| Propriedade | Atual | Proposto |
-|-------------|-------|----------|
-| Avatar tamanho | `w-20 h-20 sm:w-16 sm:h-16` | `w-24 h-24 sm:w-20 sm:h-20` |
-| Avatar fundo | `bg-white` | `bg-transparent` |
-| Container max-width | `max-w-[250px]` | `max-w-[280px]` |
-
-## Resumo Visual
-
-- **Tamanho**: +20% em relação ao atual
-- **Fundo**: Transparente em vez de branco
-- **Containers**: Ajustados para acomodar os novos tamanhos
+**Depois:**
+```typescript
+if (city) {
+  const cityName = city.split(",")[0].trim();
+  // Incluir parceiros da cidade E parceiros nacionais (Brasil)
+  query = query.or(`city.ilike.%${cityName}%,city.ilike.brasil`);
+}
+```
 
 ---
 
 ## Detalhes Técnicos
 
-### Arquivos a Modificar
-1. `src/components/HeroPremiumLogos.tsx`
-2. `src/components/PremiumLogosCarousel.tsx`
+### Mudança na Query
+- Usar o método `.or()` do Supabase para combinar duas condições
+- Primeira condição: cidade contém o nome buscado
+- Segunda condição: cidade é "Brasil" (case-insensitive com ilike)
 
-### Mudanças Específicas
+### Formato do Filtro OR no Supabase
+```typescript
+query.or(`city.ilike.%${cityName}%,city.ilike.brasil`)
+```
 
-**HeroPremiumLogos.tsx**:
-- Linha 60: Skeleton `w-[72px] h-[72px]` → `w-[88px] h-[88px]`
-- Linha 101: Carousel `w-[110px]` → `w-[130px]`
-- Linha 116: Avatar `w-[72px] h-[72px]` → `w-[88px] h-[88px]`, remover `bg-white/90` → `bg-transparent`
+Isso gera uma query SQL equivalente a:
+```sql
+WHERE (city ILIKE '%Campinas%' OR city ILIKE 'brasil')
+```
 
-**PremiumLogosCarousel.tsx**:
-- Linha 94: Carousel `max-w-[250px]` → `max-w-[280px]`
-- Linha 109: Avatar `w-20 h-20 sm:w-16 sm:h-16` → `w-24 h-24 sm:w-20 sm:h-20`, remover `bg-white` → `bg-transparent`
+### Benefícios
+- Parceiros como "Brave Sports" (cadastrada com cidade "Brasil") aparecerão em qualquer filtro de cidade
+- Não afeta o modo de proximidade (que já tem essa lógica)
+- Mantém a paginação server-side funcionando corretamente
