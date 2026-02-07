@@ -48,6 +48,7 @@ export const partnerSpecialties = [
   "Médico",
   "Nutricionista",
   "Oficina Mecânica",
+  "Ótica",
   "ONG/Instituição Parceira",
   "Padaria",
   "Personal Trainer",
