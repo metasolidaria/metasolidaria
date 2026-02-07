@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useMemo, useState, useEffect } from "react";
 
 export type PartnerTier = 'premium' | 'ouro' | 'apoiador';
 
@@ -23,6 +24,37 @@ export interface PartnerPublic {
   is_test: boolean;
 }
 
+// Tier order: premium/ouro first (both treated as gold), then apoiador
+const tierOrder: Record<PartnerTier, number> = {
+  premium: 1,
+  ouro: 1,
+  apoiador: 2,
+};
+
+// Shuffle array using Fisher-Yates algorithm
+const shuffleArray = <T,>(array: T[]): T[] => {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+};
+
+// Sort partners by tier with randomization within each tier
+const sortPartnersByTierWithShuffle = (partners: PartnerPublic[]): PartnerPublic[] => {
+  // Separate by tier
+  const goldPartners = partners.filter(p => p.tier === 'premium' || p.tier === 'ouro');
+  const apoiadorPartners = partners.filter(p => p.tier === 'apoiador');
+  
+  // Shuffle each group
+  const shuffledGold = shuffleArray(goldPartners);
+  const shuffledApoiador = shuffleArray(apoiadorPartners);
+  
+  // Combine: gold first, then apoiador
+  return [...shuffledGold, ...shuffledApoiador];
+};
+
 interface UsePaginatedPartnersOptions {
   page: number;
   limit: number;
@@ -31,14 +63,16 @@ interface UsePaginatedPartnersOptions {
 }
 
 export const usePaginatedPartners = ({ page, limit, category, city }: UsePaginatedPartnersOptions) => {
+  // Generate a random seed on component mount to ensure consistent shuffle during session
+  const [shuffleSeed] = useState(() => Math.random());
+  
   const { data, isLoading } = useQuery({
     queryKey: ["paginatedPartners", page, limit, category, city],
     queryFn: async () => {
       let query = supabase
         .from("partners_public")
         .select("*", { count: "exact", head: false })
-        .eq("is_approved", true)
-        .order("created_at", { ascending: false });
+        .eq("is_approved", true);
 
       // Apply category filter server-side
       if (category && category !== "all") {
@@ -53,13 +87,19 @@ export const usePaginatedPartners = ({ page, limit, category, city }: UsePaginat
         query = query.or(`city.ilike.%${cityName}%,city.ilike.%brasil%`);
       }
 
-      const { data: partnersData, error, count } = await query
-        .range((page - 1) * limit, page * limit - 1);
+      // Fetch all data to sort client-side (needed for tier-based random sorting)
+      const { data: partnersData, error, count } = await query;
 
       if (error) throw error;
       
+      // Sort by tier with shuffle within each tier
+      const sortedPartners = sortPartnersByTierWithShuffle(partnersData as PartnerPublic[]);
+      
+      // Apply pagination after sorting
+      const paginatedPartners = sortedPartners.slice((page - 1) * limit, page * limit);
+      
       return { 
-        partners: partnersData as PartnerPublic[], 
+        partners: paginatedPartners, 
         count: count || 0 
       };
     },
@@ -86,7 +126,9 @@ export const useAllPartnersForProximity = () => {
         .not("longitude", "is", null);
 
       if (error) throw error;
-      return data as PartnerPublic[];
+      
+      // Sort by tier with shuffle within each tier
+      return sortPartnersByTierWithShuffle(data as PartnerPublic[]);
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
