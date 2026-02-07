@@ -1,89 +1,76 @@
 
-# Plano: Corrigir Tamanho dos Logos Premium
 
-## Problema Identificado
+# Plano: Adicionar botão "Fale Conosco" na seção de Parceiros
 
-O componente `Avatar` base tem classes padrão `h-10 w-10` (40px) que estão competindo com as classes customizadas. No Tailwind CSS, quando há conflito de classes, a que foi gerada por último no CSS ganha, não a que está por último na string de classes.
+## Resumo
+Adicionar um botão "Fale Conosco" com link direto para o WhatsApp da Meta Solidária, posicionado logo abaixo do botão "Recomendar ou Seja Parceiro" na seção de Parceiros.
 
-### Código atual do Avatar base:
-```tsx
-// src/components/ui/avatar.tsx linha 12
-className={cn("relative flex h-10 w-10 shrink-0 overflow-hidden rounded-full", className)}
+## O que será feito
+
+1. **Adicionar o botão "Fale Conosco"** na seção de Parceiros, logo abaixo do botão existente "Recomendar ou Seja Parceiro"
+
+2. **Estilização do botão**:
+   - Usar variante `outline` para diferenciar visualmente do botão principal
+   - Incluir ícone do WhatsApp para identificação clara
+   - Manter consistência visual com o design atual
+
+3. **Funcionalidade**:
+   - Ao clicar, abrirá o WhatsApp com o número 19 99466-2603
+   - Mensagem padrão: "Olá! Vim pelo site Meta Solidária."
+   - Link: `https://wa.me/5519994662603?text=Olá! Vim pelo site Meta Solidária.`
+
+## Layout visual esperado
+
+```text
++------------------------------------------+
+|          Guia de Parceiros               |
+|                                          |
+|  Encontre profissionais de saúde...      |
+|                                          |
+|  [🧑‍🤝‍🧑 Recomendar ou Seja Parceiro]       |  ← Botão principal (hero)
+|  [📱 Fale Conosco]                       |  ← Novo botão (outline)
+|                                          |
++------------------------------------------+
 ```
-
-## Solução
-
-Usar a notação `!important` do Tailwind (`!w-[110px] !h-[110px]`) para forçar o tamanho, ou usar estilos inline que sempre têm precedência.
-
-**Opção escolhida: Estilos inline** - mais confiável e sem efeitos colaterais.
-
----
-
-## Alterações Propostas
-
-### 1. HeroPremiumLogos.tsx
-
-**Avatar (linha 115-116):**
-```tsx
-// De:
-className={`w-[110px] h-[110px] rounded-lg bg-transparent...`}
-
-// Para:
-style={{ width: 110, height: 110 }}
-className={`rounded-lg bg-transparent...`}
-```
-
-**Skeleton placeholder (linha 60):**
-```tsx
-// De:
-className="w-[110px] h-[110px]..."
-
-// Para:
-style={{ width: 110, height: 110 }}
-className="rounded-lg..."
-```
-
-**LogoPlaceholder no Hero.tsx (linha 19):**
-```tsx
-// De:
-className="w-12 h-12..."
-
-// Para:
-style={{ width: 110, height: 110 }}
-className="rounded-lg..."
-```
-
-### 2. PremiumLogosCarousel.tsx
-
-**Avatar (linha 108-109):**
-```tsx
-// De:
-className={`w-28 h-28 sm:w-24 sm:h-24...`}
-
-// Para usar tamanhos inline com media query via clsx:
-style={{ width: 112, height: 112 }} // 28 * 4 = 112px (w-28)
-className={`rounded-lg bg-transparent...`}
-```
-
----
-
-## Arquivos a Modificar
-
-| Arquivo | Alteração |
-|---------|-----------|
-| `src/components/HeroPremiumLogos.tsx` | Usar `style={{ width: 110, height: 110 }}` no Avatar e Skeleton |
-| `src/components/PremiumLogosCarousel.tsx` | Usar `style={{ width: 112, height: 112 }}` no Avatar |
-| `src/components/Hero.tsx` | Atualizar `LogoPlaceholder` para usar mesmo tamanho |
 
 ---
 
 ## Detalhes Técnicos
 
-### Por que estilos inline?
-1. Estilos inline sempre têm precedência sobre classes CSS
-2. Não dependem da ordem de geração do Tailwind
-3. São mais previsíveis e debugáveis
+### Arquivo a ser modificado
+- `src/components/PartnersSection.tsx`
 
-### Tamanhos finais
-- **HeroPremiumLogos**: 110px x 110px
-- **PremiumLogosCarousel**: 112px x 112px (equivalente a `w-28`)
+### Alterações específicas
+
+**Linhas 506-513** - Adicionar novo botão após o existente:
+
+```tsx
+<Button
+  variant="hero"
+  onClick={() => setIsRecommendModalOpen(true)}
+  className="gap-2"
+>
+  <UserPlus className="w-4 h-4" />
+  Recomendar ou Seja Parceiro
+</Button>
+{/* Novo botão Fale Conosco */}
+<Button
+  variant="outline"
+  asChild
+  className="gap-2 mt-2"
+>
+  <a
+    href="https://wa.me/5519994662603?text=Olá! Vim pelo site Meta Solidária."
+    target="_blank"
+    rel="noopener noreferrer"
+  >
+    <Phone className="w-4 h-4" />
+    Fale Conosco
+  </a>
+</Button>
+```
+
+### Dependências
+- O ícone `Phone` já está importado no componente (linha 6)
+- Nenhuma nova dependência necessária
+
