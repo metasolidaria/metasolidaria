@@ -78,7 +78,7 @@ export const PremiumLogosCarousel = () => {
             loop: true,
           }}
           plugins={autoplayPlugin ? [autoplayPlugin] : []}
-          className="w-auto max-w-[200px] overflow-hidden"
+          className="w-auto max-w-[250px] overflow-hidden"
         >
           <CarouselContent className="-ml-1">
             {premiumPartners.map((partner) => (
@@ -86,13 +86,13 @@ export const PremiumLogosCarousel = () => {
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Avatar 
-                      className={`w-16 h-16 sm:w-12 sm:h-12 rounded-lg border-2 border-primary/50 bg-white transition-colors shadow-sm hover:shadow-md ${partner.instagram ? "cursor-pointer hover:border-primary" : ""}`}
+                      className={`w-20 h-20 sm:w-16 sm:h-16 rounded-lg border-2 border-primary/50 bg-white transition-colors shadow-sm hover:shadow-md ${partner.instagram ? "cursor-pointer hover:border-primary" : ""}`}
                       onClick={() => handleInstagramClick(partner)}
                     >
                       <AvatarImage 
                         src={getPartnerLogo(partner)}
                         alt={partner.name || "Parceiro Premium"}
-                        className="object-contain p-1"
+                        className="object-cover"
                       />
                       <AvatarFallback className="rounded-lg bg-primary/10 text-primary font-semibold text-sm">
                         {partner.name?.charAt(0) || "P"}
