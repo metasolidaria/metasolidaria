@@ -1,66 +1,69 @@
 
-# Plano: Aumentar Logos dos Parceiros Premium nos Carrosséis
+# Plano: Corrigir Click do Instagram nos Carrosséis Premium
 
-## Resumo
-Vou aumentar o tamanho dos logos dos parceiros Premium em todos os carrosséis e ajustar o estilo para eliminar o fundo branco que aparece ao redor das imagens.
+## Problema Identificado
+O Embla Carousel usa eventos de pointer/touch para detectar arrastos (swipe), e está interceptando os cliques mesmo com `e.stopPropagation()`. Quando você clica no logo, o carousel interpreta como início de arrasto.
 
-## Alterações Propostas
+## Solução Proposta
+Implementar detecção de clique real vs. arrasto usando:
+1. Rastrear posição do mouse/touch no `onPointerDown`
+2. No `onPointerUp`, calcular se houve movimento significativo
+3. Se não houve movimento (< 5px), é um clique real → abrir Instagram
+4. Se houve movimento, é um arrasto → ignorar
 
-### 1. PremiumLogosCarousel.tsx (Header)
-**Localização**: `src/components/PremiumLogosCarousel.tsx`
+## Arquivos a Modificar
 
-| Atual | Proposto |
-|-------|----------|
-| Avatar: `w-16 h-16 sm:w-12 sm:h-12` | Avatar: `w-20 h-20 sm:w-16 sm:h-16` |
-| AvatarImage: `p-1` | AvatarImage: `p-0` |
-| Carousel: `max-w-[200px]` | Carousel: `max-w-[250px]` |
+### 1. src/components/HeroPremiumLogos.tsx
+- Adicionar refs para rastrear posição inicial do clique
+- Substituir `onClick` por `onPointerDown` + `onPointerUp`
+- Implementar lógica de detecção clique vs. arrasto
 
-### 2. HeroPremiumLogos.tsx (Hero Section)
-**Localização**: `src/components/HeroPremiumLogos.tsx`
-
-| Atual | Proposto |
-|-------|----------|
-| Avatar: `w-14 h-14` | Avatar: `w-18 h-18` (ou `w-[72px] h-[72px]`) |
-| AvatarImage: `p-1` | AvatarImage: `p-0` |
-| Carousel: `w-[90px]` | Carousel: `w-[110px]` |
-| Skeleton: `w-12 h-12` | Skeleton: `w-[72px] h-[72px]` |
-
-### 3. GoldPartnersCarousel.tsx (Página do Grupo)
-**Localização**: `src/components/GoldPartnersCarousel.tsx`
-
-| Atual | Proposto |
-|-------|----------|
-| Avatar: `w-16 h-16` | Avatar: `w-20 h-20` |
-| AvatarImage: `p-1.5` | AvatarImage: `p-0` |
-
-## Resumo Visual das Mudanças
-
-- **Tamanho**: Aumento de aproximadamente 25-30% em todos os avatares
-- **Padding**: Removido o padding interno que causava a borda branca
-- **Containers**: Ajustados para acomodar os novos tamanhos
+### 2. src/components/PremiumLogosCarousel.tsx
+- Mesma lógica do HeroPremiumLogos
 
 ---
 
 ## Detalhes Técnicos
 
-### Arquivos a Modificar
-1. `src/components/PremiumLogosCarousel.tsx`
-2. `src/components/HeroPremiumLogos.tsx`
-3. `src/components/GoldPartnersCarousel.tsx`
+### Nova Lógica de Clique
 
-### Mudanças Específicas
+```typescript
+// Rastrear posição inicial
+const pointerStartPos = useRef<{ x: number; y: number } | null>(null);
 
-**PremiumLogosCarousel.tsx**:
-- Linha 81: `max-w-[200px]` → `max-w-[250px]`
-- Linha 89: `w-16 h-16 sm:w-12 sm:h-12` → `w-20 h-20 sm:w-16 sm:h-16`
-- Linha 95: `p-1` → remover ou usar `p-0`
+const handlePointerDown = (e: React.PointerEvent) => {
+  pointerStartPos.current = { x: e.clientX, y: e.clientY };
+};
 
-**HeroPremiumLogos.tsx**:
-- Linha 59: `w-12 h-12` → `w-[72px] h-[72px]`
-- Linha 88: `w-[90px]` → `w-[110px]`
-- Linha 96: `w-14 h-14` → `w-[72px] h-[72px]`
-- Linha 102: `p-1` → remover ou usar `p-0`
+const handlePointerUp = (e: React.PointerEvent, partner: Partner) => {
+  if (!pointerStartPos.current) return;
+  
+  const dx = Math.abs(e.clientX - pointerStartPos.current.x);
+  const dy = Math.abs(e.clientY - pointerStartPos.current.y);
+  
+  // Se movimento < 5px em ambos eixos, é um clique
+  if (dx < 5 && dy < 5) {
+    handleInstagramClick(partner);
+  }
+  
+  pointerStartPos.current = null;
+};
+```
 
-**GoldPartnersCarousel.tsx**:
-- Linha 124: `w-16 h-16` → `w-20 h-20`
-- Linha 128: `p-1.5` → remover ou usar `p-0`
+### Mudanças no JSX
+
+```jsx
+<button
+  type="button"
+  onPointerDown={handlePointerDown}
+  onPointerUp={(e) => handlePointerUp(e, partner)}
+  className="focus:outline-none touch-none"
+  aria-label={`Visitar Instagram de ${partner.name}`}
+>
+```
+
+### Benefícios
+- Funciona em desktop (mouse) e mobile (touch)
+- Não interfere com o arrasto do carousel
+- Mantém acessibilidade com `aria-label`
+
