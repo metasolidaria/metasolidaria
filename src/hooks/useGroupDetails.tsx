@@ -81,17 +81,40 @@ export const useGroupDetails = (groupId: string | undefined) => {
   });
 
   // Fetch group members with their total contributions and commitments
+  // Fetch group members with their total contributions and commitments
+  // Using group_members_public view to respect WhatsApp visibility settings
   const { data: members, isLoading: membersLoading } = useQuery({
     queryKey: ["groupMembers", groupId],
     queryFn: async () => {
       if (!groupId) return [];
 
+      // Use group_members_public view which handles WhatsApp visibility
+      // The view only exposes WhatsApp when: whatsapp_visible=true, or user is the member, leader, or admin
       const { data: membersData, error: membersError } = await supabase
-        .from("group_members")
+        .from("group_members_public")
         .select("*")
         .eq("group_id", groupId);
 
       if (membersError) throw membersError;
+      if (!membersData) return [];
+
+      // Cast to array with proper typing
+      const members = membersData as Array<{
+        id: string;
+        group_id: string;
+        user_id: string | null;
+        name: string;
+        personal_goal: number | null;
+        goals_reached: number | null;
+        commitment_type: string | null;
+        commitment_metric: string | null;
+        commitment_ratio: number | null;
+        commitment_donation: number | null;
+        penalty_donation: number | null;
+        created_at: string;
+        updated_at: string;
+        whatsapp: string | null;
+      }>;
 
       // Get total contributions for each member
       const { data: progressData } = await supabase
@@ -105,7 +128,7 @@ export const useGroupDetails = (groupId: string | undefined) => {
       }, {} as Record<string, number>);
 
       // Get commitments for all members
-      const memberIds = membersData.map(m => m.id);
+      const memberIds = members.map(m => m.id);
       const { data: commitmentsData } = await supabase
         .from("member_commitments")
         .select("*")
@@ -125,8 +148,9 @@ export const useGroupDetails = (groupId: string | undefined) => {
         return acc;
       }, {} as Record<string, MemberCommitment[]>);
 
-      return membersData.map((member) => ({
+      return members.map((member) => ({
         ...member,
+        goals_reached: member.goals_reached || 0,
         total_contributed: contributionsByMember[member.id] || 0,
         commitments: commitmentsByMember[member.id] || [],
       })) as GroupMember[];
