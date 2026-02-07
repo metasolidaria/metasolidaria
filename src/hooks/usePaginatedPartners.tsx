@@ -1,6 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useMemo, useState, useEffect } from "react";
 
 export type PartnerTier = 'premium' | 'ouro' | 'apoiador';
 
@@ -63,9 +62,6 @@ interface UsePaginatedPartnersOptions {
 }
 
 export const usePaginatedPartners = ({ page, limit, category, city }: UsePaginatedPartnersOptions) => {
-  // Generate a random seed on component mount to ensure consistent shuffle during session
-  const [shuffleSeed] = useState(() => Math.random());
-  
   const { data, isLoading } = useQuery({
     queryKey: ["paginatedPartners", page, limit, category, city],
     queryFn: async () => {
