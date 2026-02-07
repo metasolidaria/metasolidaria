@@ -46,19 +46,18 @@ const useFeaturedPartners = () => {
 export const FeaturedPartnerSpotlight = () => {
   const { data: partners, isLoading } = useFeaturedPartners();
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [hasInitialized, setHasInitialized] = useState(false);
 
-  // Auto-rotation every 5 seconds
+  // Set random starting index on first load
   useEffect(() => {
-    if (!partners || partners.length <= 1) return;
-    
-    const interval = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % partners.length);
-    }, 5000);
-    
-    return () => clearInterval(interval);
-  }, [partners]);
+    if (partners && partners.length > 0 && !hasInitialized) {
+      const randomIndex = Math.floor(Math.random() * partners.length);
+      setCurrentIndex(randomIndex);
+      setHasInitialized(true);
+    }
+  }, [partners, hasInitialized]);
 
-  // Reset index if partners change
+  // Reset index if partners change and current index is out of bounds
   useEffect(() => {
     if (partners && currentIndex >= partners.length) {
       setCurrentIndex(0);
