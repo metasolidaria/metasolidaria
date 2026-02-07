@@ -121,11 +121,11 @@ export const GoldPartnersCarousel = ({ groupCity, groupId, groupName }: GoldPart
               >
                 <CardContent className="p-4">
                   <div className="flex items-start gap-3">
-                    <Avatar className="w-16 h-16 rounded-xl border-2 border-amber-500/30 bg-white">
+                    <Avatar className="w-20 h-20 rounded-xl border-2 border-amber-500/30 bg-white">
                       <AvatarImage 
                         src={getPartnerLogo(partner)} 
                         alt={partner.name || "Parceiro"}
-                        className="object-contain p-1.5"
+                        className="object-cover"
                       />
                       <AvatarFallback className="rounded-xl bg-amber-100 text-amber-700 font-semibold text-lg">
                         {partner.name?.charAt(0) || "P"}
