@@ -138,12 +138,20 @@ export const ImpactCounter = () => {
                   </p>
                 </div>
                 
-                {/* Mascot */}
-                <img 
-                  src="/mascote-meta-solidaria.png" 
-                  alt="Mascote Meta Solidária" 
-                  className="w-28 lg:w-40 xl:w-48 h-auto drop-shadow-lg"
-                />
+                {/* Mascot with Bible Verse */}
+                <div className="flex flex-col items-center text-center max-w-xs">
+                  <img 
+                    src="/mascote-meta-solidaria.png" 
+                    alt="Mascote Meta Solidária" 
+                    className="w-28 lg:w-40 xl:w-48 h-auto drop-shadow-lg mb-3"
+                  />
+                  <blockquote className="text-primary-foreground/80 text-sm italic leading-relaxed">
+                    "Cada um contribua segundo propôs no seu coração, não com tristeza ou por necessidade; porque Deus ama ao que dá com alegria."
+                  </blockquote>
+                  <cite className="text-primary-foreground/60 text-xs mt-1 not-italic font-medium">
+                    2 Coríntios 9:7
+                  </cite>
+                </div>
               </div>
 
             {/* Breakdown by Type - Only show types with values */}
