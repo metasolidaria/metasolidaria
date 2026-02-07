@@ -503,14 +503,28 @@ export const PartnersSection = () => {
             Encontre profissionais de saúde próximos de você para ajudar na sua
             jornada de transformação
           </p>
-          <Button
-            variant="hero"
-            onClick={() => setIsRecommendModalOpen(true)}
-            className="gap-2"
-          >
-            <UserPlus className="w-4 h-4" />
-            Recomendar ou Seja Parceiro
-          </Button>
+              <Button
+                variant="hero"
+                onClick={() => setIsRecommendModalOpen(true)}
+                className="gap-2"
+              >
+                <UserPlus className="w-4 h-4" />
+                Recomendar ou Seja Parceiro
+              </Button>
+              <Button
+                variant="outline"
+                asChild
+                className="gap-2"
+              >
+                <a
+                  href="https://wa.me/5519994662603?text=Olá! Vim pelo site Meta Solidária."
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Phone className="w-4 h-4" />
+                  Fale Conosco
+                </a>
+              </Button>
         </div>
 
         {/* Featured Partner Spotlight */}
