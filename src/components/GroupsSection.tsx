@@ -183,11 +183,11 @@ export const GroupsSection = ({ onRequireAuth }: GroupsSectionProps) => {
           </div>
         ) : groups && groups.length > 0 ? (
           <>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {groups.map((group, index) => (
                 <div
                   key={group.id}
-                  className="bg-card rounded-2xl overflow-hidden shadow-soft hover:shadow-glow transition-all duration-300 hover:-translate-y-1 group animate-in fade-in slide-in-from-bottom-4 duration-400"
+                  className="bg-card rounded-2xl overflow-hidden shadow-soft hover:shadow-glow transition-all duration-300 hover:-translate-y-1 group animate-in fade-in slide-in-from-bottom-4 duration-400 min-w-0"
                   style={{ animationDelay: `${index * 100}ms` }}
                 >
                   <div className="relative h-40 overflow-hidden">
@@ -226,8 +226,8 @@ export const GroupsSection = ({ onRequireAuth }: GroupsSectionProps) => {
                         {donationTypeLabels[group.donation_type]?.label || "Doações"}
                       </span>
                     </div>
-                    <div className="absolute bottom-4 left-4 right-4">
-                      <h3 className="text-xl font-bold text-primary-foreground">
+                    <div className="absolute bottom-4 left-4 right-4 min-w-0">
+                      <h3 className="text-xl font-bold text-primary-foreground truncate">
                         {group.name}
                       </h3>
                       <div className="flex items-center gap-1 text-primary-foreground/80 text-sm">
@@ -268,7 +268,7 @@ export const GroupsSection = ({ onRequireAuth }: GroupsSectionProps) => {
                       </div>
                     </div>
 
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2">
                       {isGroupLeader(group.leader_id) && (
                         <Button
                           variant="outline"
