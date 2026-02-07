@@ -133,14 +133,14 @@ export const PremiumPartnerSlots = () => {
                   {/* Avatar with purple border for Premium */}
                   <Avatar 
                     style={{ width: 110, height: 110 }}
-                    className="rounded-full border-2 border-purple-400/50 bg-transparent"
+                    className="rounded-lg border-2 border-purple-400/50 bg-transparent"
                   >
                     <AvatarImage 
                       src={getPartnerLogo(currentPartner)} 
                       alt={currentPartner.name || "Parceiro"} 
                       className="object-contain p-1"
                     />
-                    <AvatarFallback className="rounded-full font-semibold bg-purple-100 text-purple-700">
+                    <AvatarFallback className="rounded-lg font-semibold bg-purple-100 text-purple-700">
                       {currentPartner.name?.charAt(0) || "P"}
                     </AvatarFallback>
                   </Avatar>
