@@ -99,7 +99,7 @@ export const HeroPremiumLogos = () => {
                       <AvatarImage
                         src={getPartnerLogo(partner)}
                         alt={partner.name || "Parceiro Premium"}
-                        className="object-cover"
+                        className="object-contain p-0.5"
                       />
                       <AvatarFallback className="rounded-lg bg-primary/10 text-primary font-semibold text-sm">
                         {partner.name?.charAt(0) || "P"}
