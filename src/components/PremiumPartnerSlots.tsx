@@ -131,7 +131,10 @@ export const PremiumPartnerSlots = () => {
                 
                 <div className="flex flex-col items-center text-center gap-3">
                   {/* Avatar with purple border for Premium */}
-                  <Avatar className="w-16 h-16 rounded-full border-2 border-purple-400/50 bg-white">
+                  <Avatar 
+                    style={{ width: 110, height: 110 }}
+                    className="rounded-full border-2 border-purple-400/50 bg-white"
+                  >
                     <AvatarImage 
                       src={getPartnerLogo(currentPartner)} 
                       alt={currentPartner.name || "Parceiro"} 
