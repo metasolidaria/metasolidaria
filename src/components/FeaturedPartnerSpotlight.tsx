@@ -169,17 +169,17 @@ export const FeaturedPartnerSpotlight = () => {
 
             {/* Info */}
             <div className="flex-1 min-w-0">
-              <h4 className="font-bold text-foreground truncate text-lg">
+              <h4 className="font-bold text-card-foreground truncate text-lg">
                 {currentPartner.name}
               </h4>
               <p className="text-sm text-primary font-medium">
                 {currentPartner.specialty}
               </p>
-              <p className="text-xs text-muted-foreground mt-1">
+              <p className="text-xs text-card-foreground/70 mt-1">
                 {currentPartner.city}
               </p>
               {currentPartner.description && (
-                <p className="text-xs text-muted-foreground mt-2 line-clamp-2">
+                <p className="text-xs text-card-foreground/70 mt-2 line-clamp-2">
                   {currentPartner.description}
                 </p>
               )}
@@ -223,18 +223,22 @@ export const FeaturedPartnerSpotlight = () => {
 
       {/* Position Indicators */}
       {partners.length > 1 && (
-        <div className="flex justify-center gap-1.5 mt-4">
+        <div className="flex justify-center gap-3 mt-4">
           {partners.map((_, idx) => (
             <button
               key={idx}
               onClick={() => setCurrentIndex(idx)}
               aria-label={`Ver parceiro ${idx + 1}`}
-              className={`w-2 h-2 rounded-full transition-colors ${
-                idx === currentIndex 
-                  ? "bg-primary" 
-                  : "bg-muted-foreground/30 hover:bg-muted-foreground/50"
-              }`}
-            />
+              className="w-6 h-6 flex items-center justify-center"
+            >
+              <span
+                className={`w-2 h-2 rounded-full transition-colors ${
+                  idx === currentIndex 
+                    ? "bg-primary" 
+                    : "bg-muted-foreground/50"
+                }`}
+              />
+            </button>
           ))}
         </div>
       )}
