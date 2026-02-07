@@ -125,7 +125,7 @@ export const GoldPartnersCarousel = ({ groupCity, groupId, groupName }: GoldPart
                       <AvatarImage 
                         src={getPartnerLogo(partner)} 
                         alt={partner.name || "Parceiro"}
-                        className="object-cover"
+                        className="object-contain p-0.5"
                       />
                       <AvatarFallback className="rounded-xl bg-amber-100 text-amber-700 font-semibold text-lg">
                         {partner.name?.charAt(0) || "P"}
