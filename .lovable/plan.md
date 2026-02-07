@@ -1,38 +1,62 @@
 
-
-# Plano: Remover Pop-up de Teste
+# Plano: Adicionar Botão "Fale Conosco" com WhatsApp
 
 ## Objetivo
-Remover completamente o modal de anúncio de testes que aparece ao carregar a página inicial.
+Adicionar um botão "Fale Conosco" abaixo do botão "Recomendar ou Seja Parceiro" na seção de Parceiros, com link direto para o WhatsApp da Meta Solidária.
 
 ---
 
 ## Mudanças
 
-### Arquivo: `src/pages/Index.tsx`
+### Arquivo: `src/components/PartnersSection.tsx`
 
-1. **Remover a importação** do `LaunchAnnouncementModal` (linha 17)
-2. **Remover o componente** `<LaunchAnnouncementModal />` do JSX (linhas 109-111)
+**Adicionar** na linha 513 (logo após o botão "Recomendar ou Seja Parceiro"):
+
+| Elemento | Descrição |
+|----------|-----------|
+| Novo Botão | "Fale Conosco" com ícone de WhatsApp |
+| Variante | `outline` para diferenciar do botão principal |
+| Link | WhatsApp: 19 99466-2603 |
+| Mensagem | "Olá! Vim pelo site Meta Solidária." |
 
 ---
 
-## Resultado
-O pop-up não aparecerá mais quando os usuários acessarem o site.
+## Resultado Visual
+
+```text
+┌─────────────────────────────────────┐
+│        Guia de Parceiros            │
+│                                     │
+│   Encontre profissionais de saúde   │
+│   próximos de você...               │
+│                                     │
+│  [👤 Recomendar ou Seja Parceiro]   │  ← botão principal
+│       [ 📱 Fale Conosco ]           │  ← novo botão
+│                                     │
+└─────────────────────────────────────┘
+```
 
 ---
 
 ## Detalhes Técnicos
 
-```text
-Antes:
-├── Index.tsx
-│   ├── import LaunchAnnouncementModal ← remover
-│   └── <LaunchAnnouncementModal /> ← remover
+1. **Importar ícone** `MessageCircle` do lucide-react (ou usar SVG do WhatsApp)
 
-Depois:
-├── Index.tsx
-│   └── (sem modal de anúncio)
-```
+2. **Adicionar botão** após a linha 513:
+   ```tsx
+   <Button
+     variant="outline"
+     onClick={() => {
+       const message = encodeURIComponent("Olá! Vim pelo site Meta Solidária.");
+       window.open(`https://wa.me/5519994662603?text=${message}`, "_blank");
+     }}
+     className="gap-2 ml-2"
+   >
+     <Phone className="w-4 h-4" />
+     Fale Conosco
+   </Button>
+   ```
 
-**Nota:** O arquivo `src/components/LaunchAnnouncementModal.tsx` será mantido no projeto caso você queira reativar o modal futuramente.
+3. **Layout**: Os botões ficarão lado a lado em telas maiores, ou empilhados em mobile usando `flex-wrap`
 
+4. **Estilo**: Usar variante `outline` para criar contraste visual com o botão principal `hero`
