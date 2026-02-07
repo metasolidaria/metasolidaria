@@ -196,7 +196,7 @@ export const GroupsSection = ({ onRequireAuth }: GroupsSectionProps) => {
                       alt={group.name}
                       loading="lazy"
                       decoding="async"
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" 
+                      className="w-full h-full object-cover object-center group-hover:scale-110 transition-transform duration-500" 
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-foreground/60 to-transparent" />
                     <div className="absolute top-3 left-3 flex flex-wrap gap-1.5">
