@@ -136,6 +136,13 @@ export type Database = {
             referencedRelation: "group_members"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "goal_progress_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "group_members_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       group_invitations: {
@@ -393,6 +400,7 @@ export type Database = {
           name: string
           updated_at: string
           view_count: number
+          whatsapp_visible: boolean
         }
         Insert: {
           city: string
@@ -417,6 +425,7 @@ export type Database = {
           name: string
           updated_at?: string
           view_count?: number
+          whatsapp_visible?: boolean
         }
         Update: {
           city?: string
@@ -441,6 +450,7 @@ export type Database = {
           name?: string
           updated_at?: string
           view_count?: number
+          whatsapp_visible?: boolean
         }
         Relationships: [
           {
@@ -499,6 +509,13 @@ export type Database = {
             columns: ["member_id"]
             isOneToOne: false
             referencedRelation: "group_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "member_commitments_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "group_members_public"
             referencedColumns: ["id"]
           },
         ]
@@ -720,6 +737,61 @@ export type Database = {
           observations?: string | null
         }
         Relationships: []
+      }
+      group_members_public: {
+        Row: {
+          commitment_donation: number | null
+          commitment_metric: string | null
+          commitment_ratio: number | null
+          commitment_type: string | null
+          created_at: string | null
+          goals_reached: number | null
+          group_id: string | null
+          id: string | null
+          name: string | null
+          penalty_donation: number | null
+          personal_goal: number | null
+          updated_at: string | null
+          user_id: string | null
+          whatsapp: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_members_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "group_stats"
+            referencedColumns: ["group_id"]
+          },
+          {
+            foreignKeyName: "group_members_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "group_members_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "groups_admin"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "group_members_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "groups_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "group_members_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "groups_search"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       group_stats: {
         Row: {
@@ -1026,6 +1098,28 @@ export type Database = {
               _leader_whatsapp: string
               _members_visible?: boolean
               _name: string
+            }
+            Returns: string
+          }
+        | {
+            Args: {
+              _city: string
+              _default_commitment_donation?: number
+              _default_commitment_goal?: number
+              _default_commitment_metric?: string
+              _default_commitment_name?: string
+              _default_commitment_ratio?: number
+              _description: string
+              _donation_type: string
+              _end_date?: string
+              _entity_id?: string
+              _goal_2026: number
+              _is_private: boolean
+              _leader_name: string
+              _leader_whatsapp: string
+              _members_visible?: boolean
+              _name: string
+              _whatsapp_visible?: boolean
             }
             Returns: string
           }
