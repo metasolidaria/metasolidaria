@@ -57,7 +57,7 @@ export const HeroPremiumLogos = () => {
   if (isLoading) {
     return (
       <div className="border-l border-primary-foreground/30 pl-3">
-        <Skeleton className="w-[110px] h-[110px] rounded-lg bg-primary-foreground/20" />
+        <Skeleton style={{ width: 110, height: 110 }} className="rounded-lg bg-primary-foreground/20" />
       </div>
     );
   }
@@ -113,7 +113,8 @@ export const HeroPremiumLogos = () => {
                       aria-label={`Visitar Instagram de ${partner.name}`}
                     >
                       <Avatar
-                        className={`w-[110px] h-[110px] rounded-lg bg-transparent transition-all shadow-md hover:shadow-lg hover:scale-105 ${partner.instagram ? "cursor-pointer" : ""}`}
+                        style={{ width: 110, height: 110 }}
+                        className={`rounded-lg bg-transparent transition-all shadow-md hover:shadow-lg hover:scale-105 ${partner.instagram ? "cursor-pointer" : ""}`}
                       >
                         <AvatarImage
                           src={getPartnerLogo(partner)}

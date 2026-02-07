@@ -16,7 +16,7 @@ const CreateGroupModal = lazy(() => import("./CreateGroupModal").then(m => ({ de
 // Lightweight placeholder for lazy components
 const LogoPlaceholder = () => (
   <div className="border-l border-primary-foreground/30 pl-3">
-    <Skeleton className="w-12 h-12 rounded-lg bg-primary-foreground/20" />
+    <Skeleton style={{ width: 110, height: 110 }} className="rounded-lg bg-primary-foreground/20" />
   </div>
 );
 
