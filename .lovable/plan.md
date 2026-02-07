@@ -1,69 +1,49 @@
 
-# Plano: Corrigir Click do Instagram nos Carrosséis Premium
+# Plano: Aumentar Logos e Remover Fundo Branco
 
-## Problema Identificado
-O Embla Carousel usa eventos de pointer/touch para detectar arrastos (swipe), e está interceptando os cliques mesmo com `e.stopPropagation()`. Quando você clica no logo, o carousel interpreta como início de arrasto.
+## Resumo
+Vou aumentar o tamanho dos logos dos parceiros Premium e remover o fundo branco do Avatar que está aparecendo ao redor das imagens.
 
-## Solução Proposta
-Implementar detecção de clique real vs. arrasto usando:
-1. Rastrear posição do mouse/touch no `onPointerDown`
-2. No `onPointerUp`, calcular se houve movimento significativo
-3. Se não houve movimento (< 5px), é um clique real → abrir Instagram
-4. Se houve movimento, é um arrasto → ignorar
+## Alterações Propostas
 
-## Arquivos a Modificar
+### 1. HeroPremiumLogos.tsx (Hero Section)
 
-### 1. src/components/HeroPremiumLogos.tsx
-- Adicionar refs para rastrear posição inicial do clique
-- Substituir `onClick` por `onPointerDown` + `onPointerUp`
-- Implementar lógica de detecção clique vs. arrasto
+| Propriedade | Atual | Proposto |
+|-------------|-------|----------|
+| Avatar tamanho | `w-[72px] h-[72px]` | `w-[88px] h-[88px]` |
+| Avatar fundo | `bg-white/90` | `bg-transparent` |
+| Carousel width | `w-[110px]` | `w-[130px]` |
+| Skeleton | `w-[72px] h-[72px]` | `w-[88px] h-[88px]` |
 
-### 2. src/components/PremiumLogosCarousel.tsx
-- Mesma lógica do HeroPremiumLogos
+### 2. PremiumLogosCarousel.tsx (Header)
+
+| Propriedade | Atual | Proposto |
+|-------------|-------|----------|
+| Avatar tamanho | `w-20 h-20 sm:w-16 sm:h-16` | `w-24 h-24 sm:w-20 sm:h-20` |
+| Avatar fundo | `bg-white` | `bg-transparent` |
+| Container max-width | `max-w-[250px]` | `max-w-[280px]` |
+
+## Resumo Visual
+
+- **Tamanho**: +20% em relação ao atual
+- **Fundo**: Transparente em vez de branco
+- **Containers**: Ajustados para acomodar os novos tamanhos
 
 ---
 
 ## Detalhes Técnicos
 
-### Nova Lógica de Clique
+### Arquivos a Modificar
+1. `src/components/HeroPremiumLogos.tsx`
+2. `src/components/PremiumLogosCarousel.tsx`
 
-```typescript
-// Rastrear posição inicial
-const pointerStartPos = useRef<{ x: number; y: number } | null>(null);
+### Mudanças Específicas
 
-const handlePointerDown = (e: React.PointerEvent) => {
-  pointerStartPos.current = { x: e.clientX, y: e.clientY };
-};
+**HeroPremiumLogos.tsx**:
+- Linha 60: Skeleton `w-[72px] h-[72px]` → `w-[88px] h-[88px]`
+- Linha 101: Carousel `w-[110px]` → `w-[130px]`
+- Linha 116: Avatar `w-[72px] h-[72px]` → `w-[88px] h-[88px]`, remover `bg-white/90` → `bg-transparent`
 
-const handlePointerUp = (e: React.PointerEvent, partner: Partner) => {
-  if (!pointerStartPos.current) return;
-  
-  const dx = Math.abs(e.clientX - pointerStartPos.current.x);
-  const dy = Math.abs(e.clientY - pointerStartPos.current.y);
-  
-  // Se movimento < 5px em ambos eixos, é um clique
-  if (dx < 5 && dy < 5) {
-    handleInstagramClick(partner);
-  }
-  
-  pointerStartPos.current = null;
-};
-```
-
-### Mudanças no JSX
-
-```jsx
-<button
-  type="button"
-  onPointerDown={handlePointerDown}
-  onPointerUp={(e) => handlePointerUp(e, partner)}
-  className="focus:outline-none touch-none"
-  aria-label={`Visitar Instagram de ${partner.name}`}
->
-```
-
-### Benefícios
-- Funciona em desktop (mouse) e mobile (touch)
-- Não interfere com o arrasto do carousel
-- Mantém acessibilidade com `aria-label`
-
+**PremiumLogosCarousel.tsx**:
+- Linha 94: Carousel `max-w-[250px]` → `max-w-[280px]`
+- Linha 109: Avatar `w-20 h-20 sm:w-16 sm:h-16` → `w-24 h-24 sm:w-20 sm:h-20`, remover `bg-white` → `bg-transparent`
