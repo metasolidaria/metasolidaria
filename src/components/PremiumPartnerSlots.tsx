@@ -133,7 +133,7 @@ export const PremiumPartnerSlots = () => {
                   {/* Avatar with purple border for Premium */}
                   <Avatar 
                     style={{ width: 110, height: 110 }}
-                    className="rounded-full border-2 border-purple-400/50 bg-white"
+                    className="rounded-full border-2 border-purple-400/50 bg-transparent"
                   >
                     <AvatarImage 
                       src={getPartnerLogo(currentPartner)} 
