@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, forwardRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
@@ -51,6 +51,37 @@ import {
 import { InviteMemberModal } from "@/components/InviteMemberModal";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+
+interface SortableHeaderProps {
+  column: string;
+  children: React.ReactNode;
+  sortColumn: string | null;
+  sortDirection: "asc" | "desc";
+  onSort: (column: string) => void;
+}
+
+const SortableHeader = forwardRef<HTMLButtonElement, SortableHeaderProps>(
+  ({ column, children, sortColumn, sortDirection, onSort }, ref) => (
+    <Button
+      ref={ref}
+      variant="ghost"
+      onClick={() => onSort(column)}
+      className="h-auto p-0 font-medium text-muted-foreground hover:text-foreground hover:bg-transparent"
+    >
+      {children}
+      {sortColumn === column ? (
+        sortDirection === "asc" ? (
+          <ArrowUp className="ml-1 h-3 w-3" />
+        ) : (
+          <ArrowDown className="ml-1 h-3 w-3" />
+        )
+      ) : (
+        <ArrowUpDown className="ml-1 h-3 w-3 opacity-50" />
+      )}
+    </Button>
+  )
+);
+SortableHeader.displayName = "SortableHeader";
 
 const AdminGroups = () => {
   const navigate = useNavigate();
@@ -173,24 +204,6 @@ const AdminGroups = () => {
     }
   };
 
-  const SortableHeader = ({ column, children }: { column: string; children: React.ReactNode }) => (
-    <Button
-      variant="ghost"
-      onClick={() => handleSort(column)}
-      className="h-auto p-0 font-medium text-muted-foreground hover:text-foreground hover:bg-transparent"
-    >
-      {children}
-      {sortColumn === column ? (
-        sortDirection === "asc" ? (
-          <ArrowUp className="ml-1 h-3 w-3" />
-        ) : (
-          <ArrowDown className="ml-1 h-3 w-3" />
-        )
-      ) : (
-        <ArrowUpDown className="ml-1 h-3 w-3 opacity-50" />
-      )}
-    </Button>
-  );
 
   const handleEdit = (group: AdminGroup) => {
     setSelectedGroup(group);
@@ -298,14 +311,14 @@ const AdminGroups = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead><SortableHeader column="name">Nome</SortableHeader></TableHead>
-                  <TableHead><SortableHeader column="city">Cidade</SortableHeader></TableHead>
-                  <TableHead><SortableHeader column="donation_type">Tipo</SortableHeader></TableHead>
-                  <TableHead><SortableHeader column="is_private">Visibilidade</SortableHeader></TableHead>
-                  <TableHead className="text-right"><SortableHeader column="member_count">Membros</SortableHeader></TableHead>
-                  <TableHead className="text-right"><SortableHeader column="total_goals">Metas</SortableHeader></TableHead>
-                  <TableHead className="text-right"><SortableHeader column="view_count">Acessos</SortableHeader></TableHead>
-                  <TableHead><SortableHeader column="created_at">Criação</SortableHeader></TableHead>
+                  <TableHead><SortableHeader column="name" sortColumn={sortColumn} sortDirection={sortDirection} onSort={handleSort}>Nome</SortableHeader></TableHead>
+                  <TableHead><SortableHeader column="city" sortColumn={sortColumn} sortDirection={sortDirection} onSort={handleSort}>Cidade</SortableHeader></TableHead>
+                  <TableHead><SortableHeader column="donation_type" sortColumn={sortColumn} sortDirection={sortDirection} onSort={handleSort}>Tipo</SortableHeader></TableHead>
+                  <TableHead><SortableHeader column="is_private" sortColumn={sortColumn} sortDirection={sortDirection} onSort={handleSort}>Visibilidade</SortableHeader></TableHead>
+                  <TableHead className="text-right"><SortableHeader column="member_count" sortColumn={sortColumn} sortDirection={sortDirection} onSort={handleSort}>Membros</SortableHeader></TableHead>
+                  <TableHead className="text-right"><SortableHeader column="total_goals" sortColumn={sortColumn} sortDirection={sortDirection} onSort={handleSort}>Metas</SortableHeader></TableHead>
+                  <TableHead className="text-right"><SortableHeader column="view_count" sortColumn={sortColumn} sortDirection={sortDirection} onSort={handleSort}>Acessos</SortableHeader></TableHead>
+                  <TableHead><SortableHeader column="created_at" sortColumn={sortColumn} sortDirection={sortDirection} onSort={handleSort}>Criação</SortableHeader></TableHead>
                   <TableHead className="w-[150px]">Ações</TableHead>
                 </TableRow>
               </TableHeader>
