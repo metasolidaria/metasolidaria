@@ -1,62 +1,80 @@
 
-# Plano: Adicionar Botão "Fale Conosco" com WhatsApp
+
+# Plano: Adicionar Parceiro Ouro Nacional - Brave Sports
 
 ## Objetivo
-Adicionar um botão "Fale Conosco" abaixo do botão "Recomendar ou Seja Parceiro" na seção de Parceiros, com link direto para o WhatsApp da Meta Solidária.
+Cadastrar a empresa **Brave Sports** como parceiro **Ouro** com visibilidade **nacional** (Brasil), incluindo contato via WhatsApp.
 
 ---
 
-## Mudanças
+## Dados do Parceiro
 
-### Arquivo: `src/components/PartnersSection.tsx`
+| Campo | Valor |
+|-------|-------|
+| Nome | Brave Sports |
+| Tier | ouro |
+| Cidade | Brasil (visibilidade nacional) |
+| Instagram | @bravesportsbr |
+| WhatsApp | 19 99102-9475 |
+| Especialidade | Atleta/Personalidade |
+| Aprovado | Sim |
 
-**Adicionar** na linha 513 (logo após o botão "Recomendar ou Seja Parceiro"):
+---
 
-| Elemento | Descrição |
-|----------|-----------|
-| Novo Botão | "Fale Conosco" com ícone de WhatsApp |
-| Variante | `outline` para diferenciar do botão principal |
-| Link | WhatsApp: 19 99466-2603 |
-| Mensagem | "Olá! Vim pelo site Meta Solidária." |
+## Passos de Implementação
+
+### 1. Salvar Logo no Projeto
+- Salvar a imagem extraída do PDF como `public/brave-sports-logo.png`
+
+### 2. Inserir no Banco de Dados
+
+```sql
+INSERT INTO partners (
+  name,
+  tier,
+  city,
+  instagram,
+  whatsapp,
+  specialty,
+  is_approved,
+  logo_url
+) VALUES (
+  'Brave Sports',
+  'ouro',
+  'Brasil',
+  '@bravesportsbr',
+  '19991029475',
+  'Atleta/Personalidade',
+  true,
+  '/brave-sports-logo.png'
+);
+```
 
 ---
 
 ## Resultado Visual
 
+O parceiro aparecerá com dois botões de contato:
+
 ```text
 ┌─────────────────────────────────────┐
-│        Guia de Parceiros            │
+│  [Logo]  Brave Sports      [Ouro 👑]│
+│  Atleta/Personalidade               │
+│  Brasil                             │
 │                                     │
-│   Encontre profissionais de saúde   │
-│   próximos de você...               │
-│                                     │
-│  [👤 Recomendar ou Seja Parceiro]   │  ← botão principal
-│       [ 📱 Fale Conosco ]           │  ← novo botão
-│                                     │
+│  [📱 Entrar em Contato] [📷 Insta]  │
 └─────────────────────────────────────┘
 ```
 
+- **Botão WhatsApp**: Abre conversa com mensagem "Olá Brave Sports! Encontrei seu contato no Meta Solidária."
+- **Botão Instagram**: Abre perfil @bravesportsbr
+
 ---
 
-## Detalhes Técnicos
+## Visibilidade
 
-1. **Importar ícone** `MessageCircle` do lucide-react (ou usar SVG do WhatsApp)
+1. **FeaturedPartnerSpotlight** - Rotação na página inicial
+2. **Guia de Parceiros** - Com selo dourado "Ouro"
+3. **GoldPartnersCarousel** - Visível em todas as páginas de grupos
+4. **Nacional** - Aparece para usuários de qualquer cidade
 
-2. **Adicionar botão** após a linha 513:
-   ```tsx
-   <Button
-     variant="outline"
-     onClick={() => {
-       const message = encodeURIComponent("Olá! Vim pelo site Meta Solidária.");
-       window.open(`https://wa.me/5519994662603?text=${message}`, "_blank");
-     }}
-     className="gap-2 ml-2"
-   >
-     <Phone className="w-4 h-4" />
-     Fale Conosco
-   </Button>
-   ```
-
-3. **Layout**: Os botões ficarão lado a lado em telas maiores, ou empilhados em mobile usando `flex-wrap`
-
-4. **Estilo**: Usar variante `outline` para criar contraste visual com o botão principal `hero`
