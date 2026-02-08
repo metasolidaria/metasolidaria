@@ -1,86 +1,112 @@
 
-## Plano: Corrigir Erro ao Gerar Link de Convite
+## Plano: Corrigir Erro do Clipboard no iOS/Safari
 
 ### Analise do Problema
 
-Apos investigacao detalhada:
+O erro exibido na imagem:
+```
+"The request is not allowed by the user agent or the platform in the current context, 
+possibly because the user denied permission."
+```
 
-1. **Logs do Banco de Dados**: Nao ha erros de banco de dados recentes
-2. **Logs de Autenticacao**: A funcionalidade ESTA funcionando na producao (varios convites criados recentemente)
-3. **Politicas RLS**: Estao configuradas corretamente - lideres podem criar convites para seus grupos
+Este e um erro especifico do Safari no iOS relacionado a API de Clipboard. O Safari tem politicas de seguranca mais rigorosas e exige que a escrita no clipboard aconteca **imediatamente** apos a acao do usuario, sem operacoes assincronas intermediarias.
 
-O erro "Erro ao gerar link" pode ter causas intermitentes:
-- Sessao expirada temporariamente
-- Problema de rede momentaneo
-- Token de autenticacao desatualizado
+**Causa raiz**: No codigo atual, fazemos uma chamada assincrona ao banco de dados (`createLinkInvitation.mutateAsync`) ANTES de chamar `navigator.clipboard.writeText()`. O Safari perde o "user gesture" original durante essa operacao assincrona e bloqueia o acesso ao clipboard.
 
 ### Solucao Proposta
 
-#### 1. Melhorar Tratamento de Erros na InviteMemberModal
+#### Estrategia 1: Usar ClipboardItem com Promise
 
-Adicionar verificacao de sessao antes de tentar criar o convite e mensagens de erro mais especificas:
-
-```typescript
-// Em src/components/InviteMemberModal.tsx
-
-const createLinkInvitation = useMutation({
-  mutationFn: async (gId: string) => {
-    // Verificar sessao antes de prosseguir
-    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-    
-    if (sessionError || !sessionData.session) {
-      throw new Error("Sua sessao expirou. Por favor, faca login novamente.");
-    }
-
-    const { data, error } = await supabase
-      .from("group_invitations")
-      .insert([{ 
-        group_id: gId, 
-        invited_by: sessionData.session.user.id,
-        invite_type: 'link',
-        email: null
-      }])
-      .select('invite_code')
-      .single();
-
-    if (error) {
-      // Tratar erros especificos
-      if (error.code === '42501') {
-        throw new Error("Voce nao tem permissao para criar convites neste grupo");
-      }
-      throw error;
-    }
-    return data.invite_code;
-  },
-});
-```
-
-#### 2. Adicionar Retry Automatico
-
-Implementar retry automatico em caso de falha temporaria:
+O Safari aceita um `ClipboardItem` que recebe uma Promise, permitindo resolver o conteudo de forma assincrona:
 
 ```typescript
-const createLinkInvitation = useMutation({
-  mutationFn: async (gId: string) => {
-    // ... codigo existente
-  },
-  retry: 2,
-  retryDelay: 1000,
-});
+const handleCopyLink = async () => {
+  if (!groupId) return;
+
+  try {
+    // Verificar se a API moderna esta disponivel
+    if (navigator.clipboard && typeof ClipboardItem !== 'undefined') {
+      // Criar o ClipboardItem ANTES da operacao assincrona
+      const clipboardItem = new ClipboardItem({
+        'text/plain': (async () => {
+          const inviteCode = await createLinkInvitation.mutateAsync(groupId);
+          const inviteUrl = `https://metasolidaria.com.br?invite=${inviteCode}`;
+          const inviteText = generateInviteText(inviteUrl);
+          return new Blob([inviteText], { type: 'text/plain' });
+        })()
+      });
+      
+      await navigator.clipboard.write([clipboardItem]);
+    } else {
+      // Fallback para navegadores mais antigos
+      // ... usar execCommand ou outra estrategia
+    }
+  } catch (error) {
+    // ...
+  }
+};
 ```
 
-#### 3. Adicionar Botao de Retry no Modal
+#### Estrategia 2: Fallback com document.execCommand (para iOS mais antigo)
 
-Se o erro persistir, mostrar opcao para tentar novamente sem fechar o modal.
+Para dispositivos onde a API de Clipboard nao esta disponivel, usar o metodo legado:
+
+```typescript
+const fallbackCopyToClipboard = (text: string): boolean => {
+  const textArea = document.createElement('textarea');
+  textArea.value = text;
+  textArea.style.position = 'fixed';
+  textArea.style.left = '-9999px';
+  document.body.appendChild(textArea);
+  textArea.select();
+  
+  try {
+    const successful = document.execCommand('copy');
+    document.body.removeChild(textArea);
+    return successful;
+  } catch (err) {
+    document.body.removeChild(textArea);
+    return false;
+  }
+};
+```
+
+#### Estrategia 3: Usar Web Share API como alternativa
+
+No iOS, a Web Share API funciona bem e pode ser uma alternativa melhor que copiar para o clipboard:
+
+```typescript
+const handleShareNative = async () => {
+  if (navigator.share) {
+    await navigator.share({
+      title: 'Convite para o grupo',
+      text: inviteText,
+      url: inviteUrl
+    });
+  }
+};
+```
 
 ### Arquivos a Modificar
 
 | Arquivo | Alteracao |
 |---------|-----------|
-| `src/components/InviteMemberModal.tsx` | Melhorar tratamento de erros e verificacao de sessao |
+| `src/components/InviteMemberModal.tsx` | Implementar ClipboardItem com Promise + fallback + opcao de compartilhamento nativo |
+
+### Implementacao Detalhada
+
+A nova funcao `handleCopyLink` tera tres niveis de fallback:
+
+1. **Primeiro**: Tentar usar `ClipboardItem` com Promise (funciona no Safari moderno)
+2. **Segundo**: Usar `navigator.clipboard.writeText` com fallback imediato (outros navegadores)
+3. **Terceiro**: Usar `document.execCommand('copy')` para navegadores legados
+
+Alem disso, vou adicionar um botao de "Compartilhar" que usa a Web Share API nativa do iOS, oferecendo uma experiencia melhor para usuarios de dispositivos moveis.
 
 ### Detalhes Tecnicos
 
-A mutacao atual usa `supabase.auth.getUser()` que pode falhar silenciosamente se a sessao estiver expirada. Usar `getSession()` primeiro permite detectar problemas de autenticacao antes de tentar a operacao.
+O Safari exige que a escrita no clipboard aconteca dentro do mesmo "user activation" (click event). A solucao com `ClipboardItem` funciona porque passamos uma Promise ao construtor, e o Safari permite resolver essa Promise de forma assincrona enquanto mantem o contexto de ativacao do usuario.
 
-Alem disso, adicionar mensagens de erro mais claras ajudara o usuario a entender o que aconteceu e como resolver (ex: fazer login novamente).
+Referencias:
+- Apple Developer Forums: ClipboardItem aceita Promise como valor
+- MDN Web Docs: Web Share API como alternativa mobile-friendly
