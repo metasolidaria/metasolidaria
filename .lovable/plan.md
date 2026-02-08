@@ -1,85 +1,64 @@
 
-## Plano: Corrigir Erro "Grupo não encontrado" para Líder do Grupo
+## Plano: Corrigir Acesso a Grupos Privados na Administração
 
 ### Diagnóstico do Problema
 
-Após investigação detalhada, identifiquei que o grupo "Meta da semana" (ID: `fc396a41-fdfd-4e04-9a48-f9bade2e5307`) existe no banco de dados, tem a Bruna como líder e membro, mas está inacessível na página do grupo.
+O grupo "Meta da semana" é **privado** (`is_private = true`). Após a última migração que adicionou `WHERE is_private = false` na view `groups_public`, o seguinte cenário acontece:
 
-**Causa Raiz Identificada:**
+1. **Hook `useGroupDetails`** tenta buscar o grupo diretamente da tabela `groups`
+2. A RLS da tabela `groups` exige:
+   - `auth.uid() IS NOT NULL` (sessão autenticada)
+   - E que o usuário seja: líder, membro, ou que o grupo seja público
+3. Se a **sessão estiver inválida/expirada**, a query retorna vazio
+4. O fallback para `groups_public` **também falha** porque grupos privados foram excluídos dessa view
 
-A view `groups_public` foi configurada com `security_invoker=on` na migração `20260131152419`. Isso faz com que a view herde as políticas RLS da tabela `groups`, que exigem autenticação (`auth.uid() IS NOT NULL`) para qualquer operação SELECT.
-
-Quando a sessão do usuário expira, fica inválida, ou o navegador não envia o JWT corretamente:
-1. A query direta à tabela `groups` falha (RLS bloqueia)
-2. O fallback para `groups_public` também falha (herda as mesmas RLS)
-3. Resultado: "Grupo não encontrado"
-
-**Evidência nos Logs de Rede:**
-```text
-Request: GET .../groups_public?select=*
-Authorization: Bearer [anon_key] // ← Não tem JWT do usuário
-Response Body: [] // ← Array vazio
-```
+**Resultado:** Erro "Grupo não encontrado" mesmo para o próprio líder.
 
 ### Solução Proposta
 
-#### Opção 1: Voltar para `security_invoker=off` (Recomendada)
+Criar uma **função SECURITY DEFINER** dedicada para administradores visualizarem qualquer grupo. Administradores precisam gerenciar todos os grupos, incluindo privados.
 
-Recriar a view `groups_public` com `security_invoker=off`. Isso permite que a view funcione independentemente das RLS da tabela base, enquanto mantemos a segurança porque:
-- A view já filtra os campos sensíveis (não expõe `leader_whatsapp`)
-- A view `groups_public` é apenas para leitura
-- Grupos privados continuam protegidos pela lógica da própria view
+#### Opção 1: Adicionar View Administrativa (Recomendada)
 
-```sql
-DROP VIEW IF EXISTS groups_public CASCADE;
+A view `groups_admin` já existe e inclui todos os grupos. O problema está no hook `useGroupDetails` que tenta usar `groups_public` como fallback em vez de `groups_admin`.
 
-CREATE VIEW groups_public
-WITH (security_invoker = off) AS
-SELECT 
-  g.id, g.name, g.city, g.donation_type, g.goal_2026,
-  g.is_private, g.leader_id, g.leader_name, g.description,
-  g.entity_id, g.end_date, g.created_at, g.updated_at,
-  g.image_url, g.members_visible, g.view_count,
-  g.default_commitment_name, g.default_commitment_metric,
-  g.default_commitment_ratio, g.default_commitment_donation,
-  g.default_commitment_goal,
-  COALESCE(gs.member_count, 0) AS member_count,
-  COALESCE(gs.total_goals, 0) AS total_goals,
-  COALESCE(gs.total_donations, 0) AS total_donations
-FROM groups g
-LEFT JOIN group_stats gs ON gs.group_id = g.id;
+**Solução:** Modificar o hook `useGroupDetails` para verificar se o usuário é admin e, nesse caso, usar a view `groups_admin` como fonte de dados.
 
-GRANT SELECT ON groups_public TO anon, authenticated;
+#### Alterações Necessárias
+
+| Arquivo | Alteração |
+|---------|-----------|
+| `src/hooks/useGroupDetails.tsx` | Adicionar verificação de admin e fallback para `groups_admin` |
+
+#### Implementação
+
+```typescript
+// Em useGroupDetails.tsx, adicionar lógica:
+
+// 1. Verificar se usuário é admin
+const { isAdmin } = useIsAdmin();
+
+// 2. Se for admin e a query principal falhar, buscar de groups_admin
+if (!data && isAdmin) {
+  const { data: adminData } = await supabase
+    .from("groups_admin")
+    .select("*")
+    .eq("id", groupId)
+    .maybeSingle();
+  
+  if (adminData) return { ...adminData, hasFullAccess: true };
+}
 ```
 
-#### Opção 2: Adicionar Policy para Anon na Tabela Groups
+### Benefícios
 
-Criar uma política RLS adicional que permita usuários anônimos visualizarem apenas grupos públicos:
+- Administradores conseguirão visualizar qualquer grupo (público ou privado)
+- Mantém a segurança para usuários normais
+- Não requer mudanças no banco de dados
+- Usa a infraestrutura de admin já existente
 
-```sql
-CREATE POLICY "Anon can view public groups"
-ON public.groups FOR SELECT
-TO anon
-USING (is_private = false);
-```
+### Impacto
 
-Porém, esta opção exporia `leader_whatsapp` diretamente, o que não é desejado.
-
-### Arquivos a Modificar
-
-| Arquivo/Recurso | Alteração |
-|-----------------|-----------|
-| Nova migração SQL | Recriar `groups_public` com `security_invoker=off` |
-
-### Detalhes Técnicos
-
-**Por que `security_invoker=off` é seguro neste caso:**
-
-1. A view `groups_public` já exclui o campo `leader_whatsapp`
-2. Para grupos privados, o acesso completo ainda é controlado pela query direta à tabela `groups` no hook `useGroupDetails`
-3. A view apenas fornece dados básicos para listar grupos na home
-
-**Impacto:**
-- Usuários não autenticados poderão ver a lista de grupos públicos na home
-- Grupos privados continuam invisíveis para não-membros
-- Líderes e membros com sessão válida ou inválida conseguirão pelo menos ver os dados básicos do grupo via fallback
+- Administradores terão acesso completo a todos os grupos via interface
+- Grupos privados continuam protegidos para usuários não-admin
+- A view `groups_public` permanece segura para listagem pública
