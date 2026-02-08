@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
+import { useIsAdmin } from "./useIsAdmin";
 import { useToast } from "@/hooks/use-toast";
 
 interface MemberCommitment {
@@ -36,6 +37,7 @@ interface ProgressEntry {
 
 export const useGroupDetails = (groupId: string | undefined) => {
   const { user } = useAuth();
+  const { isAdmin } = useIsAdmin();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -48,9 +50,9 @@ export const useGroupDetails = (groupId: string | undefined) => {
     }
   }, [groupId]);
 
-  // Fetch group details with entity (with fallback to public view)
+  // Fetch group details with entity (with fallback to public/admin view)
   const { data: group, isLoading: groupLoading, error: groupError } = useQuery({
-    queryKey: ["group", groupId],
+    queryKey: ["group", groupId, isAdmin],
     queryFn: async () => {
       if (!groupId) return null;
 
@@ -62,6 +64,20 @@ export const useGroupDetails = (groupId: string | undefined) => {
         .maybeSingle();
 
       if (data) return { ...data, hasFullAccess: true };
+
+      // If admin and main query failed, use admin view
+      if (isAdmin) {
+        const { data: adminData, error: adminError } = await supabase
+          .from("groups_admin")
+          .select("*")
+          .eq("id", groupId)
+          .maybeSingle();
+
+        if (adminData) {
+          return { ...adminData, hasFullAccess: true };
+        }
+        if (adminError) throw adminError;
+      }
 
       // If no access, try public view for basic info
       const { data: publicData, error: publicError } = await supabase
