@@ -1,112 +1,85 @@
 
-## Plano: Corrigir Erro do Clipboard no iOS/Safari
+## Plano: Corrigir Erro "Grupo não encontrado" para Líder do Grupo
 
-### Analise do Problema
+### Diagnóstico do Problema
 
-O erro exibido na imagem:
-```
-"The request is not allowed by the user agent or the platform in the current context, 
-possibly because the user denied permission."
-```
+Após investigação detalhada, identifiquei que o grupo "Meta da semana" (ID: `fc396a41-fdfd-4e04-9a48-f9bade2e5307`) existe no banco de dados, tem a Bruna como líder e membro, mas está inacessível na página do grupo.
 
-Este e um erro especifico do Safari no iOS relacionado a API de Clipboard. O Safari tem politicas de seguranca mais rigorosas e exige que a escrita no clipboard aconteca **imediatamente** apos a acao do usuario, sem operacoes assincronas intermediarias.
+**Causa Raiz Identificada:**
 
-**Causa raiz**: No codigo atual, fazemos uma chamada assincrona ao banco de dados (`createLinkInvitation.mutateAsync`) ANTES de chamar `navigator.clipboard.writeText()`. O Safari perde o "user gesture" original durante essa operacao assincrona e bloqueia o acesso ao clipboard.
+A view `groups_public` foi configurada com `security_invoker=on` na migração `20260131152419`. Isso faz com que a view herde as políticas RLS da tabela `groups`, que exigem autenticação (`auth.uid() IS NOT NULL`) para qualquer operação SELECT.
 
-### Solucao Proposta
+Quando a sessão do usuário expira, fica inválida, ou o navegador não envia o JWT corretamente:
+1. A query direta à tabela `groups` falha (RLS bloqueia)
+2. O fallback para `groups_public` também falha (herda as mesmas RLS)
+3. Resultado: "Grupo não encontrado"
 
-#### Estrategia 1: Usar ClipboardItem com Promise
-
-O Safari aceita um `ClipboardItem` que recebe uma Promise, permitindo resolver o conteudo de forma assincrona:
-
-```typescript
-const handleCopyLink = async () => {
-  if (!groupId) return;
-
-  try {
-    // Verificar se a API moderna esta disponivel
-    if (navigator.clipboard && typeof ClipboardItem !== 'undefined') {
-      // Criar o ClipboardItem ANTES da operacao assincrona
-      const clipboardItem = new ClipboardItem({
-        'text/plain': (async () => {
-          const inviteCode = await createLinkInvitation.mutateAsync(groupId);
-          const inviteUrl = `https://metasolidaria.com.br?invite=${inviteCode}`;
-          const inviteText = generateInviteText(inviteUrl);
-          return new Blob([inviteText], { type: 'text/plain' });
-        })()
-      });
-      
-      await navigator.clipboard.write([clipboardItem]);
-    } else {
-      // Fallback para navegadores mais antigos
-      // ... usar execCommand ou outra estrategia
-    }
-  } catch (error) {
-    // ...
-  }
-};
+**Evidência nos Logs de Rede:**
+```text
+Request: GET .../groups_public?select=*
+Authorization: Bearer [anon_key] // ← Não tem JWT do usuário
+Response Body: [] // ← Array vazio
 ```
 
-#### Estrategia 2: Fallback com document.execCommand (para iOS mais antigo)
+### Solução Proposta
 
-Para dispositivos onde a API de Clipboard nao esta disponivel, usar o metodo legado:
+#### Opção 1: Voltar para `security_invoker=off` (Recomendada)
 
-```typescript
-const fallbackCopyToClipboard = (text: string): boolean => {
-  const textArea = document.createElement('textarea');
-  textArea.value = text;
-  textArea.style.position = 'fixed';
-  textArea.style.left = '-9999px';
-  document.body.appendChild(textArea);
-  textArea.select();
-  
-  try {
-    const successful = document.execCommand('copy');
-    document.body.removeChild(textArea);
-    return successful;
-  } catch (err) {
-    document.body.removeChild(textArea);
-    return false;
-  }
-};
+Recriar a view `groups_public` com `security_invoker=off`. Isso permite que a view funcione independentemente das RLS da tabela base, enquanto mantemos a segurança porque:
+- A view já filtra os campos sensíveis (não expõe `leader_whatsapp`)
+- A view `groups_public` é apenas para leitura
+- Grupos privados continuam protegidos pela lógica da própria view
+
+```sql
+DROP VIEW IF EXISTS groups_public CASCADE;
+
+CREATE VIEW groups_public
+WITH (security_invoker = off) AS
+SELECT 
+  g.id, g.name, g.city, g.donation_type, g.goal_2026,
+  g.is_private, g.leader_id, g.leader_name, g.description,
+  g.entity_id, g.end_date, g.created_at, g.updated_at,
+  g.image_url, g.members_visible, g.view_count,
+  g.default_commitment_name, g.default_commitment_metric,
+  g.default_commitment_ratio, g.default_commitment_donation,
+  g.default_commitment_goal,
+  COALESCE(gs.member_count, 0) AS member_count,
+  COALESCE(gs.total_goals, 0) AS total_goals,
+  COALESCE(gs.total_donations, 0) AS total_donations
+FROM groups g
+LEFT JOIN group_stats gs ON gs.group_id = g.id;
+
+GRANT SELECT ON groups_public TO anon, authenticated;
 ```
 
-#### Estrategia 3: Usar Web Share API como alternativa
+#### Opção 2: Adicionar Policy para Anon na Tabela Groups
 
-No iOS, a Web Share API funciona bem e pode ser uma alternativa melhor que copiar para o clipboard:
+Criar uma política RLS adicional que permita usuários anônimos visualizarem apenas grupos públicos:
 
-```typescript
-const handleShareNative = async () => {
-  if (navigator.share) {
-    await navigator.share({
-      title: 'Convite para o grupo',
-      text: inviteText,
-      url: inviteUrl
-    });
-  }
-};
+```sql
+CREATE POLICY "Anon can view public groups"
+ON public.groups FOR SELECT
+TO anon
+USING (is_private = false);
 ```
+
+Porém, esta opção exporia `leader_whatsapp` diretamente, o que não é desejado.
 
 ### Arquivos a Modificar
 
-| Arquivo | Alteracao |
-|---------|-----------|
-| `src/components/InviteMemberModal.tsx` | Implementar ClipboardItem com Promise + fallback + opcao de compartilhamento nativo |
+| Arquivo/Recurso | Alteração |
+|-----------------|-----------|
+| Nova migração SQL | Recriar `groups_public` com `security_invoker=off` |
 
-### Implementacao Detalhada
+### Detalhes Técnicos
 
-A nova funcao `handleCopyLink` tera tres niveis de fallback:
+**Por que `security_invoker=off` é seguro neste caso:**
 
-1. **Primeiro**: Tentar usar `ClipboardItem` com Promise (funciona no Safari moderno)
-2. **Segundo**: Usar `navigator.clipboard.writeText` com fallback imediato (outros navegadores)
-3. **Terceiro**: Usar `document.execCommand('copy')` para navegadores legados
+1. A view `groups_public` já exclui o campo `leader_whatsapp`
+2. Para grupos privados, o acesso completo ainda é controlado pela query direta à tabela `groups` no hook `useGroupDetails`
+3. A view apenas fornece dados básicos para listar grupos na home
 
-Alem disso, vou adicionar um botao de "Compartilhar" que usa a Web Share API nativa do iOS, oferecendo uma experiencia melhor para usuarios de dispositivos moveis.
-
-### Detalhes Tecnicos
-
-O Safari exige que a escrita no clipboard aconteca dentro do mesmo "user activation" (click event). A solucao com `ClipboardItem` funciona porque passamos uma Promise ao construtor, e o Safari permite resolver essa Promise de forma assincrona enquanto mantem o contexto de ativacao do usuario.
-
-Referencias:
-- Apple Developer Forums: ClipboardItem aceita Promise como valor
-- MDN Web Docs: Web Share API como alternativa mobile-friendly
+**Impacto:**
+- Usuários não autenticados poderão ver a lista de grupos públicos na home
+- Grupos privados continuam invisíveis para não-membros
+- Líderes e membros com sessão válida ou inválida conseguirão pelo menos ver os dados básicos do grupo via fallback
