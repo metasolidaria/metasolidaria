@@ -19,6 +19,7 @@ export const DONATION_OPTIONS = [
   { value: "livros", label: "Livros" },
   { value: "higiene", label: "Kits de Higiene" },
   { value: "sopas", label: "Sopas/Refeições" },
+  { value: "racao", label: "Ração" },
   { value: "moveis", label: "Móveis" },
   { value: "eletrodomesticos", label: "Eletrodomésticos" },
   { value: "dinheiro", label: "Dinheiro" },

@@ -9,6 +9,7 @@ export interface DonationsByType {
   sopas: number;
   brinquedos: number;
   higiene: number;
+  racao: number;
   mudas: number;
   outro: number;
 }
@@ -45,6 +46,7 @@ export const useImpactStats = () => {
         sopas: 0,
         brinquedos: 0,
         higiene: 0,
+        racao: 0,
         mudas: 0,
         outro: 0,
       };
