@@ -1,120 +1,102 @@
 
 
-## Diagnóstico: Inconsistência de Dados no Grupo "Manas Fit"
+## Plano: Adicionar Acesso de Admin às Políticas RLS
 
-### Resumo do Problema
+### Diagnóstico Confirmado
 
-O grupo "Manas Fit" aparece corretamente no resumo (1 membro, 24 metas), mas ao acessar a página do grupo, membros e metas não aparecem.
+O membro aparece porque corrigimos a view `group_members_public`. Porém, as **metas (commitments)** não aparecem porque a política RLS de SELECT da tabela `member_commitments` não inclui verificação de administrador.
 
-### Dados Confirmados no Banco
+### Dados do Grupo "Manas Fit"
 
 | Dado | Valor |
 |------|-------|
-| Grupo | Manas Fit (ID: fc477eae...) |
-| Privado | Sim (`is_private = true`) |
-| Membro | Cristina Buzzanca (líder) |
-| Meta (commitment) | 24 (personal_goal) em "3 Cardio por semana" |
-| group_stats | member_count=1, total_goals=24 |
+| ID do Grupo | `fc477eae-bd9a-4f59-a726-c254a2873b84` |
+| Membro | Cristina Buzzanca (ID: `fd3759dd...`) |
+| Commitment | "3 Cardio por semana" com `personal_goal = 24` |
+| Privado | Sim |
 
 ### Causa Raiz
 
-A view `group_members_public` está configurada com **`security_invoker=on`**, o que significa que ela herda as políticas RLS das tabelas base.
-
-```text
-┌─────────────────────────────────────────────────────────────┐
-│                 FLUXO DE DADOS                              │
-├─────────────────────────────────────────────────────────────┤
-│                                                             │
-│  useGroupDetails                                            │
-│       │                                                     │
-│       ▼                                                     │
-│  group_members_public (security_invoker=ON)                 │
-│       │                                                     │
-│       ▼                                                     │
-│  JOIN com tabela groups ──► RLS é aplicado                 │
-│       │                                                     │
-│       ▼                                                     │
-│  Para grupos PRIVADOS, RLS exige:                          │
-│  • auth.uid() IS NOT NULL (sessão válida)                  │
-│  • E ser líder OU membro                                    │
-│       │                                                     │
-│       ▼                                                     │
-│  Se sessão inválida/expirada ──► Retorna VAZIO             │
-│                                                             │
-└─────────────────────────────────────────────────────────────┘
-```
-
-### Por que o Resumo Funciona mas os Detalhes Não?
-
-- **Resumo/Listagem**: Usa `groups_admin` (para admins) ou `groups_public` que têm dados pré-agregados da view `group_stats`
-- **Detalhes de Membros**: Consulta `group_members_public` que aplica RLS e falha para grupos privados
-
-### Comparação das Views
-
-| View | security_invoker | Comportamento |
-|------|------------------|---------------|
-| `groups_public` | OFF | Bypassa RLS, filtra manualmente `is_private=false` |
-| `groups_admin` | OFF (barrier) | Bypassa RLS, verifica `is_admin()` na query |
-| `group_members_public` | **ON** | Herda RLS - causa o problema |
-
-### Solução Proposta
-
-Recriar a view `group_members_public` com `security_invoker=off` e adicionar filtros explícitos para manter a segurança:
-
-#### Migração SQL
+A política RLS de `member_commitments` para SELECT:
 
 ```sql
-CREATE OR REPLACE VIEW group_members_public
-WITH (security_invoker = off) AS
-SELECT 
-    gm.id,
-    gm.group_id,
-    gm.user_id,
-    gm.name,
-    gm.personal_goal,
-    gm.goals_reached,
-    gm.commitment_type,
-    gm.commitment_metric,
-    gm.commitment_ratio,
-    gm.commitment_donation,
-    gm.penalty_donation,
-    gm.created_at,
-    gm.updated_at,
-    CASE
-        WHEN g.whatsapp_visible = true THEN gm.whatsapp
-        WHEN gm.user_id = auth.uid() THEN gm.whatsapp
-        WHEN g.leader_id = auth.uid() THEN gm.whatsapp
-        WHEN is_admin(auth.uid()) THEN gm.whatsapp
-        ELSE NULL
-    END AS whatsapp
-FROM group_members gm
-JOIN groups g ON g.id = gm.group_id
-WHERE 
-    -- Grupo público: qualquer pessoa pode ver
-    g.is_private = false
-    -- OU grupo privado: apenas líder, membros ou admin podem ver
-    OR g.leader_id = auth.uid()
-    OR is_group_member(auth.uid(), g.id)
-    OR is_admin(auth.uid());
+-- Política ATUAL (sem admin)
+WHERE (g.is_private = false) 
+   OR (g.leader_id = auth.uid()) 
+   OR is_group_member(auth.uid(), g.id)
+-- Falta: OR is_admin(auth.uid())
 ```
 
-### Impacto da Mudança
+Como você é **admin mas não é membro/líder** do grupo "Manas Fit", a política bloqueia o acesso aos commitments.
+
+### Solução
+
+Atualizar as políticas RLS para incluir administradores:
+
+1. **member_commitments** - Adicionar `is_admin()` na política de SELECT
+2. **goal_progress** - Adicionar `is_admin()` na política de SELECT (para consistência)
+
+### Migração SQL
+
+```sql
+-- 1. Atualizar política de member_commitments
+DROP POLICY IF EXISTS "Users can view commitments for accessible groups" ON member_commitments;
+
+CREATE POLICY "Users can view commitments for accessible groups" 
+ON member_commitments FOR SELECT
+USING (
+  EXISTS (
+    SELECT 1 FROM group_members gm
+    JOIN groups g ON g.id = gm.group_id
+    WHERE gm.id = member_commitments.member_id
+    AND (
+      g.is_private = false 
+      OR g.leader_id = auth.uid() 
+      OR is_group_member(auth.uid(), g.id)
+      OR is_admin(auth.uid())  -- NOVO
+    )
+  )
+);
+
+-- 2. Atualizar política de goal_progress
+DROP POLICY IF EXISTS "Authenticated users can view progress for accessible groups" ON goal_progress;
+
+CREATE POLICY "Authenticated users can view progress for accessible groups"
+ON goal_progress FOR SELECT
+USING (
+  auth.uid() IS NOT NULL 
+  AND (
+    EXISTS (
+      SELECT 1 FROM groups
+      WHERE groups.id = goal_progress.group_id
+      AND (
+        groups.is_private = false 
+        OR groups.leader_id = auth.uid()
+        OR EXISTS (
+          SELECT 1 FROM group_members
+          WHERE group_members.group_id = groups.id 
+          AND group_members.user_id = auth.uid()
+        )
+        OR is_admin(auth.uid())  -- NOVO
+      )
+    )
+  )
+);
+```
+
+### Impacto
 
 | Cenário | Antes | Depois |
 |---------|-------|--------|
-| Admin vendo grupo privado | Pode falhar | Funciona |
-| Líder vendo seu grupo privado | Pode falhar com sessão expirada | Funciona |
-| Membro vendo grupo privado | Pode falhar | Funciona |
+| Admin vendo metas de grupo privado | Bloqueado | Funciona |
+| Admin vendo progresso de grupo privado | Bloqueado | Funciona |
+| Líder/membro vendo seu grupo | Funciona | Funciona |
 | Visitante vendo grupo público | Funciona | Funciona |
-| Visitante vendo grupo privado | Não vê membros | Não vê membros (correto) |
+| Visitante vendo grupo privado | Bloqueado | Bloqueado |
 
 ### Arquivos Alterados
 
 | Local | Tipo | Descrição |
 |-------|------|-----------|
-| Migração SQL | Banco | Recriar view `group_members_public` com `security_invoker=off` |
-
-### Observação Técnica
-
-A lógica de visibilidade do WhatsApp continua funcionando através da cláusula `CASE`, garantindo que números pessoais só apareçam para quem tem permissão.
+| Migração SQL | Banco | Atualizar políticas RLS de `member_commitments` e `goal_progress` |
 
