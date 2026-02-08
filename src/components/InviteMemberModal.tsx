@@ -1,9 +1,31 @@
 import { useState } from "react";
-import { X, Mail, Copy, Check, Loader2, MessageCircle } from "lucide-react";
+import { X, Mail, Copy, Check, Loader2, MessageCircle, Share2 } from "lucide-react";
 import { Button } from "./ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+
+// Fallback para copiar texto em navegadores legados
+const fallbackCopyToClipboard = (text: string): boolean => {
+  const textArea = document.createElement('textarea');
+  textArea.value = text;
+  textArea.style.position = 'fixed';
+  textArea.style.left = '-9999px';
+  textArea.style.top = '0';
+  textArea.style.opacity = '0';
+  document.body.appendChild(textArea);
+  textArea.focus();
+  textArea.select();
+  
+  try {
+    const successful = document.execCommand('copy');
+    document.body.removeChild(textArea);
+    return successful;
+  } catch (err) {
+    document.body.removeChild(textArea);
+    return false;
+  }
+};
 
 interface InviteMemberModalProps {
   open: boolean;
@@ -63,20 +85,84 @@ export const InviteMemberModal = ({ open, onOpenChange, groupId, groupName, grou
     if (!groupId) return;
 
     try {
+      // Tentar usar ClipboardItem com Promise (Safari moderno)
+      if (navigator.clipboard && typeof ClipboardItem !== 'undefined') {
+        const clipboardItem = new ClipboardItem({
+          'text/plain': (async () => {
+            const inviteCode = await createLinkInvitation.mutateAsync(groupId);
+            const inviteUrl = `https://metasolidaria.com.br?invite=${inviteCode}`;
+            const inviteText = generateInviteText(inviteUrl);
+            return new Blob([inviteText], { type: 'text/plain' });
+          })()
+        });
+        
+        await navigator.clipboard.write([clipboardItem]);
+        setCopied(true);
+        toast({
+          title: "Convite copiado! 📋",
+          description: "Compartilhe a mensagem com a pessoa que deseja convidar.",
+        });
+        setTimeout(() => setCopied(false), 2000);
+      } else {
+        // Fallback: gerar link primeiro, depois copiar
+        const inviteCode = await createLinkInvitation.mutateAsync(groupId);
+        const inviteUrl = `https://metasolidaria.com.br?invite=${inviteCode}`;
+        const inviteText = generateInviteText(inviteUrl);
+        
+        const success = fallbackCopyToClipboard(inviteText);
+        if (success) {
+          setCopied(true);
+          toast({
+            title: "Convite copiado! 📋",
+            description: "Compartilhe a mensagem com a pessoa que deseja convidar.",
+          });
+          setTimeout(() => setCopied(false), 2000);
+        } else {
+          throw new Error("Não foi possível copiar. Use o botão de compartilhar.");
+        }
+      }
+    } catch (error: any) {
+      toast({
+        title: "Erro ao copiar",
+        description: error.message || "Tente usar o botão de compartilhar.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleShareNative = async () => {
+    if (!groupId) return;
+
+    try {
       const inviteCode = await createLinkInvitation.mutateAsync(groupId);
       const inviteUrl = `https://metasolidaria.com.br?invite=${inviteCode}`;
       const inviteText = generateInviteText(inviteUrl);
       
-      await navigator.clipboard.writeText(inviteText);
-      setCopied(true);
-      toast({
-        title: "Convite copiado! 📋",
-        description: "Compartilhe a mensagem com a pessoa que deseja convidar.",
-      });
-      setTimeout(() => setCopied(false), 2000);
+      if (navigator.share) {
+        await navigator.share({
+          title: `Convite para ${groupName || 'Meta Solidária'}`,
+          text: inviteText,
+        });
+      } else {
+        // Fallback para navegadores sem Web Share API
+        const success = fallbackCopyToClipboard(inviteText);
+        if (success) {
+          setCopied(true);
+          toast({
+            title: "Convite copiado! 📋",
+            description: "Compartilhe a mensagem com a pessoa que deseja convidar.",
+          });
+          setTimeout(() => setCopied(false), 2000);
+        } else {
+          throw new Error("Não foi possível compartilhar.");
+        }
+      }
     } catch (error: any) {
+      // Usuário cancelou o share - não mostrar erro
+      if (error.name === 'AbortError') return;
+      
       toast({
-        title: "Erro ao gerar link",
+        title: "Erro ao compartilhar",
         description: error.message,
         variant: "destructive",
       });
@@ -139,6 +225,25 @@ export const InviteMemberModal = ({ open, onOpenChange, groupId, groupName, grou
             </p>
 
             <div className="flex flex-col gap-3">
+              {/* Botão de compartilhar nativo - melhor experiência no iOS */}
+              {'share' in navigator && (
+                <Button
+                  type="button"
+                  className="w-full h-12"
+                  onClick={handleShareNative}
+                  disabled={createLinkInvitation.isPending}
+                >
+                  {createLinkInvitation.isPending ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <>
+                      <Share2 className="w-4 h-4 mr-2" />
+                      Compartilhar Convite
+                    </>
+                  )}
+                </Button>
+              )}
+
               <Button
                 type="button"
                 variant="outline"
@@ -166,7 +271,7 @@ export const InviteMemberModal = ({ open, onOpenChange, groupId, groupName, grou
 
               <Button
                 type="button"
-                className="w-full h-12 bg-green-600 hover:bg-green-700 text-white"
+                className="w-full h-12 bg-[hsl(var(--whatsapp))] hover:bg-[hsl(var(--whatsapp))]/90 text-primary-foreground"
                 onClick={handleShareWhatsApp}
                 disabled={createLinkInvitation.isPending}
               >
