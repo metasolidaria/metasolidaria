@@ -134,7 +134,7 @@ export const EditMemberGoalModal = ({
               Definir Compromissos
             </h2>
             <p className="text-primary-foreground/80 mt-1">
-              Crie blocos de metas independentes, {memberName}
+              Crie metas independentes, {memberName}
             </p>
           </div>
 
@@ -143,7 +143,7 @@ export const EditMemberGoalModal = ({
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <Label className="text-foreground font-medium">
-                  Blocos de Metas
+                  Suas Metas
                 </Label>
                 <Button
                   type="button"
@@ -161,7 +161,7 @@ export const EditMemberGoalModal = ({
                 <div className="text-center py-8 bg-muted/30 rounded-xl border-2 border-dashed border-muted">
                   <Target className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
                   <p className="text-sm text-muted-foreground font-medium">
-                    Nenhum bloco de meta definido
+                    Nenhuma meta definida
                   </p>
                   <p className="text-xs text-muted-foreground mt-1 max-w-[200px] mx-auto">
                     Clique em "Adicionar Meta" para criar suas metas de doação
