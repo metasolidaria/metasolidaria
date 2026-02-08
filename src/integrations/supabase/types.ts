@@ -1021,108 +1021,28 @@ export type Database = {
         Returns: undefined
       }
       approve_join_request: { Args: { _request_id: string }; Returns: string }
-      create_group_with_leader:
-        | {
-            Args: {
-              _city: string
-              _description: string
-              _donation_type: string
-              _goal_2026: number
-              _is_private: boolean
-              _leader_name: string
-              _leader_whatsapp: string
-              _name: string
-            }
-            Returns: string
-          }
-        | {
-            Args: {
-              _city: string
-              _description: string
-              _donation_type: string
-              _end_date?: string
-              _goal_2026: number
-              _is_private: boolean
-              _leader_name: string
-              _leader_whatsapp: string
-              _name: string
-            }
-            Returns: string
-          }
-        | {
-            Args: {
-              _city: string
-              _description: string
-              _donation_type: string
-              _end_date?: string
-              _entity_id?: string
-              _goal_2026: number
-              _is_private: boolean
-              _leader_name: string
-              _leader_whatsapp: string
-              _name: string
-            }
-            Returns: string
-          }
-        | {
-            Args: {
-              _city: string
-              _description: string
-              _donation_type: string
-              _end_date?: string
-              _entity_id?: string
-              _goal_2026: number
-              _is_private: boolean
-              _leader_name: string
-              _leader_whatsapp: string
-              _members_visible?: boolean
-              _name: string
-            }
-            Returns: string
-          }
-        | {
-            Args: {
-              _city: string
-              _default_commitment_donation?: number
-              _default_commitment_goal?: number
-              _default_commitment_metric?: string
-              _default_commitment_name?: string
-              _default_commitment_ratio?: number
-              _description: string
-              _donation_type: string
-              _end_date?: string
-              _entity_id?: string
-              _goal_2026: number
-              _is_private: boolean
-              _leader_name: string
-              _leader_whatsapp: string
-              _members_visible?: boolean
-              _name: string
-            }
-            Returns: string
-          }
-        | {
-            Args: {
-              _city: string
-              _default_commitment_donation?: number
-              _default_commitment_goal?: number
-              _default_commitment_metric?: string
-              _default_commitment_name?: string
-              _default_commitment_ratio?: number
-              _description: string
-              _donation_type: string
-              _end_date?: string
-              _entity_id?: string
-              _goal_2026: number
-              _is_private: boolean
-              _leader_name: string
-              _leader_whatsapp: string
-              _members_visible?: boolean
-              _name: string
-              _whatsapp_visible?: boolean
-            }
-            Returns: string
-          }
+      create_group_with_leader: {
+        Args: {
+          _city: string
+          _default_commitment_donation?: number
+          _default_commitment_goal?: number
+          _default_commitment_metric?: string
+          _default_commitment_name?: string
+          _default_commitment_ratio?: number
+          _description: string
+          _donation_type: string
+          _end_date?: string
+          _entity_id?: string
+          _goal_2026: number
+          _is_private: boolean
+          _leader_name: string
+          _leader_whatsapp: string
+          _members_visible?: boolean
+          _name: string
+          _whatsapp_visible?: boolean
+        }
+        Returns: string
+      }
       get_admin_groups: {
         Args: never
         Returns: {
