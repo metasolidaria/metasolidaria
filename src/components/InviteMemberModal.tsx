@@ -19,26 +19,38 @@ export const InviteMemberModal = ({ open, onOpenChange, groupId, groupName, grou
 
   const createLinkInvitation = useMutation({
     mutationFn: async (gId: string) => {
-      const { data: { user } } = await supabase.auth.getUser();
+      // Verificar sessão antes de prosseguir
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
       
-      if (!user) {
-        throw new Error("Você precisa estar logado");
+      if (sessionError || !sessionData.session) {
+        throw new Error("Sua sessão expirou. Por favor, faça login novamente.");
       }
 
       const { data, error } = await supabase
         .from("group_invitations")
         .insert([{ 
           group_id: gId, 
-          invited_by: user.id,
+          invited_by: sessionData.session.user.id,
           invite_type: 'link',
           email: null
         }])
         .select('invite_code')
         .single();
 
-      if (error) throw error;
+      if (error) {
+        // Tratar erros específicos
+        if (error.code === '42501') {
+          throw new Error("Você não tem permissão para criar convites neste grupo");
+        }
+        if (error.code === 'PGRST301') {
+          throw new Error("Sua sessão expirou. Por favor, faça login novamente.");
+        }
+        throw new Error("Erro ao gerar convite. Tente novamente.");
+      }
       return data.invite_code;
     },
+    retry: 2,
+    retryDelay: 1000,
   });
 
   const generateInviteText = (inviteUrl: string) => {
