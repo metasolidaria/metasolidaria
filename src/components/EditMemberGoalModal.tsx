@@ -153,7 +153,7 @@ export const EditMemberGoalModal = ({
                   className="text-xs"
                 >
                   <Plus className="w-3 h-3 mr-1" />
-                  Adicionar Bloco
+                  Adicionar Meta
                 </Button>
               </div>
 
@@ -164,7 +164,7 @@ export const EditMemberGoalModal = ({
                     Nenhum bloco de meta definido
                   </p>
                   <p className="text-xs text-muted-foreground mt-1 max-w-[200px] mx-auto">
-                    Clique em "Adicionar Bloco" para criar suas metas de doação
+                    Clique em "Adicionar Meta" para criar suas metas de doação
                   </p>
                 </div>
               ) : (
