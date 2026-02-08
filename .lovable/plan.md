@@ -1,49 +1,86 @@
 
-## Plano: Adicionar 2 Membros por Grupo de Teste
+## Plano: Corrigir Erro ao Gerar Link de Convite
 
-### Objetivo
-Adicionar 2 novos membros em cada um dos 5 grupos de teste (seed), aumentando de 5 para 7 membros por grupo.
+### Analise do Problema
 
-### Grupos de Teste Identificados
-| Grupo | Cidade | Membros Atuais |
-|-------|--------|----------------|
-| Amigos do Bem | São Paulo | 5 |
-| Leitores Solidários | Campinas | 5 |
-| Aquecendo Corações | Ribeirão Preto | 5 |
-| Moda Solidária | Santos | 5 |
-| Brinquedos da Alegria | Sorocaba | 5 |
+Apos investigacao detalhada:
 
-### Implementação
+1. **Logs do Banco de Dados**: Nao ha erros de banco de dados recentes
+2. **Logs de Autenticacao**: A funcionalidade ESTA funcionando na producao (varios convites criados recentemente)
+3. **Politicas RLS**: Estao configuradas corretamente - lideres podem criar convites para seus grupos
 
-Executar INSERT para adicionar 10 novos membros (2 por grupo) com:
-- Nomes fictícios realistas
-- Metas pessoais variadas
-- WhatsApp formatado
-- Contagem de metas alcançadas
+O erro "Erro ao gerar link" pode ter causas intermitentes:
+- Sessao expirada temporariamente
+- Problema de rede momentaneo
+- Token de autenticacao desatualizado
 
-```sql
-INSERT INTO group_members (group_id, name, whatsapp, personal_goal, goals_reached)
-VALUES
-  -- Amigos do Bem (São Paulo)
-  ('11111111-1111-1111-1111-111111111111', 'Ricardo Mendes', '(11) 98765-1234', 15, 3),
-  ('11111111-1111-1111-1111-111111111111', 'Tatiana Oliveira', '(11) 97654-3210', 12, 5),
-  
-  -- Leitores Solidários (Campinas)
-  ('22222222-2222-2222-2222-222222222222', 'Gustavo Ferreira', '(19) 99876-5432', 20, 8),
-  ('22222222-2222-2222-2222-222222222222', 'Camila Rodrigues', '(19) 98765-4321', 18, 6),
-  
-  -- Aquecendo Corações (Ribeirão Preto)
-  ('33333333-3333-3333-3333-333333333333', 'Fernando Almeida', '(16) 99654-3210', 10, 4),
-  ('33333333-3333-3333-3333-333333333333', 'Letícia Souza', '(16) 98543-2109', 8, 2),
-  
-  -- Moda Solidária (Santos)
-  ('44444444-4444-4444-4444-444444444444', 'Bruno Carvalho', '(13) 99432-1098', 25, 10),
-  ('44444444-4444-4444-4444-444444444444', 'Isabela Martins', '(13) 98321-0987', 22, 9),
-  
-  -- Brinquedos da Alegria (Sorocaba)
-  ('55555555-5555-5555-5555-555555555555', 'Eduardo Santos', '(15) 99210-9876', 14, 5),
-  ('55555555-5555-5555-5555-555555555555', 'Natália Costa', '(15) 98109-8765', 16, 7);
+### Solucao Proposta
+
+#### 1. Melhorar Tratamento de Erros na InviteMemberModal
+
+Adicionar verificacao de sessao antes de tentar criar o convite e mensagens de erro mais especificas:
+
+```typescript
+// Em src/components/InviteMemberModal.tsx
+
+const createLinkInvitation = useMutation({
+  mutationFn: async (gId: string) => {
+    // Verificar sessao antes de prosseguir
+    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+    
+    if (sessionError || !sessionData.session) {
+      throw new Error("Sua sessao expirou. Por favor, faca login novamente.");
+    }
+
+    const { data, error } = await supabase
+      .from("group_invitations")
+      .insert([{ 
+        group_id: gId, 
+        invited_by: sessionData.session.user.id,
+        invite_type: 'link',
+        email: null
+      }])
+      .select('invite_code')
+      .single();
+
+    if (error) {
+      // Tratar erros especificos
+      if (error.code === '42501') {
+        throw new Error("Voce nao tem permissao para criar convites neste grupo");
+      }
+      throw error;
+    }
+    return data.invite_code;
+  },
+});
 ```
 
-### Resultado Esperado
-Cada grupo de teste passará de 5 para 7 membros, totalizando 35 membros nos grupos de seed.
+#### 2. Adicionar Retry Automatico
+
+Implementar retry automatico em caso de falha temporaria:
+
+```typescript
+const createLinkInvitation = useMutation({
+  mutationFn: async (gId: string) => {
+    // ... codigo existente
+  },
+  retry: 2,
+  retryDelay: 1000,
+});
+```
+
+#### 3. Adicionar Botao de Retry no Modal
+
+Se o erro persistir, mostrar opcao para tentar novamente sem fechar o modal.
+
+### Arquivos a Modificar
+
+| Arquivo | Alteracao |
+|---------|-----------|
+| `src/components/InviteMemberModal.tsx` | Melhorar tratamento de erros e verificacao de sessao |
+
+### Detalhes Tecnicos
+
+A mutacao atual usa `supabase.auth.getUser()` que pode falhar silenciosamente se a sessao estiver expirada. Usar `getSession()` primeiro permite detectar problemas de autenticacao antes de tentar a operacao.
+
+Alem disso, adicionar mensagens de erro mais claras ajudara o usuario a entender o que aconteceu e como resolver (ex: fazer login novamente).
