@@ -10,7 +10,7 @@ import { PasswordInput } from "./PasswordInput";
 import { signupSchema, validateForm } from "@/lib/validations";
 import { supabase } from "@/integrations/supabase/client";
 import { CityAutocomplete } from "./CityAutocomplete";
-import { lovable } from "@/integrations/lovable/index";
+import { signInWithCloudOAuth } from "@/lib/lovableOAuth";
 
 interface AuthModalProps {
   open: boolean;
@@ -293,7 +293,7 @@ export const AuthModal = ({ open, onOpenChange, defaultMode = "login" }: AuthMod
                   onClick={async () => {
                     setLoading(true);
                     try {
-                      const { error } = await lovable.auth.signInWithOAuth("google", {
+                      const { error } = await signInWithCloudOAuth("google", {
                         redirect_uri: window.location.origin,
                       });
                       if (error) {
@@ -343,7 +343,7 @@ export const AuthModal = ({ open, onOpenChange, defaultMode = "login" }: AuthMod
                   onClick={async () => {
                     setLoading(true);
                     try {
-                      const { error } = await lovable.auth.signInWithOAuth("apple", {
+                      const { error } = await signInWithCloudOAuth("apple", {
                         redirect_uri: window.location.origin,
                       });
                       if (error) {
