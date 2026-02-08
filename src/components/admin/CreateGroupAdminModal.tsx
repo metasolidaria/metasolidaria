@@ -41,6 +41,7 @@ const donationTypes = [
   { id: "sopas", label: "Sopas (porções)" },
   { id: "brinquedos", label: "Brinquedos (unidades)" },
   { id: "higiene", label: "Kits de Higiene (unidades)" },
+  { id: "racao", label: "Ração (kg)" },
   { id: "outro", label: "Outro" },
 ];
 
