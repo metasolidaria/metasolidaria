@@ -1,76 +1,49 @@
 
+## Plano: Adicionar 2 Membros por Grupo de Teste
 
-# Plano: Adicionar botão "Fale Conosco" na seção de Parceiros
+### Objetivo
+Adicionar 2 novos membros em cada um dos 5 grupos de teste (seed), aumentando de 5 para 7 membros por grupo.
 
-## Resumo
-Adicionar um botão "Fale Conosco" com link direto para o WhatsApp da Meta Solidária, posicionado logo abaixo do botão "Recomendar ou Seja Parceiro" na seção de Parceiros.
+### Grupos de Teste Identificados
+| Grupo | Cidade | Membros Atuais |
+|-------|--------|----------------|
+| Amigos do Bem | São Paulo | 5 |
+| Leitores Solidários | Campinas | 5 |
+| Aquecendo Corações | Ribeirão Preto | 5 |
+| Moda Solidária | Santos | 5 |
+| Brinquedos da Alegria | Sorocaba | 5 |
 
-## O que será feito
+### Implementação
 
-1. **Adicionar o botão "Fale Conosco"** na seção de Parceiros, logo abaixo do botão existente "Recomendar ou Seja Parceiro"
+Executar INSERT para adicionar 10 novos membros (2 por grupo) com:
+- Nomes fictícios realistas
+- Metas pessoais variadas
+- WhatsApp formatado
+- Contagem de metas alcançadas
 
-2. **Estilização do botão**:
-   - Usar variante `outline` para diferenciar visualmente do botão principal
-   - Incluir ícone do WhatsApp para identificação clara
-   - Manter consistência visual com o design atual
-
-3. **Funcionalidade**:
-   - Ao clicar, abrirá o WhatsApp com o número 19 99466-2603
-   - Mensagem padrão: "Olá! Vim pelo site Meta Solidária."
-   - Link: `https://wa.me/5519994662603?text=Olá! Vim pelo site Meta Solidária.`
-
-## Layout visual esperado
-
-```text
-+------------------------------------------+
-|          Guia de Parceiros               |
-|                                          |
-|  Encontre profissionais de saúde...      |
-|                                          |
-|  [🧑‍🤝‍🧑 Recomendar ou Seja Parceiro]       |  ← Botão principal (hero)
-|  [📱 Fale Conosco]                       |  ← Novo botão (outline)
-|                                          |
-+------------------------------------------+
+```sql
+INSERT INTO group_members (group_id, name, whatsapp, personal_goal, goals_reached)
+VALUES
+  -- Amigos do Bem (São Paulo)
+  ('11111111-1111-1111-1111-111111111111', 'Ricardo Mendes', '(11) 98765-1234', 15, 3),
+  ('11111111-1111-1111-1111-111111111111', 'Tatiana Oliveira', '(11) 97654-3210', 12, 5),
+  
+  -- Leitores Solidários (Campinas)
+  ('22222222-2222-2222-2222-222222222222', 'Gustavo Ferreira', '(19) 99876-5432', 20, 8),
+  ('22222222-2222-2222-2222-222222222222', 'Camila Rodrigues', '(19) 98765-4321', 18, 6),
+  
+  -- Aquecendo Corações (Ribeirão Preto)
+  ('33333333-3333-3333-3333-333333333333', 'Fernando Almeida', '(16) 99654-3210', 10, 4),
+  ('33333333-3333-3333-3333-333333333333', 'Letícia Souza', '(16) 98543-2109', 8, 2),
+  
+  -- Moda Solidária (Santos)
+  ('44444444-4444-4444-4444-444444444444', 'Bruno Carvalho', '(13) 99432-1098', 25, 10),
+  ('44444444-4444-4444-4444-444444444444', 'Isabela Martins', '(13) 98321-0987', 22, 9),
+  
+  -- Brinquedos da Alegria (Sorocaba)
+  ('55555555-5555-5555-5555-555555555555', 'Eduardo Santos', '(15) 99210-9876', 14, 5),
+  ('55555555-5555-5555-5555-555555555555', 'Natália Costa', '(15) 98109-8765', 16, 7);
 ```
 
----
-
-## Detalhes Técnicos
-
-### Arquivo a ser modificado
-- `src/components/PartnersSection.tsx`
-
-### Alterações específicas
-
-**Linhas 506-513** - Adicionar novo botão após o existente:
-
-```tsx
-<Button
-  variant="hero"
-  onClick={() => setIsRecommendModalOpen(true)}
-  className="gap-2"
->
-  <UserPlus className="w-4 h-4" />
-  Recomendar ou Seja Parceiro
-</Button>
-{/* Novo botão Fale Conosco */}
-<Button
-  variant="outline"
-  asChild
-  className="gap-2 mt-2"
->
-  <a
-    href="https://wa.me/5519994662603?text=Olá! Vim pelo site Meta Solidária."
-    target="_blank"
-    rel="noopener noreferrer"
-  >
-    <Phone className="w-4 h-4" />
-    Fale Conosco
-  </a>
-</Button>
-```
-
-### Dependências
-- O ícone `Phone` já está importado no componente (linha 6)
-- Nenhuma nova dependência necessária
-
+### Resultado Esperado
+Cada grupo de teste passará de 5 para 7 membros, totalizando 35 membros nos grupos de seed.
