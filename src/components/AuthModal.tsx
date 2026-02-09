@@ -104,7 +104,7 @@ export const AuthModal = ({ open, onOpenChange, defaultMode = "login" }: AuthMod
           setLoading(false);
           return;
         }
-        const { error } = await signUp(
+        const { data: signUpData, error } = await signUp(
           formData.email.trim(),
           formData.password,
           formData.fullName.trim(),
@@ -112,10 +112,31 @@ export const AuthModal = ({ open, onOpenChange, defaultMode = "login" }: AuthMod
           formData.city.trim() || undefined
         );
         if (error) throw error;
-        toast({
-          title: "Conta criada com sucesso! 🎉",
-          description: "Você já pode criar grupos e participar da comunidade.",
-        });
+        
+        // Verificar se o email já está cadastrado (Supabase retorna identities vazio)
+        if (signUpData?.user?.identities?.length === 0) {
+          toast({
+            title: "Email já cadastrado",
+            description: "Este email já possui uma conta. Tente fazer login ou recupere sua senha.",
+            variant: "destructive",
+          });
+          setMode("login");
+          setLoading(false);
+          return;
+        }
+        
+        // Verificar se precisa confirmar email
+        if (signUpData?.user && !signUpData?.session) {
+          toast({
+            title: "Verifique seu email 📧",
+            description: "Enviamos um link de confirmação para o seu email. Confirme para acessar sua conta.",
+          });
+        } else {
+          toast({
+            title: "Conta criada com sucesso! 🎉",
+            description: "Você já pode criar grupos e participar da comunidade.",
+          });
+        }
         onOpenChange(false);
       }
     } catch (error: any) {
