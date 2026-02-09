@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { Check, X } from "lucide-react";
+import { Check, X, Circle } from "lucide-react";
 
 interface PasswordStrengthIndicatorProps {
   password: string;
@@ -27,34 +27,34 @@ export const PasswordStrengthIndicator = ({ password }: PasswordStrengthIndicato
     return { level: 3, label: "Forte", color: "bg-green-500" };
   }, [requirements]);
 
-  const allMet = requirements.every(r => r.met);
-
-  if (!password) return null;
+  const isEmpty = !password;
 
   return (
     <div className="space-y-3 mt-2">
-      {/* Strength bar */}
-      <div className="space-y-1">
-        <div className="flex gap-1">
-          {[1, 2, 3].map((level) => (
-            <div
-              key={level}
-              className={`h-1.5 flex-1 rounded-full transition-colors ${
-                strength.level >= level ? strength.color : "bg-muted"
-              }`}
-            />
-          ))}
+      {/* Strength bar - only show when typing */}
+      {!isEmpty && (
+        <div className="space-y-1">
+          <div className="flex gap-1">
+            {[1, 2, 3].map((level) => (
+              <div
+                key={level}
+                className={`h-1.5 flex-1 rounded-full transition-colors ${
+                  strength.level >= level ? strength.color : "bg-muted"
+                }`}
+              />
+            ))}
+          </div>
+          {strength.label && (
+            <p className={`text-xs font-medium ${
+              strength.level === 1 ? "text-destructive" :
+              strength.level === 2 ? "text-yellow-600" :
+              "text-green-600"
+            }`}>
+              Senha {strength.label}
+            </p>
+          )}
         </div>
-        {strength.label && (
-          <p className={`text-xs font-medium ${
-            strength.level === 1 ? "text-destructive" :
-            strength.level === 2 ? "text-yellow-600" :
-            "text-green-600"
-          }`}>
-            Senha {strength.label}
-          </p>
-        )}
-      </div>
+      )}
 
       {/* Requirements checklist */}
       <div className="grid grid-cols-2 gap-1">
@@ -62,10 +62,12 @@ export const PasswordStrengthIndicator = ({ password }: PasswordStrengthIndicato
           <div
             key={index}
             className={`flex items-center gap-1.5 text-xs ${
-              req.met ? "text-green-600" : "text-muted-foreground"
+              isEmpty ? "text-muted-foreground" : req.met ? "text-green-600" : "text-muted-foreground"
             }`}
           >
-            {req.met ? (
+            {isEmpty ? (
+              <Circle className="w-3 h-3" />
+            ) : req.met ? (
               <Check className="w-3 h-3" />
             ) : (
               <X className="w-3 h-3" />
