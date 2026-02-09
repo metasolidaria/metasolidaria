@@ -16,13 +16,14 @@ export const PasswordStrengthIndicator = ({ password }: PasswordStrengthIndicato
     { label: "Letra maiúscula", met: /[A-Z]/.test(password) },
     { label: "Letra minúscula", met: /[a-z]/.test(password) },
     { label: "Número", met: /[0-9]/.test(password) },
+    { label: "Caractere especial (!@#$...)", met: /[^A-Za-z0-9]/.test(password) },
   ], [password]);
 
   const strength = useMemo(() => {
     const metCount = requirements.filter(r => r.met).length;
     if (metCount === 0) return { level: 0, label: "", color: "" };
     if (metCount <= 2) return { level: 1, label: "Fraca", color: "bg-destructive" };
-    if (metCount === 3) return { level: 2, label: "Média", color: "bg-yellow-500" };
+    if (metCount <= 4) return { level: 2, label: "Média", color: "bg-yellow-500" };
     return { level: 3, label: "Forte", color: "bg-green-500" };
   }, [requirements]);
 
@@ -82,5 +83,6 @@ export const validatePasswordStrength = (password: string): string | null => {
   if (!/[A-Z]/.test(password)) return "A senha deve conter letra maiúscula";
   if (!/[a-z]/.test(password)) return "A senha deve conter letra minúscula";
   if (!/[0-9]/.test(password)) return "A senha deve conter número";
+  if (!/[^A-Za-z0-9]/.test(password)) return "A senha deve conter um caractere especial (!@#$...)";
   return null;
 };
