@@ -140,9 +140,22 @@ export const AuthModal = ({ open, onOpenChange, defaultMode = "login" }: AuthMod
         onOpenChange(false);
       }
     } catch (error: any) {
+      let errorMessage = error.message;
+      
+      // Traduzir mensagens comuns do Supabase para português
+      if (error.message?.includes("Password is known to be weak")) {
+        errorMessage = "Esta senha é muito comum e fácil de adivinhar. Por favor, escolha uma senha diferente e mais segura.";
+      } else if (error.message?.includes("Invalid login credentials")) {
+        errorMessage = "Email ou senha incorretos. Verifique seus dados e tente novamente.";
+      } else if (error.message?.includes("Email not confirmed")) {
+        errorMessage = "Seu email ainda não foi confirmado. Verifique sua caixa de entrada.";
+      } else if (error.message?.includes("User already registered")) {
+        errorMessage = "Este email já está cadastrado. Tente fazer login.";
+      }
+      
       toast({
         title: "Erro",
-        description: error.message,
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
