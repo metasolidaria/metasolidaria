@@ -1,85 +1,76 @@
 
-
-## Plano: Adicionar Acesso de Admin às Políticas RLS
+## Plano: Corrigir Visibilidade de Grupos na Administração de Usuários
 
 ### Diagnóstico Confirmado
 
-O membro aparece porque corrigimos a view `group_members_public`. Porém, as **metas (commitments)** não aparecem porque a política RLS de SELECT da tabela `member_commitments` não inclui verificação de administrador.
+Através das requisições de rede, confirmei que:
 
-### Dados do Grupo "Manas Fit"
-
-| Dado | Valor |
-|------|-------|
-| ID do Grupo | `fc477eae-bd9a-4f59-a726-c254a2873b84` |
-| Membro | Cristina Buzzanca (ID: `fd3759dd...`) |
-| Commitment | "3 Cardio por semana" com `personal_goal = 24` |
-| Privado | Sim |
+1. **Requisição da Cristina (user_id=1a084e0d...)**: Retorna `[]` (vazio)
+2. **O membro existe no banco**: group_id `fc477eae...` (Manas Fit), é privado
 
 ### Causa Raiz
 
-A política RLS de `member_commitments` para SELECT:
+A query `fetchUserGroups` faz um **INNER JOIN** entre `group_members` e `groups`:
 
-```sql
--- Política ATUAL (sem admin)
-WHERE (g.is_private = false) 
-   OR (g.leader_id = auth.uid()) 
-   OR is_group_member(auth.uid(), g.id)
--- Falta: OR is_admin(auth.uid())
+```js
+const { data, error } = await supabase
+  .from("group_members")
+  .select(`group_id, created_at, groups!inner(id, name, leader_id)`)
+  .eq("user_id", userId);
 ```
 
-Como você é **admin mas não é membro/líder** do grupo "Manas Fit", a política bloqueia o acesso aos commitments.
+**Fluxo do problema:**
 
-### Solução
+```text
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                        Requisição fetchUserGroups                            │
+├─────────────────────────────────────────────────────────────────────────────┤
+│  1. Buscar em group_members onde user_id = Cristina                          │
+│     └─ RLS: "Admins can view all" ✅ (is_admin() permite)                    │
+│     └─ Encontra: Cristina é membro do grupo Manas Fit                        │
+│                                                                              │
+│  2. INNER JOIN com groups (para pegar nome do grupo)                        │
+│     └─ RLS de groups: "is_private=false OR leader_id=auth.uid()              │
+│                        OR is_group_member(auth.uid(), id)"                   │
+│     └─ Manas Fit é privado ❌                                                │
+│     └─ Admin não é líder ❌                                                  │
+│     └─ Admin não é membro ❌                                                 │
+│     └─ SEM is_admin() na política! ❌                                        │
+│                                                                              │
+│  3. Resultado: INNER JOIN falha → linha excluída → array vazio               │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
 
-Atualizar as políticas RLS para incluir administradores:
-
-1. **member_commitments** - Adicionar `is_admin()` na política de SELECT
-2. **goal_progress** - Adicionar `is_admin()` na política de SELECT (para consistência)
-
-### Migração SQL
+### Política Atual de `groups` (SELECT)
 
 ```sql
--- 1. Atualizar política de member_commitments
-DROP POLICY IF EXISTS "Users can view commitments for accessible groups" ON member_commitments;
-
-CREATE POLICY "Users can view commitments for accessible groups" 
-ON member_commitments FOR SELECT
-USING (
-  EXISTS (
-    SELECT 1 FROM group_members gm
-    JOIN groups g ON g.id = gm.group_id
-    WHERE gm.id = member_commitments.member_id
-    AND (
-      g.is_private = false 
-      OR g.leader_id = auth.uid() 
-      OR is_group_member(auth.uid(), g.id)
-      OR is_admin(auth.uid())  -- NOVO
-    )
-  )
-);
-
--- 2. Atualizar política de goal_progress
-DROP POLICY IF EXISTS "Authenticated users can view progress for accessible groups" ON goal_progress;
-
-CREATE POLICY "Authenticated users can view progress for accessible groups"
-ON goal_progress FOR SELECT
 USING (
   auth.uid() IS NOT NULL 
   AND (
-    EXISTS (
-      SELECT 1 FROM groups
-      WHERE groups.id = goal_progress.group_id
-      AND (
-        groups.is_private = false 
-        OR groups.leader_id = auth.uid()
-        OR EXISTS (
-          SELECT 1 FROM group_members
-          WHERE group_members.group_id = groups.id 
-          AND group_members.user_id = auth.uid()
-        )
-        OR is_admin(auth.uid())  -- NOVO
-      )
-    )
+    is_private = false 
+    OR leader_id = auth.uid() 
+    OR is_group_member(auth.uid(), id)
+    -- FALTA: is_admin(auth.uid())
+  )
+)
+```
+
+### Solução
+
+Atualizar a política RLS de SELECT na tabela `groups` para incluir administradores:
+
+```sql
+DROP POLICY IF EXISTS "Authenticated users can view accessible groups" ON groups;
+
+CREATE POLICY "Authenticated users can view accessible groups" 
+ON groups FOR SELECT
+USING (
+  auth.uid() IS NOT NULL 
+  AND (
+    is_private = false 
+    OR leader_id = auth.uid() 
+    OR is_group_member(auth.uid(), id)
+    OR is_admin(auth.uid())  -- ADICIONADO
   )
 );
 ```
@@ -88,15 +79,24 @@ USING (
 
 | Cenário | Antes | Depois |
 |---------|-------|--------|
-| Admin vendo metas de grupo privado | Bloqueado | Funciona |
-| Admin vendo progresso de grupo privado | Bloqueado | Funciona |
+| Admin vendo grupos de usuários | Bloqueado (grupos privados) | Funciona |
+| Admin acessando página do grupo privado | Bloqueado | Funciona |
 | Líder/membro vendo seu grupo | Funciona | Funciona |
 | Visitante vendo grupo público | Funciona | Funciona |
 | Visitante vendo grupo privado | Bloqueado | Bloqueado |
 
-### Arquivos Alterados
+### Segurança
 
-| Local | Tipo | Descrição |
-|-------|------|-----------|
-| Migração SQL | Banco | Atualizar políticas RLS de `member_commitments` e `goal_progress` |
+Esta alteração é segura porque:
+- Apenas usuários com papel `admin` na tabela `user_roles` ou e-mail na tabela `admin_emails` passam na verificação `is_admin()`
+- A função `is_admin()` é `SECURITY DEFINER` e valida corretamente os privilégios
+- O padrão é consistente com outras tabelas (`member_commitments`, `goal_progress`, `group_members`)
 
+### Detalhes Técnicos
+
+| Item | Valor |
+|------|-------|
+| Tabela | `groups` |
+| Política afetada | `Authenticated users can view accessible groups` |
+| Tipo de migração | DROP + CREATE da política |
+| Impacto em dados | Nenhum (apenas permissões) |
