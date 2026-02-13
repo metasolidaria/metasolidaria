@@ -138,9 +138,10 @@ export const usePushNotifications = () => {
 
     // Get service worker registration
     const registration = await navigator.serviceWorker.ready;
+    const pushManager = (registration as any).pushManager;
 
     // Check if already subscribed
-    let subscription = await registration.pushManager.getSubscription();
+    let subscription = await pushManager.getSubscription();
 
     // If not subscribed, create new subscription
     if (!subscription) {
@@ -151,7 +152,7 @@ export const usePushNotifications = () => {
       }
 
       const applicationServerKey = urlBase64ToUint8Array(VAPID_PUBLIC_KEY);
-      subscription = await registration.pushManager.subscribe({
+      subscription = await pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: applicationServerKey.buffer as ArrayBuffer,
       });
@@ -327,7 +328,7 @@ export const usePushNotifications = () => {
       // Unsubscribe from web push if applicable
       if ("serviceWorker" in navigator) {
         const registration = await navigator.serviceWorker.ready;
-        const subscription = await registration.pushManager.getSubscription();
+        const subscription = await (registration as any).pushManager.getSubscription();
         if (subscription) {
           await subscription.unsubscribe();
         }
