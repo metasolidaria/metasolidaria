@@ -343,7 +343,7 @@ export default function GroupPage() {
                 ) : (
                   <span className="flex items-center gap-1 text-muted-foreground/70 italic">
                     <Building2 className="w-4 h-4" />
-                    Entidade não definida
+                    Instituição não definida
                   </span>
                 )}
               </div>

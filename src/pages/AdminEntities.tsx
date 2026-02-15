@@ -170,15 +170,15 @@ const AdminEntities = () => {
             <div>
               <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
                 <Building2 className="w-6 h-6 text-primary" />
-                Administração de Entidades
+                Administração de Instituições
               </h1>
               <p className="text-muted-foreground mt-1">
-                Gerencie as entidades beneficiárias cadastradas
+                Gerencie as instituições beneficentes cadastradas
               </p>
             </div>
             <Button onClick={() => setCreateModalOpen(true)} className="gap-2">
               <Plus className="w-4 h-4" />
-              Nova Entidade
+              Nova Instituição
             </Button>
           </div>
 
@@ -216,7 +216,7 @@ const AdminEntities = () => {
                 ) : sortedEntities.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                      {search ? "Nenhuma entidade encontrada" : "Nenhuma entidade cadastrada"}
+                      {search ? "Nenhuma instituição encontrada" : "Nenhuma instituição cadastrada"}
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -288,7 +288,7 @@ const AdminEntities = () => {
 
           {/* Stats */}
           <p className="text-sm text-muted-foreground">
-            {sortedEntities.length} entidade{sortedEntities.length !== 1 ? "s" : ""} encontrada{sortedEntities.length !== 1 ? "s" : ""}
+            {sortedEntities.length} instituiç{sortedEntities.length !== 1 ? "ões" : "ão"} encontrada{sortedEntities.length !== 1 ? "s" : ""}
           </p>
         </div>
       </main>
@@ -316,10 +316,10 @@ const AdminEntities = () => {
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Excluir Entidade</AlertDialogTitle>
-            <AlertDialogDescription>
-              Tem certeza que deseja excluir a entidade "{selectedEntity?.name}"? 
-              Esta ação não pode ser desfeita.
+             <AlertDialogTitle>Excluir Instituição</AlertDialogTitle>
+             <AlertDialogDescription>
+               Tem certeza que deseja excluir a instituição "{selectedEntity?.name}"? 
+               Esta ação não pode ser desfeita.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

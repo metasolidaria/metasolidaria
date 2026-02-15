@@ -53,11 +53,11 @@ export const EditEntityModal = ({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Editar Entidade</DialogTitle>
+          <DialogTitle>Editar Instituição</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="edit-name">Nome da Entidade *</Label>
+            <Label htmlFor="edit-name">Nome da Instituição *</Label>
             <Input
               id="edit-name"
               value={name}

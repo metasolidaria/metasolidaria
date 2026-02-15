@@ -60,7 +60,7 @@ export const EntitySelect = ({ value, onChange }: EntitySelectProps) => {
   return (
     <div className="space-y-2" ref={containerRef}>
       <Label className="text-foreground font-medium">
-        Entidade Beneficiária
+        Instituição Beneficente
       </Label>
       
       <div className="relative">
@@ -81,7 +81,7 @@ export const EntitySelect = ({ value, onChange }: EntitySelectProps) => {
               ? `${selectedEntity.name} - ${selectedEntity.city}`
               : value === null 
                 ? "Ainda não definido"
-                : "Selecione uma entidade..."}
+                : "Selecione uma instituição..."}
           </span>
           <ChevronDown className={cn(
             "w-4 h-4 text-muted-foreground transition-transform",
@@ -96,7 +96,7 @@ export const EntitySelect = ({ value, onChange }: EntitySelectProps) => {
                 {/* Search */}
                 <div className="p-2 border-b border-border">
                   <Input
-                    placeholder="Buscar entidade..."
+                    placeholder="Buscar instituição..."
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     className="h-9"
@@ -130,7 +130,7 @@ export const EntitySelect = ({ value, onChange }: EntitySelectProps) => {
                     </div>
                   ) : filteredEntities.length === 0 ? (
                     <div className="p-3 text-center text-muted-foreground text-sm">
-                      Nenhuma entidade encontrada
+                      Nenhuma instituição encontrada
                     </div>
                   ) : (
                     filteredEntities.map((entity) => (
@@ -172,7 +172,7 @@ export const EntitySelect = ({ value, onChange }: EntitySelectProps) => {
                     onClick={() => setShowNewForm(true)}
                   >
                     <Plus className="w-4 h-4" />
-                    Cadastrar nova entidade
+                    Cadastrar nova instituição
                   </Button>
                 </div>
               </>
@@ -180,7 +180,7 @@ export const EntitySelect = ({ value, onChange }: EntitySelectProps) => {
               /* New entity form */
               <div className="p-4 space-y-3">
                 <div className="flex items-center justify-between">
-                  <h4 className="font-medium text-foreground">Nova Entidade</h4>
+                  <h4 className="font-medium text-foreground">Nova Instituição</h4>
                   <button
                     type="button"
                     onClick={() => setShowNewForm(false)}
@@ -191,9 +191,9 @@ export const EntitySelect = ({ value, onChange }: EntitySelectProps) => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="entityName" className="text-sm">
-                    Nome da Entidade
-                  </Label>
+                   <Label htmlFor="entityName" className="text-sm">
+                     Nome da Instituição
+                   </Label>
                   <Input
                     id="entityName"
                     placeholder="Ex: Lar dos Idosos"
@@ -207,7 +207,7 @@ export const EntitySelect = ({ value, onChange }: EntitySelectProps) => {
                   <CityAutocomplete
                     value={newEntity.city}
                     onChange={(city) => setNewEntity({ ...newEntity, city })}
-                    placeholder="Cidade da entidade"
+                    placeholder="Cidade da instituição"
                   />
                 </div>
 
@@ -238,7 +238,7 @@ export const EntitySelect = ({ value, onChange }: EntitySelectProps) => {
       </div>
 
       <p className="text-xs text-muted-foreground">
-        Selecione a entidade que receberá as doações ou cadastre uma nova
+        Selecione a instituição que receberá as doações ou cadastre uma nova
       </p>
     </div>
   );

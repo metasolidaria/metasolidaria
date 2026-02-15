@@ -53,7 +53,7 @@ const TermsOfService = () => {
             <ul className="list-disc pl-6 space-y-2 mt-2">
               <li>Criação e gestão de grupos de doação</li>
               <li>Acompanhamento de metas e progresso de doações</li>
-              <li>Conexão entre doadores e entidades beneficiárias</li>
+              <li>Conexão entre doadores e instituições beneficentes</li>
               <li>Estatísticas de impacto social coletivo</li>
               <li>Comunicação entre líderes e membros de grupos</li>
             </ul>
@@ -105,7 +105,7 @@ const TermsOfService = () => {
             <ul className="list-disc pl-6 space-y-2 mt-2">
               <li>
                 <strong>Natureza voluntária:</strong> Todas as doações são voluntárias 
-                e realizadas diretamente entre doadores e entidades beneficiárias
+                e realizadas diretamente entre doadores e instituições beneficentes
               </li>
               <li>
                 <strong>Sem intermediação financeira:</strong> A plataforma não coleta, 

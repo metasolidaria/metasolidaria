@@ -41,11 +41,11 @@ export const CreateEntityModal = ({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Nova Entidade Beneficiária</DialogTitle>
+          <DialogTitle>Nova Instituição Beneficente</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="name">Nome da Entidade *</Label>
+            <Label htmlFor="name">Nome da Instituição *</Label>
             <Input
               id="name"
               value={name}
@@ -86,7 +86,7 @@ export const CreateEntityModal = ({
               Cancelar
             </Button>
             <Button type="submit" disabled={isLoading || !name.trim() || !city.trim()}>
-              {isLoading ? "Salvando..." : "Criar Entidade"}
+              {isLoading ? "Salvando..." : "Criar Instituição"}
             </Button>
           </div>
         </form>
