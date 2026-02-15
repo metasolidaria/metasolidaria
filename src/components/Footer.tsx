@@ -96,7 +96,7 @@ const AdminSection = lazy(() =>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
               <Link to="/admin/entidades" className="cursor-pointer">
-                Entidades
+                Instituições
               </Link>
             </DropdownMenuItem>
           </DropdownMenuContent>

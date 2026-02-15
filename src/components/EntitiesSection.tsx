@@ -105,14 +105,14 @@ export const EntitiesSection = ({ onRequireAuth }: EntitiesSectionProps) => {
       <div className="container mx-auto px-4">
         <div className="text-center mb-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
           <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-            Entidades Beneficiárias
+            Instituições Beneficentes
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-8">
             Organizações que recebem as doações dos grupos solidários
           </p>
           <Button onClick={handleOpenModal} size="lg">
             <Plus className="w-5 h-5" />
-            Cadastrar Entidade
+            Cadastrar Instituição
           </Button>
 
           {/* Filtro por cidade */}
@@ -133,7 +133,7 @@ export const EntitiesSection = ({ onRequireAuth }: EntitiesSectionProps) => {
           <div className="text-center py-12 animate-in fade-in duration-300">
             <Building2 className="w-16 h-16 text-muted-foreground/50 mx-auto mb-4" />
             <p className="text-muted-foreground mb-2">
-              Busque por uma cidade ou clique em "Ver Todas" para visualizar as entidades cadastradas.
+              Busque por uma cidade ou clique em "Ver Todas" para visualizar as instituições cadastradas.
             </p>
             <Button
               variant="outline"
@@ -147,17 +147,17 @@ export const EntitiesSection = ({ onRequireAuth }: EntitiesSectionProps) => {
           <div className="text-center py-12 animate-in fade-in duration-300">
             <Building2 className="w-16 h-16 text-muted-foreground/50 mx-auto mb-4" />
             <p className="text-muted-foreground">
-              Nenhuma entidade cadastrada ainda.
+              Nenhuma instituição cadastrada ainda.
             </p>
             <p className="text-sm text-muted-foreground mt-2">
-              Seja o primeiro a cadastrar uma entidade beneficiária!
+              Seja o primeiro a cadastrar uma instituição beneficente!
             </p>
           </div>
         ) : filteredEntities.length === 0 ? (
           <div className="text-center py-12 animate-in fade-in duration-300">
             <Search className="w-16 h-16 text-muted-foreground/50 mx-auto mb-4" />
             <p className="text-muted-foreground">
-              Nenhuma entidade encontrada em "{searchCity}".
+              Nenhuma instituição encontrada em "{searchCity}".
             </p>
             <p className="text-sm text-muted-foreground mt-2">
               Tente buscar por outra cidade.
@@ -252,12 +252,12 @@ export const EntitiesSection = ({ onRequireAuth }: EntitiesSectionProps) => {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Building2 className="w-5 h-5 text-primary" />
-              Nova Entidade Beneficiária
+              Nova Instituição Beneficente
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 pt-4">
             <div className="space-y-2">
-              <Label htmlFor="entity-name">Nome da Entidade *</Label>
+              <Label htmlFor="entity-name">Nome da Instituição *</Label>
               <Input
                 id="entity-name"
                 placeholder="Ex: Lar dos Idosos"
@@ -291,7 +291,7 @@ export const EntitiesSection = ({ onRequireAuth }: EntitiesSectionProps) => {
 
             {/* Tipos de doação aceitos */}
             <div className="space-y-3">
-              <Label>O que a entidade aceita receber? (opcional)</Label>
+              <Label>O que a instituição aceita receber? (opcional)</Label>
               <div className="grid grid-cols-2 gap-2">
                 {DONATION_OPTIONS.map((option) => (
                   <div

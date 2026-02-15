@@ -77,7 +77,7 @@ export const useEntities = () => {
       if (error) {
         // Handle unique constraint violation
         if (error.code === "23505") {
-          throw new Error("Esta entidade já está cadastrada nesta cidade");
+          throw new Error("Esta instituição já está cadastrada nesta cidade");
         }
         throw error;
       }
@@ -86,13 +86,13 @@ export const useEntities = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["entities"] });
       toast({
-        title: "Entidade cadastrada!",
-        description: "A entidade foi cadastrada e está disponível para seleção.",
+         title: "Instituição cadastrada!",
+         description: "A instituição foi cadastrada e está disponível para seleção.",
       });
     },
     onError: (error: Error) => {
       toast({
-        title: "Erro ao cadastrar entidade",
+        title: "Erro ao cadastrar instituição",
         description: error.message,
         variant: "destructive",
       });

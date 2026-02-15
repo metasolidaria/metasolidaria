@@ -88,7 +88,7 @@ export const useAdminEntities = () => {
 
       if (error) {
         if (error.code === "23505") {
-          throw new Error("Esta entidade já está cadastrada nesta cidade");
+           throw new Error("Esta instituição já está cadastrada nesta cidade");
         }
         throw error;
       }
@@ -97,14 +97,14 @@ export const useAdminEntities = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-entities"] });
       queryClient.invalidateQueries({ queryKey: ["entities"] });
-      toast({
-        title: "Entidade criada!",
-        description: "A entidade foi cadastrada com sucesso.",
+       toast({
+         title: "Instituição criada!",
+         description: "A instituição foi cadastrada com sucesso.",
       });
     },
     onError: (error: Error) => {
       toast({
-        title: "Erro ao criar entidade",
+        title: "Erro ao criar instituição",
         description: error.message,
         variant: "destructive",
       });
@@ -126,7 +126,7 @@ export const useAdminEntities = () => {
 
       if (error) {
         if (error.code === "23505") {
-          throw new Error("Esta entidade já está cadastrada nesta cidade");
+          throw new Error("Esta instituição já está cadastrada nesta cidade");
         }
         throw error;
       }
@@ -136,13 +136,13 @@ export const useAdminEntities = () => {
       queryClient.invalidateQueries({ queryKey: ["admin-entities"] });
       queryClient.invalidateQueries({ queryKey: ["entities"] });
       toast({
-        title: "Entidade atualizada!",
-        description: "Os dados foram salvos com sucesso.",
+         title: "Instituição atualizada!",
+         description: "Os dados foram salvos com sucesso.",
       });
     },
     onError: (error: Error) => {
       toast({
-        title: "Erro ao atualizar entidade",
+        title: "Erro ao atualizar instituição",
         description: error.message,
         variant: "destructive",
       });
@@ -162,13 +162,13 @@ export const useAdminEntities = () => {
       queryClient.invalidateQueries({ queryKey: ["admin-entities"] });
       queryClient.invalidateQueries({ queryKey: ["entities"] });
       toast({
-        title: "Entidade excluída!",
-        description: "A entidade foi removida com sucesso.",
+         title: "Instituição excluída!",
+         description: "A instituição foi removida com sucesso.",
       });
     },
     onError: (error: Error) => {
       toast({
-        title: "Erro ao excluir entidade",
+        title: "Erro ao excluir instituição",
         description: error.message,
         variant: "destructive",
       });
