@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Menu, X, User, LogOut, Settings, HelpCircle, Download } from "lucide-react";
+import { Menu, X, User, LogOut, Settings, HelpCircle, Download, BookOpen } from "lucide-react";
 import { Button } from "./ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { InstallAppButton } from "./InstallAppButton";
 import { HowItWorksModal } from "./HowItWorksModal";
 import { DownloadAppModal } from "./DownloadAppModal";
+import { CreateGroupTutorialModal } from "./CreateGroupTutorialModal";
 const logo = "/logo.jpg";
 
 interface HeaderProps {
@@ -17,6 +18,7 @@ export const Header = ({ onAuthClick }: HeaderProps) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isHowItWorksOpen, setIsHowItWorksOpen] = useState(false);
   const [isDownloadOpen, setIsDownloadOpen] = useState(false);
+  const [isTutorialOpen, setIsTutorialOpen] = useState(false);
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
 
@@ -92,6 +94,15 @@ export const Header = ({ onAuthClick }: HeaderProps) => {
             >
               <Download className="w-4 h-4" />
               Baixar App
+            </button>
+            <button
+              onClick={() => setIsTutorialOpen(true)}
+              className={`text-sm font-medium transition-colors hover:text-primary flex items-center gap-1 ${
+                isScrolled ? "text-foreground" : "text-primary-foreground"
+              }`}
+            >
+              <BookOpen className="w-4 h-4" />
+              Criar Grupo
             </button>
           </nav>
 
@@ -188,6 +199,16 @@ export const Header = ({ onAuthClick }: HeaderProps) => {
                 <HelpCircle className="w-4 h-4" />
                 Como Funciona
               </button>
+              <button
+                onClick={() => {
+                  setIsTutorialOpen(true);
+                  setIsMobileMenuOpen(false);
+                }}
+                className="flex items-center gap-2 text-foreground text-left py-2 px-3 rounded-lg bg-primary/5 hover:bg-primary/10 transition-colors"
+              >
+                <BookOpen className="w-4 h-4 text-primary" />
+                Criar Grupo
+              </button>
               {user ? (
                 <>
                   <div className="border-t border-border mt-2 pt-2">
@@ -231,6 +252,7 @@ export const Header = ({ onAuthClick }: HeaderProps) => {
       </div>
       <HowItWorksModal open={isHowItWorksOpen} onOpenChange={setIsHowItWorksOpen} />
       <DownloadAppModal open={isDownloadOpen} onOpenChange={setIsDownloadOpen} />
+      <CreateGroupTutorialModal open={isTutorialOpen} onOpenChange={setIsTutorialOpen} />
     </header>
   );
 };
