@@ -130,8 +130,16 @@ export const CreateGroupTutorialModal = ({
         pdf.addImage(imgData, "JPEG", x, y, w, h);
       }
 
-      pdf.save("tutorial-meta-solidaria.pdf");
-      toast.success("PDF baixado com sucesso!");
+      // On mobile, open in new tab so user can save/share; on desktop, direct download
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      if (isMobile) {
+        const blobUrl = pdf.output("bloburl");
+        window.open(blobUrl as unknown as string, "_blank");
+        toast.success("PDF aberto em nova aba! Use o botão de compartilhar para salvar.");
+      } else {
+        pdf.save("tutorial-meta-solidaria.pdf");
+        toast.success("PDF baixado com sucesso!");
+      }
     } catch (error) {
       console.error("Erro ao gerar PDF:", error);
       toast.error("Erro ao gerar o PDF. Tente novamente.");
