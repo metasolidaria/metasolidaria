@@ -50,7 +50,7 @@ export const usePaginatedGroups = ({ page, limit, filter, userMemberships, membe
 
         // Build query to include groups where user is leader OR member
         let query = supabase
-          .from("groups_public" as any)
+          .from("groups_my" as any)
           .select("*", { count: "exact", head: false });
 
         if (userMemberships.length > 0) {
