@@ -3,13 +3,13 @@ import { useSearchParams } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { Hero } from "@/components/Hero";
 import { Footer } from "@/components/Footer";
+import { WhatsAppFloatingButton } from "@/components/WhatsAppFloatingButton";
 import { useInviteLink } from "@/hooks/useInviteLink";
 
 // Lazy load AuthModal to reduce initial bundle size
 const AuthModal = lazy(() => import("@/components/AuthModal").then(m => ({ default: m.AuthModal })));
 
 // Lazy load below-the-fold sections to improve FCP and LCP
-const HowItWorksModal = lazy(() => import("@/components/HowItWorksModal").then(m => ({ default: m.HowItWorksModal })));
 const ImpactCounter = lazy(() => import("@/components/ImpactCounter").then(m => ({ default: m.ImpactCounter })));
 const GroupsSection = lazy(() => import("@/components/GroupsSection").then(m => ({ default: m.GroupsSection })));
 const EntitiesSection = lazy(() => import("@/components/EntitiesSection").then(m => ({ default: m.EntitiesSection })));
@@ -105,10 +105,7 @@ const Index = () => {
         </div>
       )}
       
-      <Suspense fallback={null}>
-        <HowItWorksModal />
-      </Suspense>
-      
+      <WhatsAppFloatingButton />
       <main>
         <Hero />
         <Suspense fallback={<SectionPlaceholder />}>

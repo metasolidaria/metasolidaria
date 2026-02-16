@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Menu, X, User, LogOut, Settings } from "lucide-react";
+import { Menu, X, User, LogOut, Settings, HelpCircle } from "lucide-react";
 import { Button } from "./ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { InstallAppButton } from "./InstallAppButton";
+import { HowItWorksModal } from "./HowItWorksModal";
 const logo = "/logo.jpg";
 
 interface HeaderProps {
@@ -13,6 +14,7 @@ interface HeaderProps {
 export const Header = ({ onAuthClick }: HeaderProps) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isHowItWorksOpen, setIsHowItWorksOpen] = useState(false);
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
 
@@ -71,6 +73,15 @@ export const Header = ({ onAuthClick }: HeaderProps) => {
                 {item}
               </button>
             ))}
+            <button
+              onClick={() => setIsHowItWorksOpen(true)}
+              className={`text-sm font-medium transition-colors hover:text-primary flex items-center gap-1 ${
+                isScrolled ? "text-foreground" : "text-primary-foreground"
+              }`}
+            >
+              <HelpCircle className="w-4 h-4" />
+              Como Funciona
+            </button>
             <InstallAppButton variant="header" isScrolled={isScrolled} />
           </nav>
 
@@ -148,6 +159,16 @@ export const Header = ({ onAuthClick }: HeaderProps) => {
                 </button>
               ))}
               <InstallAppButton variant="menu" />
+              <button
+                onClick={() => {
+                  setIsHowItWorksOpen(true);
+                  setIsMobileMenuOpen(false);
+                }}
+                className="text-foreground text-left py-2 px-3 rounded-lg hover:bg-muted transition-colors flex items-center gap-2"
+              >
+                <HelpCircle className="w-4 h-4" />
+                Como Funciona
+              </button>
               {user ? (
                 <>
                   <div className="border-t border-border mt-2 pt-2">
@@ -189,6 +210,7 @@ export const Header = ({ onAuthClick }: HeaderProps) => {
           </div>
         )}
       </div>
+      <HowItWorksModal open={isHowItWorksOpen} onOpenChange={setIsHowItWorksOpen} />
     </header>
   );
 };
