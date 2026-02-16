@@ -56,14 +56,17 @@ export const EntitiesSection = ({ onRequireAuth }: EntitiesSectionProps) => {
   const [searchCity, setSearchCity] = useState("");
   const [showAll, setShowAll] = useState(false);
 
-  const shouldShowEntities = showAll || searchCity.trim().length > 0;
-
   const filteredEntities = useMemo(() => {
     if (!searchCity.trim()) return entities;
     return entities.filter((entity) =>
       entity.city.toLowerCase().includes(searchCity.toLowerCase())
     );
   }, [entities, searchCity]);
+
+  const isSearching = searchCity.trim().length > 0;
+  const displayedEntities = isSearching || showAll
+    ? filteredEntities
+    : filteredEntities.slice(0, 4);
 
   const handleOpenModal = () => {
     if (!user) {
@@ -135,20 +138,6 @@ export const EntitiesSection = ({ onRequireAuth }: EntitiesSectionProps) => {
           <div className="flex justify-center py-12">
             <Loader2 className="w-8 h-8 animate-spin text-primary" />
           </div>
-        ) : !shouldShowEntities ? (
-          <div className="text-center py-12 animate-in fade-in duration-300">
-            <Building2 className="w-16 h-16 text-muted-foreground/50 mx-auto mb-4" />
-            <p className="text-muted-foreground mb-2">
-              Busque por uma cidade ou clique em "Ver Todas" para visualizar as instituições cadastradas.
-            </p>
-            <Button
-              variant="outline"
-              onClick={() => setShowAll(true)}
-              className="mt-4"
-            >
-              Ver Todas
-            </Button>
-          </div>
         ) : entities.length === 0 ? (
           <div className="text-center py-12 animate-in fade-in duration-300">
             <Building2 className="w-16 h-16 text-muted-foreground/50 mx-auto mb-4" />
@@ -170,8 +159,9 @@ export const EntitiesSection = ({ onRequireAuth }: EntitiesSectionProps) => {
             </p>
           </div>
         ) : (
+          <>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filteredEntities.map((entity, index) => (
+            {displayedEntities.map((entity, index) => (
               <div
                 key={entity.id}
                 className="animate-in fade-in slide-in-from-bottom-4 duration-400"
@@ -249,6 +239,14 @@ export const EntitiesSection = ({ onRequireAuth }: EntitiesSectionProps) => {
               </div>
             ))}
           </div>
+          {!showAll && !isSearching && filteredEntities.length > 4 && (
+            <div className="text-center mt-8">
+              <Button variant="outline" onClick={() => setShowAll(true)}>
+                Ver Todas ({filteredEntities.length})
+              </Button>
+            </div>
+          )}
+          </>
         )}
       </div>
 
