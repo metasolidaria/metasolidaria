@@ -42,7 +42,7 @@ const socialLinks = [
   {
     name: "TikTok",
     icon: TikTokIcon,
-    href: "https://tiktok.com/@metasolidaria",
+    href: "https://tiktok.com/@meta.solidaria",
     color: "hover:text-primary-foreground"
   },
   {
