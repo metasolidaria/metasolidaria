@@ -10,11 +10,21 @@ import {
 } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
 
+import step0Img from "@/assets/tutorial/step0-botao-criar.jpg";
 import step1Img from "@/assets/tutorial/step1-dados-lider.jpg";
 import step2Img from "@/assets/tutorial/step2-tipo-doacao.jpg";
 import step3Img from "@/assets/tutorial/step3-meta-padrao.jpg";
+import step4Img from "@/assets/tutorial/step4-pagina-grupo.jpg";
+import step5Img from "@/assets/tutorial/step5-incluir-evolucao.jpg";
+import step6Img from "@/assets/tutorial/step6-evolucao-registrada.jpg";
 
 const steps = [
+  {
+    image: step0Img,
+    title: "Encontre o botão \"Criar Grupo\"",
+    description:
+      "Na tela inicial, toque no botão \"Criar Grupo\" para começar a montar seu grupo de doações.",
+  },
   {
     image: step1Img,
     title: "Preencha os dados do líder e do grupo",
@@ -32,6 +42,24 @@ const steps = [
     title: "Configure a meta padrão e privacidade",
     description:
       "Defina a meta padrão para os membros, escolha se o grupo será privado e se os membros serão visíveis.",
+  },
+  {
+    image: step4Img,
+    title: "Adicione membros ou compartilhe convites",
+    description:
+      "Na página do grupo, use \"Adicionar Membro\" para incluir diretamente ou \"Enviar Convite\" para compartilhar um link.",
+  },
+  {
+    image: step5Img,
+    title: "Registre a evolução com \"Incluir Evolução\"",
+    description:
+      "Toque em \"Incluir Evolução\" para registrar as doações realizadas pelos membros do grupo.",
+  },
+  {
+    image: step6Img,
+    title: "Acompanhe o progresso do grupo",
+    description:
+      "Veja a meta do grupo, o progresso de cada membro e o histórico completo de doações registradas.",
   },
 ];
 
@@ -56,7 +84,7 @@ export const CreateGroupTutorialModal = ({
       <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto p-4 sm:p-6">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold text-center">
-            Como Criar um Grupo
+            Como Criar e Gerenciar um Grupo
           </DialogTitle>
           <DialogDescription className="text-center">
             Passo {currentStep + 1} de {steps.length}
