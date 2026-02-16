@@ -8,6 +8,8 @@ export interface Entity {
   city: string;
   accepted_donations: string[];
   observations: string | null;
+  pix_key: string | null;
+  pix_name: string | null;
   created_at: string;
 }
 
@@ -50,13 +52,17 @@ export const useEntities = () => {
       city, 
       phone,
       accepted_donations,
-      observations 
+      observations,
+      pix_key,
+      pix_name,
     }: { 
       name: string; 
       city: string; 
       phone?: string;
       accepted_donations?: string[];
       observations?: string;
+      pix_key?: string;
+      pix_name?: string;
     }) => {
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) throw new Error("User not authenticated");
@@ -69,6 +75,8 @@ export const useEntities = () => {
           phone: phone?.trim() || null,
           accepted_donations: accepted_donations || [],
           observations: observations?.trim() || null,
+          pix_key: pix_key?.trim() || null,
+          pix_name: pix_name?.trim() || null,
           created_by: userData.user.id 
         })
         .select()

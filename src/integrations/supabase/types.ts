@@ -42,6 +42,8 @@ export type Database = {
           name: string
           observations: string | null
           phone: string | null
+          pix_key: string | null
+          pix_name: string | null
         }
         Insert: {
           accepted_donations?: string[] | null
@@ -52,6 +54,8 @@ export type Database = {
           name: string
           observations?: string | null
           phone?: string | null
+          pix_key?: string | null
+          pix_name?: string | null
         }
         Update: {
           accepted_donations?: string[] | null
@@ -62,6 +66,8 @@ export type Database = {
           name?: string
           observations?: string | null
           phone?: string | null
+          pix_key?: string | null
+          pix_name?: string | null
         }
         Relationships: []
       }
@@ -719,6 +725,8 @@ export type Database = {
           id: string | null
           name: string | null
           observations: string | null
+          pix_key: string | null
+          pix_name: string | null
         }
         Insert: {
           accepted_donations?: string[] | null
@@ -727,6 +735,8 @@ export type Database = {
           id?: string | null
           name?: string | null
           observations?: string | null
+          pix_key?: string | null
+          pix_name?: string | null
         }
         Update: {
           accepted_donations?: string[] | null
@@ -735,6 +745,8 @@ export type Database = {
           id?: string | null
           name?: string | null
           observations?: string | null
+          pix_key?: string | null
+          pix_name?: string | null
         }
         Relationships: []
       }
