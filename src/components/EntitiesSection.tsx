@@ -34,6 +34,8 @@ interface NewEntityState {
   phone: string;
   accepted_donations: string[];
   observations: string;
+  pix_key: string;
+  pix_name: string;
 }
 
 const initialEntityState: NewEntityState = {
@@ -42,6 +44,8 @@ const initialEntityState: NewEntityState = {
   phone: "",
   accepted_donations: [],
   observations: "",
+  pix_key: "",
+  pix_name: "",
 };
 
 export const EntitiesSection = ({ onRequireAuth }: EntitiesSectionProps) => {
@@ -79,6 +83,8 @@ export const EntitiesSection = ({ onRequireAuth }: EntitiesSectionProps) => {
         phone: newEntity.phone,
         accepted_donations: newEntity.accepted_donations,
         observations: newEntity.observations,
+        pix_key: newEntity.pix_key,
+        pix_name: newEntity.pix_name,
       });
       setNewEntity(initialEntityState);
       setIsModalOpen(false);
@@ -312,6 +318,32 @@ export const EntitiesSection = ({ onRequireAuth }: EntitiesSectionProps) => {
                   </div>
                 ))}
               </div>
+            </div>
+
+            {/* Chave PIX */}
+            <div className="space-y-2">
+              <Label htmlFor="entity-pix-key">Chave PIX (opcional)</Label>
+              <Input
+                id="entity-pix-key"
+                placeholder="Ex: email@exemplo.com, CPF, telefone..."
+                value={newEntity.pix_key}
+                onChange={(e) =>
+                  setNewEntity((prev) => ({ ...prev, pix_key: e.target.value }))
+                }
+              />
+            </div>
+
+            {/* Nome PIX */}
+            <div className="space-y-2">
+              <Label htmlFor="entity-pix-name">Nome PIX (opcional)</Label>
+              <Input
+                id="entity-pix-name"
+                placeholder="Nome do titular da chave PIX"
+                value={newEntity.pix_name}
+                onChange={(e) =>
+                  setNewEntity((prev) => ({ ...prev, pix_name: e.target.value }))
+                }
+              />
             </div>
 
             {/* Observações */}
