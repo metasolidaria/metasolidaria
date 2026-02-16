@@ -1,39 +1,36 @@
 
 
-## Caixa de Informacoes da Instituicao Beneficente na Pagina do Grupo
+## Adicionar campos faltantes nos modais de criar/editar instituicao (Admin)
 
-### Objetivo
-
-Adicionar uma caixa informativa abaixo dos botoes do lider na pagina do grupo que:
-
-1. **Se o grupo tem uma entidade selecionada**: Mostra os detalhes da entidade (nome, cidade, doacoes aceitas, chave PIX e nome PIX)
-2. **Se o grupo NAO tem entidade**: Sugere entidades cadastradas na mesma cidade do grupo, mostrando as mesmas informacoes
+Os modais de criar e editar instituicao na aba de administracao so tem 3 campos (nome, cidade, telefone), mas a tabela `entities` tem mais 4 campos que precisam estar disponiveis: **doacoes aceitas**, **observacoes**, **chave PIX** e **nome PIX**.
 
 ### O que sera feito
 
-**1. Atualizar a query do grupo (`src/hooks/useGroupDetails.tsx`)**
+**1. Atualizar o hook `useAdminEntities.tsx`**
+- Adicionar os campos `accepted_donations`, `observations`, `pix_key` e `pix_name` no tipo `AdminEntity`
+- Atualizar as mutations `createEntity` e `updateEntity` para enviar esses campos ao banco
 
-- Expandir o select da entidade para incluir `accepted_donations`, `pix_key`, `pix_name` e `observations` alem de `id`, `name` e `city`
+**2. Atualizar `CreateEntityModal.tsx`**
+- Adicionar campos para:
+  - Doacoes aceitas (checkboxes usando `DONATION_OPTIONS` do `useEntities`)
+  - Observacoes (textarea)
+  - Chave PIX (input)
+  - Nome PIX (input)
+- Atualizar a interface `onSubmit` para incluir os novos campos
+- Limpar todos os campos ao fechar o modal
 
-**2. Criar componente `EntityInfoBox` (`src/components/EntityInfoBox.tsx`)**
+**3. Atualizar `EditEntityModal.tsx`**
+- Adicionar os mesmos campos do CreateEntityModal
+- Carregar os valores existentes da entidade no `useEffect`
+- Atualizar a interface `onSubmit` para incluir os novos campos
 
-- Novo componente que recebe a cidade do grupo e a entidade selecionada (se houver)
-- Se ha entidade selecionada: exibe os dados dela (nome, doacoes aceitas como badges, chave PIX e nome PIX)
-- Se nao ha entidade: busca entidades da mesma cidade via `entities_public` e exibe como sugestoes
-- Estilo visual: card com icone Building2, cores suaves, consistente com o design existente
-- Cada entidade sugerida mostra: nome, lista de doacoes aceitas, e informacoes PIX (se disponiveis)
-
-**3. Integrar na pagina do grupo (`src/pages/GroupPage.tsx`)**
-
-- Inserir o `EntityInfoBox` logo abaixo dos botoes do lider (apos linha 391)
-- Visivel para todos os visitantes da pagina, nao apenas lideres
-- Passa `groupCity={group.city}`, `entity={group.entity}`, e `entityId={group.entity_id}`
+**4. Atualizar `AdminEntities.tsx`**
+- Ajustar os handlers `handleCreate` e `handleEdit` para passar os novos campos
 
 ### Detalhes tecnicos
 
-- A busca de sugestoes usara a view `entities_public` filtrando por cidade (case-insensitive com `ilike`)
-- O componente usara `useQuery` do TanStack para buscar as sugestoes apenas quando nao ha entidade selecionada
-- Labels das doacoes aceitas serao mapeadas usando o array `DONATION_OPTIONS` ja existente em `useEntities.tsx`
-- Informacoes PIX serao exibidas com icone de copia para facilitar o uso
-- Se nao houver entidades na cidade, a caixa nao sera exibida
+- Os checkboxes de doacoes aceitas usarao o array `DONATION_OPTIONS` importado de `useEntities.tsx`
+- O modal tera scroll (`max-h` com `overflow-y-auto`) para acomodar os novos campos
+- Nenhuma alteracao de banco de dados necessaria -- os campos ja existem na tabela `entities`
+- A interface `AdminEntity` passara a incluir: `accepted_donations: string[] | null`, `observations: string | null`, `pix_key: string | null`, `pix_name: string | null`
 
