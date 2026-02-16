@@ -1,35 +1,38 @@
 
 
-## Tutorial "Como Criar um Grupo" - Modal com Screenshots
+## Tutorial Expandido - 7 Passos Completos
 
-### Resumo
-Criar um modal passo a passo no menu de navegacao mostrando como criar um grupo, usando os 3 prints enviados como ilustracao de cada etapa.
+Atualizar o tutorial de criacao de grupo de 3 para 7 passos, cobrindo o fluxo completo desde encontrar o botao ate ver a evolucao registrada.
 
-### Passos
+### Estrutura dos 7 passos
 
-**1. Copiar as 3 imagens para `src/assets/tutorial/`**
-- `step1-dados-lider.jpg` - Screenshot do topo do formulario (nome do lider, WhatsApp, nome do grupo, descricao, foto)
-- `step2-tipo-doacao.jpg` - Screenshot da cidade, data, tipo de doacao
-- `step3-meta-padrao.jpg` - Screenshot da meta padrao para membros, grupo privado, membros visiveis, botoes
+| Passo | Titulo | Imagem | Status |
+|-------|--------|--------|--------|
+| 1 | Encontre o botao "Criar Grupo" na tela inicial | Screenshot_032426 (tela inicial com botao) | Novo |
+| 2 | Preencha os dados do lider e do grupo | step1-dados-lider.jpg (ja existe) | Existente |
+| 3 | Escolha a cidade, data e tipo de doacao | step2-tipo-doacao.jpg (ja existe) | Existente |
+| 4 | Configure a meta padrao e privacidade | step3-meta-padrao.jpg (ja existe) | Existente |
+| 5 | Adicione membros ou compartilhe convites | Screenshot_032549 (pagina do grupo com botoes) + Screenshot_032537 (modal incluir membro) + Screenshot_032553 (modal convite) | Novo |
+| 6 | Registre a evolucao com "Incluir Evolucao" | Screenshot_032920 (botao incluir evolucao) + Screenshot_033022 (modal registrar doacao) | Novo |
+| 7 | Acompanhe o progresso do grupo | Screenshot_033042 (meta do grupo com progresso e historico) | Novo |
 
-**2. Criar `src/components/CreateGroupTutorialModal.tsx`**
-- Modal controlado por props `open` e `onOpenChange` (mesmo padrao dos outros modais)
-- Layout em carrossel/stepper com 3 passos:
-  - Passo 1: "Preencha os dados do lider e do grupo" + imagem step1
-  - Passo 2: "Escolha a cidade, data e tipo de doacao" + imagem step2
-  - Passo 3: "Configure a meta padrao e privacidade" + imagem step3
-- Botoes "Anterior" / "Proximo" / "Fechar" para navegar entre os passos
-- Indicador de progresso (bolinhas ou barra)
+### Alteracoes
 
-**3. Atualizar `src/components/Header.tsx`**
-- Adicionar estado `isTutorialOpen`
-- Adicionar item "Criar Grupo" no menu desktop e mobile (icone `BookOpen` ou `GraduationCap`)
-- Renderizar o `CreateGroupTutorialModal` controlado pelo estado
+**1. Copiar 4 novas imagens para `src/assets/tutorial/`**
+- `step0-botao-criar.jpg` - Tela inicial mostrando o botao "Criar Grupo"
+- `step4-pagina-grupo.jpg` - Pagina do grupo com botoes Adicionar Membro / Enviar Convite
+- `step5-incluir-evolucao.jpg` - Modal de registrar doacao
+- `step6-evolucao-registrada.jpg` - Progresso do grupo com historico de doacoes
+
+Obs: Os prints do modal "Incluir Membro" e "Convidar Membro" servem como referencia visual para a descricao do passo 5, mas usaremos a imagem da pagina do grupo como print principal desse passo.
+
+**2. Atualizar `src/components/CreateGroupTutorialModal.tsx`**
+- Expandir o array `steps` de 3 para 7 itens
+- Adicionar imports das 4 novas imagens
+- Atualizar titulo do modal para "Como Criar e Gerenciar um Grupo"
+- A navegacao (bolinhas, botoes, barra de progresso) ja funciona dinamicamente
 
 ### Detalhes tecnicos
 
-- As imagens serao importadas como modulos ES6 via `src/assets/tutorial/`
-- O modal usara o componente `Dialog` existente com `max-w-md`
-- Cada passo mostra a imagem com `rounded-lg shadow` e texto descritivo abaixo
-- Navegacao entre passos via estado local `currentStep`
+Nenhuma mudanca no Header necessaria - a integracao ja esta pronta. Apenas o componente `CreateGroupTutorialModal.tsx` sera atualizado com os novos passos e imagens.
 
