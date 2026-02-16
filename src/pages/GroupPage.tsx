@@ -394,6 +394,7 @@ export default function GroupPage() {
           {/* Entity Info Box */}
           <EntityInfoBox
             groupCity={group.city}
+            groupDonationType={group.donation_type}
             entity={(group as any).entity}
             entityId={group.entity_id}
           />
