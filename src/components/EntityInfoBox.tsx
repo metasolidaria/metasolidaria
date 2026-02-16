@@ -17,6 +17,7 @@ interface EntityData {
 
 interface EntityInfoBoxProps {
   groupCity: string;
+  groupDonationType?: string;
   entity?: EntityData | null;
   entityId?: string | null;
 }
@@ -91,10 +92,10 @@ function EntityDetails({ entity }: { entity: EntityData }) {
   );
 }
 
-export function EntityInfoBox({ groupCity, entity, entityId }: EntityInfoBoxProps) {
+export function EntityInfoBox({ groupCity, groupDonationType, entity, entityId }: EntityInfoBoxProps) {
   // Fetch suggestions only when no entity is selected
   const { data: suggestions } = useQuery({
-    queryKey: ["entity-suggestions", groupCity],
+    queryKey: ["entity-suggestions", groupCity, groupDonationType],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("entities_public")
@@ -102,7 +103,20 @@ export function EntityInfoBox({ groupCity, entity, entityId }: EntityInfoBoxProp
         .ilike("city", groupCity);
 
       if (error) throw error;
-      return (data || []) as EntityData[];
+      let results = (data || []) as EntityData[];
+      
+      // Prioritize entities that accept the group's donation type
+      if (groupDonationType && results.length > 0) {
+        const matching = results.filter(
+          (e) => e.accepted_donations && e.accepted_donations.includes(groupDonationType)
+        );
+        const others = results.filter(
+          (e) => !e.accepted_donations || !e.accepted_donations.includes(groupDonationType)
+        );
+        results = [...matching, ...others];
+      }
+      
+      return results;
     },
     enabled: !entityId && !!groupCity,
   });
