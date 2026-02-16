@@ -1,38 +1,35 @@
 
 
-## Mover "Como Funciona" para o menu e trocar botao flutuante por WhatsApp
+## Tutorial "Como Criar um Grupo" - Modal com Screenshots
 
 ### Resumo
+Criar um modal passo a passo no menu de navegacao mostrando como criar um grupo, usando os 3 prints enviados como ilustracao de cada etapa.
 
-1. O botao flutuante de duvida (canto inferior direito) sera substituido por um botao flutuante do WhatsApp (verde, com link direto para 19 99466-2603).
-2. O item "Como Funciona" sera adicionado ao menu de navegacao (desktop e mobile), abrindo o mesmo popup que ja existe.
+### Passos
 
-### Mudancas por arquivo
+**1. Copiar as 3 imagens para `src/assets/tutorial/`**
+- `step1-dados-lider.jpg` - Screenshot do topo do formulario (nome do lider, WhatsApp, nome do grupo, descricao, foto)
+- `step2-tipo-doacao.jpg` - Screenshot da cidade, data, tipo de doacao
+- `step3-meta-padrao.jpg` - Screenshot da meta padrao para membros, grupo privado, membros visiveis, botoes
 
-**1. `src/components/HowItWorksModal.tsx`**
-- Remover o botao flutuante fixo e o estado interno.
-- Receber props `open` e `onOpenChange` para ser controlado externamente.
-- Manter todo o conteudo do modal (passos) como esta.
+**2. Criar `src/components/CreateGroupTutorialModal.tsx`**
+- Modal controlado por props `open` e `onOpenChange` (mesmo padrao dos outros modais)
+- Layout em carrossel/stepper com 3 passos:
+  - Passo 1: "Preencha os dados do lider e do grupo" + imagem step1
+  - Passo 2: "Escolha a cidade, data e tipo de doacao" + imagem step2
+  - Passo 3: "Configure a meta padrao e privacidade" + imagem step3
+- Botoes "Anterior" / "Proximo" / "Fechar" para navegar entre os passos
+- Indicador de progresso (bolinhas ou barra)
 
-**2. Novo arquivo: `src/components/WhatsAppFloatingButton.tsx`**
-- Botao flutuante verde (`bg-green-500`) no canto inferior direito (`fixed bottom-20 right-4`).
-- Icone SVG do WhatsApp (mesmo usado no Footer).
-- Abre link `https://wa.me/5519994662603?text=Olá! Vim pelo site Meta Solidária.` em nova aba.
+**3. Atualizar `src/components/Header.tsx`**
+- Adicionar estado `isTutorialOpen`
+- Adicionar item "Criar Grupo" no menu desktop e mobile (icone `BookOpen` ou `GraduationCap`)
+- Renderizar o `CreateGroupTutorialModal` controlado pelo estado
 
-**3. `src/components/Header.tsx`**
-- Adicionar estado `isHowItWorksOpen`.
-- Adicionar botao "Como Funciona" na navegacao desktop (ao lado dos outros itens de menu).
-- Adicionar botao "Como Funciona" no menu mobile.
-- Importar e renderizar o `HowItWorksModal` controlado pelo estado.
+### Detalhes tecnicos
 
-**4. `src/pages/Index.tsx`**
-- Remover o `<HowItWorksModal />` e seu lazy import.
-- Adicionar o `<WhatsAppFloatingButton />` no lugar.
-
-### Resultado visual
-
-- Menu desktop: Grupos | Instituicoes | Parceiros | Impacto | Como Funciona
-- Menu mobile: mesmos itens incluindo "Como Funciona"
-- Botao flutuante verde do WhatsApp no canto inferior direito
-- Ao clicar "Como Funciona", abre o mesmo popup explicativo de sempre
+- As imagens serao importadas como modulos ES6 via `src/assets/tutorial/`
+- O modal usara o componente `Dialog` existente com `max-w-md`
+- Cada passo mostra a imagem com `rounded-lg shadow` e texto descritivo abaixo
+- Navegacao entre passos via estado local `currentStep`
 
