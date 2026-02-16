@@ -1,25 +1,39 @@
 
-## Mover Parceiros Solidários para o final da página do grupo
 
-Atualmente, o carrossel de parceiros ouro (`GoldPartnersCarousel`) aparece logo no topo do conteudo, antes das seções de progresso e membros. A mudanca vai movê-lo para o final da pagina, depois de todo o conteudo principal.
+## Caixa de Informacoes da Instituicao Beneficente na Pagina do Grupo
+
+### Objetivo
+
+Adicionar uma caixa informativa abaixo dos botoes do lider na pagina do grupo que:
+
+1. **Se o grupo tem uma entidade selecionada**: Mostra os detalhes da entidade (nome, cidade, doacoes aceitas, chave PIX e nome PIX)
+2. **Se o grupo NAO tem entidade**: Sugere entidades cadastradas na mesma cidade do grupo, mostrando as mesmas informacoes
 
 ### O que sera feito
 
-**Arquivo: `src/pages/GroupPage.tsx`**
+**1. Atualizar a query do grupo (`src/hooks/useGroupDetails.tsx`)**
 
-1. Remover o `GoldPartnersCarousel` da posicao atual (linhas 396-399), que fica acima do grid principal.
-2. Inserir o `GoldPartnersCarousel` logo apos o fechamento do grid (apos a linha 742), ficando como ultimo elemento visivel da pagina antes dos modais.
+- Expandir o select da entidade para incluir `accepted_donations`, `pix_key`, `pix_name` e `observations` alem de `id`, `name` e `city`
 
-### Resultado
+**2. Criar componente `EntityInfoBox` (`src/components/EntityInfoBox.tsx`)**
 
-A ordem na pagina do grupo ficara:
-1. Header (com badges, nome, cidade, PremiumLogosCarousel)
-2. Botoes do lider (se aplicavel)
-3. Meta do grupo / Progresso
-4. Historico de doacoes
-5. Membros e Resumo (sidebar)
-6. **Parceiros Solidarios (Gold Partners Carousel)** -- movido para ca
+- Novo componente que recebe a cidade do grupo e a entidade selecionada (se houver)
+- Se ha entidade selecionada: exibe os dados dela (nome, doacoes aceitas como badges, chave PIX e nome PIX)
+- Se nao ha entidade: busca entidades da mesma cidade via `entities_public` e exibe como sugestoes
+- Estilo visual: card com icone Building2, cores suaves, consistente com o design existente
+- Cada entidade sugerida mostra: nome, lista de doacoes aceitas, e informacoes PIX (se disponiveis)
+
+**3. Integrar na pagina do grupo (`src/pages/GroupPage.tsx`)**
+
+- Inserir o `EntityInfoBox` logo abaixo dos botoes do lider (apos linha 391)
+- Visivel para todos os visitantes da pagina, nao apenas lideres
+- Passa `groupCity={group.city}`, `entity={group.entity}`, e `entityId={group.entity_id}`
 
 ### Detalhes tecnicos
 
-Apenas reposicionar o bloco JSX do `GoldPartnersCarousel` dentro do mesmo container (`div.container`), movendo-o de antes do `grid` para depois dele. Nenhuma alteracao de logica ou props.
+- A busca de sugestoes usara a view `entities_public` filtrando por cidade (case-insensitive com `ilike`)
+- O componente usara `useQuery` do TanStack para buscar as sugestoes apenas quando nao ha entidade selecionada
+- Labels das doacoes aceitas serao mapeadas usando o array `DONATION_OPTIONS` ja existente em `useEntities.tsx`
+- Informacoes PIX serao exibidas com icone de copia para facilitar o uso
+- Se nao houver entidades na cidade, a caixa nao sera exibida
+
