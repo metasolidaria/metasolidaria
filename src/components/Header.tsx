@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Menu, X, User, LogOut, Settings, HelpCircle } from "lucide-react";
+import { Menu, X, User, LogOut, Settings, HelpCircle, Download } from "lucide-react";
 import { Button } from "./ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { InstallAppButton } from "./InstallAppButton";
 import { HowItWorksModal } from "./HowItWorksModal";
+import { DownloadAppModal } from "./DownloadAppModal";
 const logo = "/logo.jpg";
 
 interface HeaderProps {
@@ -15,6 +16,7 @@ export const Header = ({ onAuthClick }: HeaderProps) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isHowItWorksOpen, setIsHowItWorksOpen] = useState(false);
+  const [isDownloadOpen, setIsDownloadOpen] = useState(false);
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
 
@@ -82,7 +84,15 @@ export const Header = ({ onAuthClick }: HeaderProps) => {
               <HelpCircle className="w-4 h-4" />
               Como Funciona
             </button>
-            <InstallAppButton variant="header" isScrolled={isScrolled} />
+            <button
+              onClick={() => setIsDownloadOpen(true)}
+              className={`text-sm font-medium transition-colors hover:text-primary flex items-center gap-1 ${
+                isScrolled ? "text-foreground" : "text-primary-foreground"
+              }`}
+            >
+              <Download className="w-4 h-4" />
+              Baixar App
+            </button>
           </nav>
 
           {/* Auth Buttons */}
@@ -158,7 +168,16 @@ export const Header = ({ onAuthClick }: HeaderProps) => {
                   {item}
                 </button>
               ))}
-              <InstallAppButton variant="menu" />
+              <button
+                onClick={() => {
+                  setIsDownloadOpen(true);
+                  setIsMobileMenuOpen(false);
+                }}
+                className="flex items-center gap-2 text-foreground text-left py-2 px-3 rounded-lg bg-primary/5 hover:bg-primary/10 transition-colors"
+              >
+                <Download className="w-4 h-4 text-primary" />
+                Baixar App
+              </button>
               <button
                 onClick={() => {
                   setIsHowItWorksOpen(true);
@@ -211,6 +230,7 @@ export const Header = ({ onAuthClick }: HeaderProps) => {
         )}
       </div>
       <HowItWorksModal open={isHowItWorksOpen} onOpenChange={setIsHowItWorksOpen} />
+      <DownloadAppModal open={isDownloadOpen} onOpenChange={setIsDownloadOpen} />
     </header>
   );
 };
