@@ -41,7 +41,7 @@ export const DownloadAppModal = ({ open, onOpenChange }: DownloadAppModalProps) 
             <ol className="space-y-2 text-sm text-muted-foreground">
               <li className="flex items-start gap-2">
                 <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-bold shrink-0 mt-0.5">1</span>
-                <span>Abra o site <strong className="text-foreground">metasolidaria.lovable.app</strong> no Safari</span>
+                <span>Abra o site <strong className="text-foreground">metasolidaria.com.br</strong> no Safari</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-bold shrink-0 mt-0.5">2</span>
@@ -69,7 +69,7 @@ export const DownloadAppModal = ({ open, onOpenChange }: DownloadAppModalProps) 
             <ol className="space-y-2 text-sm text-muted-foreground">
               <li className="flex items-start gap-2">
                 <span className="flex items-center justify-center w-6 h-6 rounded-full bg-green-500/10 text-green-600 text-xs font-bold shrink-0 mt-0.5">1</span>
-                <span>Abra o site <strong className="text-foreground">metasolidaria.lovable.app</strong> no Chrome</span>
+                <span>Abra o site <strong className="text-foreground">metasolidaria.com.br</strong> no Chrome</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="flex items-center justify-center w-6 h-6 rounded-full bg-green-500/10 text-green-600 text-xs font-bold shrink-0 mt-0.5">2</span>
