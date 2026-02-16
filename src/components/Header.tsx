@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import { useNavigate } from "react-router-dom";
 import { Menu, X, User, LogOut, Settings, HelpCircle, Download, BookOpen } from "lucide-react";
 import { Button } from "./ui/button";
@@ -6,7 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { InstallAppButton } from "./InstallAppButton";
 import { HowItWorksModal } from "./HowItWorksModal";
 import { DownloadAppModal } from "./DownloadAppModal";
-import { CreateGroupTutorialModal } from "./CreateGroupTutorialModal";
+const CreateGroupTutorialModal = lazy(() => import("./CreateGroupTutorialModal").then(m => ({ default: m.CreateGroupTutorialModal })));
 const logo = "/logo.jpg";
 
 interface HeaderProps {
@@ -252,7 +252,9 @@ export const Header = ({ onAuthClick }: HeaderProps) => {
       </div>
       <HowItWorksModal open={isHowItWorksOpen} onOpenChange={setIsHowItWorksOpen} />
       <DownloadAppModal open={isDownloadOpen} onOpenChange={setIsDownloadOpen} />
-      <CreateGroupTutorialModal open={isTutorialOpen} onOpenChange={setIsTutorialOpen} />
+      <Suspense fallback={null}>
+        <CreateGroupTutorialModal open={isTutorialOpen} onOpenChange={setIsTutorialOpen} />
+      </Suspense>
     </header>
   );
 };
