@@ -128,6 +128,13 @@ export type Database = {
             foreignKeyName: "goal_progress_group_id_fkey"
             columns: ["group_id"]
             isOneToOne: false
+            referencedRelation: "groups_my"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "goal_progress_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
             referencedRelation: "groups_public"
             referencedColumns: ["id"]
           },
@@ -214,6 +221,13 @@ export type Database = {
             foreignKeyName: "group_invitations_group_id_fkey"
             columns: ["group_id"]
             isOneToOne: false
+            referencedRelation: "groups_my"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "group_invitations_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
             referencedRelation: "groups_public"
             referencedColumns: ["id"]
           },
@@ -280,6 +294,13 @@ export type Database = {
             columns: ["group_id"]
             isOneToOne: false
             referencedRelation: "groups_admin"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "group_join_requests_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "groups_my"
             referencedColumns: ["id"]
           },
           {
@@ -367,6 +388,13 @@ export type Database = {
             columns: ["group_id"]
             isOneToOne: false
             referencedRelation: "groups_admin"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "group_members_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "groups_my"
             referencedColumns: ["id"]
           },
           {
@@ -796,6 +824,13 @@ export type Database = {
             foreignKeyName: "group_members_group_id_fkey"
             columns: ["group_id"]
             isOneToOne: false
+            referencedRelation: "groups_my"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "group_members_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
             referencedRelation: "groups_public"
             referencedColumns: ["id"]
           },
@@ -833,6 +868,50 @@ export type Database = {
           leader_id: string | null
           leader_name: string | null
           leader_whatsapp: string | null
+          member_count: number | null
+          members_visible: boolean | null
+          name: string | null
+          total_donations: number | null
+          total_goals: number | null
+          updated_at: string | null
+          view_count: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "groups_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: false
+            referencedRelation: "entities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "groups_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: false
+            referencedRelation: "entities_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      groups_my: {
+        Row: {
+          city: string | null
+          created_at: string | null
+          default_commitment_donation: number | null
+          default_commitment_goal: number | null
+          default_commitment_metric: string | null
+          default_commitment_name: string | null
+          default_commitment_ratio: number | null
+          description: string | null
+          donation_type: string | null
+          end_date: string | null
+          entity_id: string | null
+          goal_2026: number | null
+          id: string | null
+          image_url: string | null
+          is_private: boolean | null
+          leader_id: string | null
+          leader_name: string | null
           member_count: number | null
           members_visible: boolean | null
           name: string | null
