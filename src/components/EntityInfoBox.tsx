@@ -71,7 +71,7 @@ function EntityDetails({ entity }: { entity: EntityData }) {
       )}
 
       {(entity.pix_key || entity.pix_name) && (
-        <div className="bg-muted/50 rounded-lg p-3 space-y-1.5">
+        <div className="bg-muted/50 rounded-lg p-3 space-y-2">
           {entity.pix_name && (
             <p className="text-sm">
               <span className="text-muted-foreground">Nome PIX:</span>{" "}
@@ -86,6 +86,11 @@ function EntityDetails({ entity }: { entity: EntityData }) {
               </p>
               <CopyButton text={entity.pix_key} />
             </div>
+          )}
+          {entity.pix_name && (
+            <p className="text-xs text-destructive flex items-center gap-1.5 mt-1">
+              ⚠️ Antes de concluir a transação, confira se o nome do destinatário corresponde a <strong>{entity.pix_name}</strong>.
+            </p>
           )}
         </div>
       )}
