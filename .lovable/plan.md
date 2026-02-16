@@ -1,36 +1,26 @@
 
 
-## Adicionar campos faltantes nos modais de criar/editar instituicao (Admin)
+## Ocultar instituicoes de teste da tela inicial
 
-Os modais de criar e editar instituicao na aba de administracao so tem 3 campos (nome, cidade, telefone), mas a tabela `entities` tem mais 4 campos que precisam estar disponiveis: **doacoes aceitas**, **observacoes**, **chave PIX** e **nome PIX**.
+As 5 instituicoes de teste (Lar dos Idosos Esperanca, Casa da Crianca Feliz, etc.) estao aparecendo porque nao existe nenhum mecanismo para diferencia-las das reais.
 
 ### O que sera feito
 
-**1. Atualizar o hook `useAdminEntities.tsx`**
-- Adicionar os campos `accepted_donations`, `observations`, `pix_key` e `pix_name` no tipo `AdminEntity`
-- Atualizar as mutations `createEntity` e `updateEntity` para enviar esses campos ao banco
+**1. Adicionar coluna `is_test` na tabela `entities`**
+- Nova coluna booleana com default `false`
+- Marcar as 5 instituicoes de seed como `is_test = true`
 
-**2. Atualizar `CreateEntityModal.tsx`**
-- Adicionar campos para:
-  - Doacoes aceitas (checkboxes usando `DONATION_OPTIONS` do `useEntities`)
-  - Observacoes (textarea)
-  - Chave PIX (input)
-  - Nome PIX (input)
-- Atualizar a interface `onSubmit` para incluir os novos campos
-- Limpar todos os campos ao fechar o modal
+**2. Atualizar a view `entities_public`**
+- Adicionar filtro `WHERE is_test = false` para ocultar instituicoes de teste da listagem publica
 
-**3. Atualizar `EditEntityModal.tsx`**
-- Adicionar os mesmos campos do CreateEntityModal
-- Carregar os valores existentes da entidade no `useEffect`
-- Atualizar a interface `onSubmit` para incluir os novos campos
-
-**4. Atualizar `AdminEntities.tsx`**
-- Ajustar os handlers `handleCreate` e `handleEdit` para passar os novos campos
+**3. Nenhuma alteracao de codigo necessaria**
+- O hook `useEntities` e o `EntitiesSection` ja usam a view `entities_public`, entao o filtro sera aplicado automaticamente
 
 ### Detalhes tecnicos
 
-- Os checkboxes de doacoes aceitas usarao o array `DONATION_OPTIONS` importado de `useEntities.tsx`
-- O modal tera scroll (`max-h` com `overflow-y-auto`) para acomodar os novos campos
-- Nenhuma alteracao de banco de dados necessaria -- os campos ja existem na tabela `entities`
-- A interface `AdminEntity` passara a incluir: `accepted_donations: string[] | null`, `observations: string | null`, `pix_key: string | null`, `pix_name: string | null`
+Uma unica migracao SQL que:
+1. Adiciona `is_test boolean NOT NULL DEFAULT false` na tabela `entities`
+2. Atualiza as 5 entidades de teste (`e1111111-...` ate `e5555555-...`) para `is_test = true`
+3. Recria a view `entities_public` com `WHERE is_test = false`
 
+As instituicoes de teste continuarao no banco e visiveis na aba de administracao, mas nao aparecerao mais na tela inicial nem nas sugestoes de entidades na pagina do grupo.
