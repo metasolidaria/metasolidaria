@@ -58,7 +58,7 @@ export const Header = ({ onAuthClick }: HeaderProps) => {
 
           {/* Desktop Navigation - Centered absolutely */}
           <nav className="hidden md:flex items-center gap-4 lg:gap-8 absolute left-1/2 -translate-x-1/2">
-            {["Grupos", "Entidades", "Parceiros", "Impacto"].map((item) => (
+            {["Grupos", "Instituições", "Parceiros", "Impacto"].map((item) => (
               <button
                 key={item}
                 onClick={() =>
@@ -136,7 +136,7 @@ export const Header = ({ onAuthClick }: HeaderProps) => {
         {isMobileMenuOpen && (
           <div className="md:hidden bg-card rounded-xl shadow-soft p-4 mb-4 animate-fade-in">
             <nav className="flex flex-col gap-2">
-              {["Grupos", "Entidades", "Parceiros", "Impacto"].map((item) => (
+              {["Grupos", "Instituições", "Parceiros", "Impacto"].map((item) => (
                 <button
                   key={item}
                   onClick={() =>
