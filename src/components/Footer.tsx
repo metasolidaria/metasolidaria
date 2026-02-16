@@ -1,4 +1,4 @@
-import { Heart, Settings, Instagram, Facebook, ChevronDown } from "lucide-react";
+import { Heart, Settings, Instagram, Facebook, ChevronDown, Mail } from "lucide-react";
 import { Link } from "react-router-dom";
 import { lazy, Suspense } from "react";
 import { InstallAppButton } from "./InstallAppButton";
@@ -50,6 +50,12 @@ const socialLinks = [
     icon: WhatsAppIcon,
     href: "https://wa.me/5519994662603?text=Olá! Vim pelo site Meta Solidária.",
     color: "hover:text-green-400"
+  },
+  {
+    name: "Email",
+    icon: Mail,
+    href: "mailto:Contato@metasolidaria.com.br",
+    color: "hover:text-yellow-300"
   }
 ];
 
