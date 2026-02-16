@@ -1,35 +1,24 @@
 
+## Corrigir: Grupos privados nao aparecem em "Meus Grupos"
 
-## Exportar Tutorial em PDF
+### Problema
+A view `groups_public` possui o filtro `WHERE g.is_private = false`, que exclui todos os grupos privados. Quando o usuario filtra por "Meus Grupos", a query usa essa mesma view, entao seus grupos privados nunca aparecem.
 
-### Abordagem
-Adicionar um botao "Baixar PDF" no modal do tutorial que gera um PDF com todos os 7 passos (imagem + titulo + descricao) em um unico documento, usando as bibliotecas `jspdf` e `html2canvas`.
+### Solucao
+Criar uma nova view `groups_my` que inclui grupos privados, mas somente para membros ou lideres autenticados. A view `groups_public` continuara filtrando apenas grupos publicos (comportamento correto para a aba "Todos").
 
-### Como vai funcionar
-- Um botao "Baixar PDF" aparece no rodape do modal (ao lado dos botoes de navegacao)
-- Ao clicar, o sistema renderiza uma div oculta com todos os 7 passos lado a lado (verticalmente)
-- Usa `html2canvas` para capturar cada passo e `jspdf` para montar o PDF final
-- Cada passo ocupa uma pagina do PDF com a imagem + titulo + descricao
-- O PDF e baixado automaticamente como `tutorial-meta-solidaria.pdf`
+### Alteracoes
 
-### Detalhes tecnicos
+**1. Criar view `groups_my` no banco de dados**
+- Uma nova view com `security_invoker = on` que mostra todos os grupos (publicos e privados) sem o filtro `is_private = false`
+- A seguranca sera garantida pelo RLS da tabela `groups` (que ja permite acesso a grupos privados para lideres e membros)
 
-**1. Instalar dependencias**
-- `jspdf` - para gerar o PDF
-- `html2canvas` - para capturar os elementos HTML como imagem
+**2. Atualizar `src/hooks/usePaginatedGroups.tsx`**
+- No bloco do filtro `"mine"`, trocar a query de `groups_public` para `groups_my`
+- Isso fara com que grupos privados do usuario aparecam na aba "Meus Grupos"
+- A aba "Todos" continuara usando `groups_public` (somente publicos)
 
-**2. Atualizar `src/components/CreateGroupTutorialModal.tsx`**
-- Adicionar funcao `handleExportPDF` que:
-  - Cria um elemento temporario invisivel no DOM com todos os passos
-  - Para cada passo, renderiza imagem + titulo + descricao
-  - Usa `html2canvas` para capturar cada passo
-  - Usa `jspdf` para criar o documento com uma pagina por passo
-  - Remove o elemento temporario
-  - Dispara o download
-- Adicionar botao "Baixar PDF" com icone `Download` no header do modal
-- Mostrar estado de loading ("Gerando PDF...") enquanto processa
-
-**3. Otimizacao de performance**
-- As bibliotecas `jspdf` e `html2canvas` serao importadas via `import()` dinamico (lazy), so carregadas quando o usuario clicar em "Baixar PDF"
-- Nenhum impacto no bundle inicial
-
+### Por que isso e seguro
+- A view `groups_my` usa `security_invoker = on`, ou seja, as politicas de RLS da tabela `groups` se aplicam
+- O RLS da tabela `groups` ja permite SELECT apenas para: grupos publicos, grupos onde o usuario e lider, grupos onde o usuario e membro, ou administradores
+- Nenhum usuario vera grupos privados de terceiros
