@@ -120,7 +120,7 @@ const Index = () => {
           <GroupsSection onRequireAuth={handleRequireAuth} />
         </Suspense>
         <Suspense fallback={<SectionPlaceholder />}>
-          <div id="entidades">
+          <div id="instituições">
             <EntitiesSection onRequireAuth={handleRequireAuth} />
           </div>
         </Suspense>
