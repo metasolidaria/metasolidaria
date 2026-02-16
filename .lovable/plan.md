@@ -1,21 +1,25 @@
 
+## Mover Parceiros Solidários para o final da página do grupo
 
-## Remover 5 instituições de teste
+Atualmente, o carrossel de parceiros ouro (`GoldPartnersCarousel`) aparece logo no topo do conteudo, antes das seções de progresso e membros. A mudanca vai movê-lo para o final da pagina, depois de todo o conteudo principal.
 
-Serão removidas as seguintes instituições do banco de dados:
+### O que sera feito
 
-1. Lar dos Idosos Esperança (São Paulo)
-2. Casa da Criança Feliz (Campinas)
-3. Centro Comunitário União (Ribeirão Preto)
-4. Abrigo Vida Nova (Santos)
-5. ONG Mãos que Ajudam (Sorocaba)
+**Arquivo: `src/pages/GroupPage.tsx`**
 
-As 3 instituições reais permanecerão intactas:
-- Educandario (Ouro Fino, MG)
-- Santa Casa de Ouro Fino MG (Ouro Fino, MG)
-- Alimento para todos (Campinas, SP)
+1. Remover o `GoldPartnersCarousel` da posicao atual (linhas 396-399), que fica acima do grid principal.
+2. Inserir o `GoldPartnersCarousel` logo apos o fechamento do grid (apos a linha 742), ficando como ultimo elemento visivel da pagina antes dos modais.
 
-### Detalhes técnicos
+### Resultado
 
-Executar um DELETE na tabela `entities` filtrando pelos IDs das 5 instituições de teste (IDs que começam com `e1111111`, `e2222222`, `e3333333`, `e4444444`, `e5555555`). A view `entities_public` será atualizada automaticamente.
+A ordem na pagina do grupo ficara:
+1. Header (com badges, nome, cidade, PremiumLogosCarousel)
+2. Botoes do lider (se aplicavel)
+3. Meta do grupo / Progresso
+4. Historico de doacoes
+5. Membros e Resumo (sidebar)
+6. **Parceiros Solidarios (Gold Partners Carousel)** -- movido para ca
 
+### Detalhes tecnicos
+
+Apenas reposicionar o bloco JSX do `GoldPartnersCarousel` dentro do mesmo container (`div.container`), movendo-o de antes do `grid` para depois dele. Nenhuma alteracao de logica ou props.
