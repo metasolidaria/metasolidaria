@@ -18,6 +18,7 @@ import { JoinRequestsPanel } from "@/components/JoinRequestsPanel";
 import { useProgressAnalysis } from "@/hooks/useProgressAnalysis";
 import { GoldPartnersCarousel } from "@/components/GoldPartnersCarousel";
 import { PremiumLogosCarousel } from "@/components/PremiumLogosCarousel";
+import { EntityInfoBox } from "@/components/EntityInfoBox";
 import { useState } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -389,6 +390,13 @@ export default function GroupPage() {
               </Button>
             </motion.div>
           )}
+
+          {/* Entity Info Box */}
+          <EntityInfoBox
+            groupCity={group.city}
+            entity={(group as any).entity}
+            entityId={group.entity_id}
+          />
         </div>
       </div>
 
