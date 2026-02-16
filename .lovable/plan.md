@@ -1,27 +1,38 @@
 
 
-## Tornar o botao de copiar chave PIX mais visivel nas sugestoes de instituicao
+## Mover "Como Funciona" para o menu e trocar botao flutuante por WhatsApp
 
-O componente `EntityInfoBox.tsx` ja possui um `CopyButton` ao lado da chave PIX, mas ele e apenas um icone muito pequeno (3.5x3.5 = 14px) que pode passar despercebido.
+### Resumo
 
-### O que sera feito
+1. O botao flutuante de duvida (canto inferior direito) sera substituido por um botao flutuante do WhatsApp (verde, com link direto para 19 99466-2603).
+2. O item "Como Funciona" sera adicionado ao menu de navegacao (desktop e mobile), abrindo o mesmo popup que ja existe.
 
-**Arquivo: `src/components/EntityInfoBox.tsx`**
+### Mudancas por arquivo
 
-Substituir o botao de copia discreto por um botao mais visivel com texto "Copiar" ao lado do icone, usando o componente `Button` com variante `outline` e tamanho `sm`. O botao tera feedback visual ("Copiado!") ao clicar.
+**1. `src/components/HowItWorksModal.tsx`**
+- Remover o botao flutuante fixo e o estado interno.
+- Receber props `open` e `onOpenChange` para ser controlado externamente.
+- Manter todo o conteudo do modal (passos) como esta.
 
-Mudanca no componente `CopyButton`:
-- De: icone pequeno inline ao lado do texto
-- Para: botao com texto "Copiar PIX" abaixo da chave, mais facil de identificar e clicar
+**2. Novo arquivo: `src/components/WhatsAppFloatingButton.tsx`**
+- Botao flutuante verde (`bg-green-500`) no canto inferior direito (`fixed bottom-20 right-4`).
+- Icone SVG do WhatsApp (mesmo usado no Footer).
+- Abre link `https://wa.me/5519994662603?text=Olá! Vim pelo site Meta Solidária.` em nova aba.
 
-### Detalhes tecnicos
+**3. `src/components/Header.tsx`**
+- Adicionar estado `isHowItWorksOpen`.
+- Adicionar botao "Como Funciona" na navegacao desktop (ao lado dos outros itens de menu).
+- Adicionar botao "Como Funciona" no menu mobile.
+- Importar e renderizar o `HowItWorksModal` controlado pelo estado.
 
-No componente `CopyButton`, trocar de um `<button>` inline com icone pequeno para um `<Button variant="outline" size="sm">` com texto visivel:
+**4. `src/pages/Index.tsx`**
+- Remover o `<HowItWorksModal />` e seu lazy import.
+- Adicionar o `<WhatsAppFloatingButton />` no lugar.
 
-```
-Antes:  [icone 14px clicavel]
-Depois: [Botao "Copiar PIX" com icone + texto, e feedback "Copiado!" por 2s]
-```
+### Resultado visual
 
-O botao aparecera tanto na secao de instituicao selecionada quanto nas sugestoes, sempre que houver chave PIX cadastrada.
+- Menu desktop: Grupos | Instituicoes | Parceiros | Impacto | Como Funciona
+- Menu mobile: mesmos itens incluindo "Como Funciona"
+- Botao flutuante verde do WhatsApp no canto inferior direito
+- Ao clicar "Como Funciona", abre o mesmo popup explicativo de sempre
 
