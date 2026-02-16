@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Building2, Copy, Check, Lightbulb } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
 import { DONATION_OPTIONS } from "@/hooks/useEntities";
 import { Badge } from "@/components/ui/badge";
 import { useState } from "react";
@@ -36,13 +37,15 @@ function CopyButton({ text }: { text: string }) {
   };
 
   return (
-    <button
+    <Button
+      variant="outline"
+      size="sm"
       onClick={handleCopy}
-      className="inline-flex items-center gap-1 text-primary hover:text-primary/80 transition-colors"
-      title="Copiar"
+      className="mt-2 gap-1.5"
     >
-      {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-    </button>
+      {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+      {copied ? "Copiado!" : "Copiar PIX"}
+    </Button>
   );
 }
 
@@ -76,11 +79,13 @@ function EntityDetails({ entity }: { entity: EntityData }) {
             </p>
           )}
           {entity.pix_key && (
-            <p className="text-sm flex items-center gap-1.5">
-              <span className="text-muted-foreground">Chave PIX:</span>{" "}
-              <span className="font-medium text-foreground break-all">{entity.pix_key}</span>
+            <div className="text-sm">
+              <p className="flex items-center gap-1.5">
+                <span className="text-muted-foreground">Chave PIX:</span>{" "}
+                <span className="font-medium text-foreground break-all">{entity.pix_key}</span>
+              </p>
               <CopyButton text={entity.pix_key} />
-            </p>
+            </div>
           )}
         </div>
       )}
