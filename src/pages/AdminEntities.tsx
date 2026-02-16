@@ -134,13 +134,13 @@ const AdminEntities = () => {
     </Button>
   );
 
-  const handleCreate = (data: { name: string; city: string; phone?: string }) => {
+  const handleCreate = (data: { name: string; city: string; phone?: string; accepted_donations?: string[]; observations?: string; pix_key?: string; pix_name?: string }) => {
     createEntity.mutate(data, {
       onSuccess: () => setCreateModalOpen(false),
     });
   };
 
-  const handleEdit = (data: { id: string; name: string; city: string; phone?: string }) => {
+  const handleEdit = (data: { id: string; name: string; city: string; phone?: string; accepted_donations?: string[]; observations?: string; pix_key?: string; pix_name?: string }) => {
     updateEntity.mutate(data, {
       onSuccess: () => {
         setEditModalOpen(false);

@@ -7,6 +7,10 @@ export interface AdminEntity {
   name: string;
   city: string;
   phone: string | null;
+  accepted_donations: string[] | null;
+  observations: string | null;
+  pix_key: string | null;
+  pix_name: string | null;
   created_by: string | null;
   created_at: string;
   total_donated: number;
@@ -71,7 +75,7 @@ export const useAdminEntities = () => {
   });
 
   const createEntity = useMutation({
-    mutationFn: async ({ name, city, phone }: { name: string; city: string; phone?: string }) => {
+    mutationFn: async ({ name, city, phone, accepted_donations, observations, pix_key, pix_name }: { name: string; city: string; phone?: string; accepted_donations?: string[]; observations?: string; pix_key?: string; pix_name?: string }) => {
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) throw new Error("User not authenticated");
 
@@ -81,6 +85,10 @@ export const useAdminEntities = () => {
           name: name.trim(), 
           city: city.trim(),
           phone: phone?.trim() || null,
+          accepted_donations: accepted_donations || [],
+          observations: observations?.trim() || null,
+          pix_key: pix_key?.trim() || null,
+          pix_name: pix_name?.trim() || null,
           created_by: userData.user.id 
         })
         .select()
@@ -112,13 +120,17 @@ export const useAdminEntities = () => {
   });
 
   const updateEntity = useMutation({
-    mutationFn: async ({ id, name, city, phone }: { id: string; name: string; city: string; phone?: string }) => {
+    mutationFn: async ({ id, name, city, phone, accepted_donations, observations, pix_key, pix_name }: { id: string; name: string; city: string; phone?: string; accepted_donations?: string[]; observations?: string; pix_key?: string; pix_name?: string }) => {
       const { data, error } = await supabase
         .from("entities")
         .update({ 
           name: name.trim(), 
           city: city.trim(),
           phone: phone?.trim() || null,
+          accepted_donations: accepted_donations || [],
+          observations: observations?.trim() || null,
+          pix_key: pix_key?.trim() || null,
+          pix_name: pix_name?.trim() || null,
         })
         .eq("id", id)
         .select()
