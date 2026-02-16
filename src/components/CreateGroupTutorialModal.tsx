@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Download, Loader2 } from "lucide-react";
 import { Button } from "./ui/button";
 import {
   Dialog,
@@ -9,6 +9,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
+import { toast } from "sonner";
 
 const steps = [
   {
@@ -65,19 +66,105 @@ export const CreateGroupTutorialModal = ({
   onOpenChange,
 }: CreateGroupTutorialModalProps) => {
   const [currentStep, setCurrentStep] = useState(0);
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
 
   const handleOpenChange = (value: boolean) => {
     if (!value) setCurrentStep(0);
     onOpenChange(value);
   };
 
+  const handleExportPDF = async () => {
+    setIsGeneratingPDF(true);
+    try {
+      const [{ jsPDF }, html2canvasModule] = await Promise.all([
+        import("jspdf"),
+        import("html2canvas"),
+      ]);
+      const html2canvas = html2canvasModule.default;
+
+      const pdf = new jsPDF("p", "mm", "a4");
+      const pageWidth = 210;
+      const pageHeight = 297;
+
+      for (let i = 0; i < steps.length; i++) {
+        if (i > 0) pdf.addPage();
+
+        // Create temporary element for this step
+        const container = document.createElement("div");
+        container.style.cssText = "position:fixed;left:-9999px;top:0;width:800px;background:#fff;padding:40px;font-family:system-ui,sans-serif;";
+        
+        container.innerHTML = `
+          <div style="text-align:center;margin-bottom:16px;">
+            <span style="background:#2563eb;color:#fff;padding:6px 16px;border-radius:20px;font-size:14px;font-weight:600;">
+              Passo ${i + 1} de ${steps.length}
+            </span>
+          </div>
+          <img src="${steps[i].image}" style="width:100%;border-radius:12px;margin-bottom:20px;" crossorigin="anonymous" />
+          <h2 style="font-size:22px;font-weight:700;margin:0 0 8px;text-align:center;color:#1a1a1a;">${steps[i].title}</h2>
+          <p style="font-size:16px;color:#555;text-align:center;margin:0;line-height:1.5;">${steps[i].description}</p>
+        `;
+        document.body.appendChild(container);
+
+        // Wait for image to load
+        const img = container.querySelector("img");
+        if (img && !img.complete) {
+          await new Promise<void>((resolve) => {
+            img.onload = () => resolve();
+            img.onerror = () => resolve();
+          });
+        }
+
+        const canvas = await html2canvas(container, { scale: 2, useCORS: true });
+        document.body.removeChild(container);
+
+        const imgData = canvas.toDataURL("image/jpeg", 0.85);
+        const ratio = canvas.width / canvas.height;
+        let w = pageWidth - 20;
+        let h = w / ratio;
+        if (h > pageHeight - 20) {
+          h = pageHeight - 20;
+          w = h * ratio;
+        }
+        const x = (pageWidth - w) / 2;
+        const y = (pageHeight - h) / 2;
+        pdf.addImage(imgData, "JPEG", x, y, w, h);
+      }
+
+      pdf.save("tutorial-meta-solidaria.pdf");
+      toast.success("PDF baixado com sucesso!");
+    } catch (error) {
+      console.error("Erro ao gerar PDF:", error);
+      toast.error("Erro ao gerar o PDF. Tente novamente.");
+    } finally {
+      setIsGeneratingPDF(false);
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto p-4 sm:p-6">
         <DialogHeader>
-          <DialogTitle className="text-xl font-bold text-center">
-            Como Criar e Gerenciar um Grupo
-          </DialogTitle>
+          <div className="flex items-center justify-between">
+            <DialogTitle className="text-xl font-bold text-center flex-1">
+              Como Criar e Gerenciar um Grupo
+            </DialogTitle>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExportPDF}
+              disabled={isGeneratingPDF}
+              className="ml-2 shrink-0"
+            >
+              {isGeneratingPDF ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Download className="w-4 h-4" />
+              )}
+              <span className="hidden sm:inline">
+                {isGeneratingPDF ? "Gerando..." : "Baixar PDF"}
+              </span>
+            </Button>
+          </div>
           <DialogDescription className="text-center">
             Passo {currentStep + 1} de {steps.length}
           </DialogDescription>
