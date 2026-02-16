@@ -1,41 +1,35 @@
 
 
-## Otimizar Tutorial - Carregamento Lazy das Imagens
+## Exportar Tutorial em PDF
 
-### Problema
-As 7 imagens do tutorial estao sendo importadas via `import` estatico no topo do arquivo. O Vite inclui todas no bundle inicial, aumentando o tamanho do carregamento da pagina mesmo que o usuario nunca abra o tutorial.
+### Abordagem
+Adicionar um botao "Baixar PDF" no modal do tutorial que gera um PDF com todos os 7 passos (imagem + titulo + descricao) em um unico documento, usando as bibliotecas `jspdf` e `html2canvas`.
 
-### Solucao
-Duas otimizacoes combinadas:
+### Como vai funcionar
+- Um botao "Baixar PDF" aparece no rodape do modal (ao lado dos botoes de navegacao)
+- Ao clicar, o sistema renderiza uma div oculta com todos os 7 passos lado a lado (verticalmente)
+- Usa `html2canvas` para capturar cada passo e `jspdf` para montar o PDF final
+- Cada passo ocupa uma pagina do PDF com a imagem + titulo + descricao
+- O PDF e baixado automaticamente como `tutorial-meta-solidaria.pdf`
 
-**1. Mover imagens para `/public/tutorial/` em vez de `src/assets/tutorial/`**
-- Imagens em `/public` nao entram no bundle JS — sao servidas como arquivos estaticos
-- Referenciadas por caminho absoluto (`/tutorial/step0.jpg`) em vez de import
-- Isso ja elimina o peso do bundle inicial
+### Detalhes tecnicos
 
-**2. Lazy-load com `loading="lazy"` nas tags `<img>`**
-- O navegador so carrega a imagem quando ela entra no viewport
-- Como o modal so mostra 1 imagem por vez, as demais nao serao carregadas ate serem necessarias
+**1. Instalar dependencias**
+- `jspdf` - para gerar o PDF
+- `html2canvas` - para capturar os elementos HTML como imagem
 
-**3. Lazy-load do proprio componente (code-splitting)**
-- Usar `React.lazy()` para importar o `CreateGroupTutorialModal` no Header
-- O codigo JS do modal so sera baixado quando o usuario clicar em "Criar Grupo"
+**2. Atualizar `src/components/CreateGroupTutorialModal.tsx`**
+- Adicionar funcao `handleExportPDF` que:
+  - Cria um elemento temporario invisivel no DOM com todos os passos
+  - Para cada passo, renderiza imagem + titulo + descricao
+  - Usa `html2canvas` para capturar cada passo
+  - Usa `jspdf` para criar o documento com uma pagina por passo
+  - Remove o elemento temporario
+  - Dispara o download
+- Adicionar botao "Baixar PDF" com icone `Download` no header do modal
+- Mostrar estado de loading ("Gerando PDF...") enquanto processa
 
-### Alteracoes
+**3. Otimizacao de performance**
+- As bibliotecas `jspdf` e `html2canvas` serao importadas via `import()` dinamico (lazy), so carregadas quando o usuario clicar em "Baixar PDF"
+- Nenhum impacto no bundle inicial
 
-**Mover arquivos:**
-- `src/assets/tutorial/*.jpg` → `public/tutorial/*.jpg` (7 arquivos)
-
-**Atualizar `src/components/CreateGroupTutorialModal.tsx`:**
-- Remover os 7 `import` de imagens
-- Usar caminhos absolutos no array `steps`: `image: "/tutorial/step0-botao-criar.jpg"`
-- Adicionar `loading="lazy"` na tag `<img>`
-
-**Atualizar `src/components/Header.tsx`:**
-- Trocar import estatico por `React.lazy(() => import("./CreateGroupTutorialModal"))`
-- Envolver com `<Suspense>` para carregamento sob demanda
-
-### Resultado esperado
-- Bundle inicial: sem impacto (0 KB adicionado)
-- Imagens: carregadas sob demanda apenas quando o modal e aberto
-- Codigo JS do modal: carregado sob demanda apenas no clique
