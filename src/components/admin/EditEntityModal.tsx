@@ -3,7 +3,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import { CityAutocomplete } from "@/components/CityAutocomplete";
+import { DONATION_OPTIONS } from "@/hooks/useEntities";
 import { Phone } from "lucide-react";
 import type { AdminEntity } from "@/hooks/useAdminEntities";
 
@@ -11,7 +14,7 @@ interface EditEntityModalProps {
   entity: AdminEntity | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (data: { id: string; name: string; city: string; phone?: string }) => void;
+  onSubmit: (data: { id: string; name: string; city: string; phone?: string; accepted_donations?: string[]; observations?: string; pix_key?: string; pix_name?: string }) => void;
   isLoading: boolean;
 }
 
@@ -25,19 +28,36 @@ export const EditEntityModal = ({
   const [name, setName] = useState("");
   const [city, setCity] = useState("");
   const [phone, setPhone] = useState("");
+  const [acceptedDonations, setAcceptedDonations] = useState<string[]>([]);
+  const [observations, setObservations] = useState("");
+  const [pixKey, setPixKey] = useState("");
+  const [pixName, setPixName] = useState("");
 
   useEffect(() => {
     if (entity) {
       setName(entity.name);
       setCity(entity.city);
       setPhone(entity.phone || "");
+      setAcceptedDonations(entity.accepted_donations || []);
+      setObservations(entity.observations || "");
+      setPixKey(entity.pix_key || "");
+      setPixName(entity.pix_name || "");
     }
   }, [entity]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!entity) return;
-    onSubmit({ id: entity.id, name, city, phone: phone || undefined });
+    onSubmit({
+      id: entity.id,
+      name,
+      city,
+      phone: phone || undefined,
+      accepted_donations: acceptedDonations.length > 0 ? acceptedDonations : undefined,
+      observations: observations || undefined,
+      pix_key: pixKey || undefined,
+      pix_name: pixName || undefined,
+    });
   };
 
   const handleOpenChange = (newOpen: boolean) => {
@@ -45,13 +65,23 @@ export const EditEntityModal = ({
       setName("");
       setCity("");
       setPhone("");
+      setAcceptedDonations([]);
+      setObservations("");
+      setPixKey("");
+      setPixName("");
     }
     onOpenChange(newOpen);
   };
 
+  const toggleDonation = (value: string) => {
+    setAcceptedDonations((prev) =>
+      prev.includes(value) ? prev.filter((d) => d !== value) : [...prev, value]
+    );
+  };
+
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Editar Instituição</DialogTitle>
         </DialogHeader>
@@ -91,6 +121,58 @@ export const EditEntityModal = ({
                 maxLength={20}
               />
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Doações aceitas</Label>
+            <div className="grid grid-cols-2 gap-2">
+              {DONATION_OPTIONS.map((option) => (
+                <div key={option.value} className="flex items-center gap-2">
+                  <Checkbox
+                    id={`edit-donation-${option.value}`}
+                    checked={acceptedDonations.includes(option.value)}
+                    onCheckedChange={() => toggleDonation(option.value)}
+                  />
+                  <Label htmlFor={`edit-donation-${option.value}`} className="text-sm font-normal cursor-pointer">
+                    {option.label}
+                  </Label>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="edit-pix-key">Chave PIX (opcional)</Label>
+            <Input
+              id="edit-pix-key"
+              value={pixKey}
+              onChange={(e) => setPixKey(e.target.value)}
+              placeholder="CPF, e-mail, telefone ou chave aleatória"
+              maxLength={100}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="edit-pix-name">Nome PIX (opcional)</Label>
+            <Input
+              id="edit-pix-name"
+              value={pixName}
+              onChange={(e) => setPixName(e.target.value)}
+              placeholder="Nome do titular da chave PIX"
+              maxLength={100}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="edit-observations">Observações (opcional)</Label>
+            <Textarea
+              id="edit-observations"
+              value={observations}
+              onChange={(e) => setObservations(e.target.value)}
+              placeholder="Informações adicionais sobre a instituição"
+              maxLength={500}
+              rows={3}
+            />
           </div>
 
           <div className="flex justify-end gap-2 pt-4">
