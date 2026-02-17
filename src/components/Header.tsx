@@ -90,30 +90,18 @@ export const Header = ({ onAuthClick }: HeaderProps) => {
             </button>
           </nav>
 
-          {/* Auth Buttons + Hamburger */}
-          <div className="flex items-center gap-2 sm:gap-3 z-10 shrink-0">
+          {/* Auth Icon + Hamburger */}
+          <div className="flex items-center gap-2 z-10 shrink-0">
             {user ? (
-              <>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => navigate("/perfil")}
-                  className={`max-w-[140px] ${isScrolled ? "text-foreground" : "text-primary-foreground hover:text-primary-foreground/80"}`}
-                >
-                  <Settings className="w-4 h-4 mr-1 shrink-0" />
-                  <span className="truncate">
-                    {user.user_metadata?.full_name || user.email?.split("@")[0]}
-                  </span>
-                </Button>
-                <Button
-                  variant={isScrolled ? "outline" : "hero-outline"}
-                  size="sm"
-                  onClick={handleSignOut}
-                >
-                  <LogOut className="w-4 h-4" />
-                  Sair
-                </Button>
-              </>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => navigate("/perfil")}
+                className={isScrolled ? "text-foreground" : "text-primary-foreground hover:text-primary-foreground/80"}
+                aria-label="Perfil"
+              >
+                <User className="w-5 h-5" />
+              </Button>
             ) : (
               <Button
                 variant={isScrolled ? "default" : "hero-outline"}
@@ -141,8 +129,30 @@ export const Header = ({ onAuthClick }: HeaderProps) => {
         {/* Dropdown Menu */}
         {isMobileMenuOpen && (
           <div className="bg-card rounded-xl shadow-soft p-4 mb-4 animate-fade-in">
+            {/* User section */}
+            {user && (
+              <>
+                <div className="flex items-center justify-between pb-3 mb-3 border-b border-border">
+                  <button
+                    onClick={() => { navigate("/perfil"); setIsMobileMenuOpen(false); }}
+                    className="flex items-center gap-2 text-foreground hover:text-primary transition-colors"
+                  >
+                    <Settings className="w-4 h-4" />
+                    <span className="text-sm font-medium truncate max-w-[200px]">
+                      {user.user_metadata?.full_name || user.email?.split("@")[0]}
+                    </span>
+                  </button>
+                  <button
+                    onClick={handleSignOut}
+                    className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-destructive transition-colors"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    Sair
+                  </button>
+                </div>
+              </>
+            )}
             <nav className="flex flex-col gap-2">
-              {/* On mobile show all, on md+ only items not already visible */}
               <button
                 onClick={() => scrollToSection("grupos")}
                 className="md:hidden text-foreground text-left py-2 px-3 rounded-lg hover:bg-muted transition-colors"
