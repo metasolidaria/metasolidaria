@@ -19,6 +19,7 @@ export interface Group {
   total_goals?: number;
   total_donations?: number;
   image_url?: string | null;
+  is_test?: boolean;
 }
 
 // Type for public view (without sensitive data)
@@ -76,6 +77,7 @@ export const useGroups = () => {
       const { data: groupsData, error: groupsError } = await supabase
         .from("groups_public" as any)
         .select("*")
+        .order("is_test", { ascending: true })
         .order("created_at", { ascending: false }) as { data: any[] | null, error: any };
 
       if (groupsError) throw groupsError;
@@ -97,6 +99,7 @@ export const useGroups = () => {
         total_goals: group.total_goals || 0,
         total_donations: group.total_donations || 0,
         image_url: group.image_url || null,
+        is_test: group.is_test || false,
       } as Group));
     },
   });

@@ -430,6 +430,7 @@ export type Database = {
           id: string
           image_url: string | null
           is_private: boolean
+          is_test: boolean
           leader_id: string
           leader_name: string | null
           leader_whatsapp: string | null
@@ -455,6 +456,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_private?: boolean
+          is_test?: boolean
           leader_id: string
           leader_name?: string | null
           leader_whatsapp?: string | null
@@ -480,6 +482,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_private?: boolean
+          is_test?: boolean
           leader_id?: string
           leader_name?: string | null
           leader_whatsapp?: string | null
@@ -864,6 +867,7 @@ export type Database = {
           id: string | null
           image_url: string | null
           is_private: boolean | null
+          is_test: boolean | null
           leader_email: string | null
           leader_id: string | null
           leader_name: string | null
@@ -910,6 +914,7 @@ export type Database = {
           id: string | null
           image_url: string | null
           is_private: boolean | null
+          is_test: boolean | null
           leader_id: string | null
           leader_name: string | null
           member_count: number | null
@@ -954,6 +959,7 @@ export type Database = {
           id: string | null
           image_url: string | null
           is_private: boolean | null
+          is_test: boolean | null
           leader_id: string | null
           leader_name: string | null
           member_count: number | null
