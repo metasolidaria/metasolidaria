@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Users, Target, MapPin, Plus, Heart, Loader2, Lock, Globe, Mail, ChevronLeft, ChevronRight, Crown, EyeOff, Eye } from "lucide-react";
+import { Users, Target, MapPin, Plus, Heart, Loader2, Lock, Globe, Mail, ChevronLeft, ChevronRight, Crown, EyeOff, Eye, FlaskConical } from "lucide-react";
 import { Button } from "./ui/button";
 import { CreateGroupModal } from "./CreateGroupModal";
 import { InviteMemberModal } from "./InviteMemberModal";
@@ -217,6 +217,12 @@ export const GroupsSection = ({ onRequireAuth }: GroupsSectionProps) => {
                         <span className="bg-muted/80 backdrop-blur-sm px-2 py-1 rounded-full text-xs text-muted-foreground flex items-center gap-1">
                           <EyeOff className="w-3 h-3" />
                           Membros ocultos
+                        </span>
+                      )}
+                      {group.is_test && (
+                        <span className="bg-amber-600/80 backdrop-blur-sm px-2 py-1 rounded-full text-xs text-white flex items-center gap-1">
+                          <FlaskConical className="w-3 h-3" />
+                          Teste
                         </span>
                       )}
                     </div>

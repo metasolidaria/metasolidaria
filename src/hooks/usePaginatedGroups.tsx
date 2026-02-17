@@ -21,6 +21,7 @@ export interface Group {
   total_donations?: number;
   image_url?: string | null;
   members_visible?: boolean;
+  is_test?: boolean;
 }
 
 interface UsePaginatedGroupsOptions {
@@ -62,6 +63,7 @@ export const usePaginatedGroups = ({ page, limit, filter, userMemberships, membe
         }
 
         const { data: groupsData, error, count } = await query
+          .order("is_test", { ascending: true })
           .order("created_at", { ascending: false })
           .range((page - 1) * limit, page * limit - 1) as { data: any[] | null, error: any, count: number | null };
 
@@ -84,6 +86,7 @@ export const usePaginatedGroups = ({ page, limit, filter, userMemberships, membe
           total_donations: group.total_donations || 0,
           image_url: group.image_url || null,
           members_visible: group.members_visible !== false,
+          is_test: group.is_test || false,
         } as Group));
 
         return { groups, count: count || 0 };
@@ -93,6 +96,7 @@ export const usePaginatedGroups = ({ page, limit, filter, userMemberships, membe
       const { data: groupsData, error, count } = await supabase
         .from("groups_public" as any)
         .select("*", { count: "exact", head: false })
+        .order("is_test", { ascending: true })
         .order("created_at", { ascending: false })
         .range((page - 1) * limit, page * limit - 1) as { data: any[] | null, error: any, count: number | null };
 
@@ -115,6 +119,7 @@ export const usePaginatedGroups = ({ page, limit, filter, userMemberships, membe
         total_donations: group.total_donations || 0,
         image_url: group.image_url || null,
         members_visible: group.members_visible !== false,
+        is_test: group.is_test || false,
       } as Group));
 
       return { groups, count: count || 0 };
