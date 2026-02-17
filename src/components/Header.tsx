@@ -62,52 +62,8 @@ export const Header = ({ onAuthClick }: HeaderProps) => {
             </span>
           </div>
 
-          {/* Desktop Navigation - Centered absolutely */}
-          <nav className="hidden md:flex items-center gap-4 lg:gap-8 absolute left-1/2 -translate-x-1/2">
-            {["Grupos", "Instituições", "Parceiros", "Impacto"].map((item) => (
-              <button
-                key={item}
-                onClick={() =>
-                  scrollToSection(item.toLowerCase().replace(" ", "-"))
-                }
-                className={`text-sm font-medium transition-colors hover:text-primary ${
-                  isScrolled ? "text-foreground" : "text-primary-foreground"
-                }`}
-              >
-                {item}
-              </button>
-            ))}
-            <button
-              onClick={() => setIsHowItWorksOpen(true)}
-              className={`text-sm font-medium transition-colors hover:text-primary flex items-center gap-1 ${
-                isScrolled ? "text-foreground" : "text-primary-foreground"
-              }`}
-            >
-              <HelpCircle className="w-4 h-4" />
-              Como Funciona
-            </button>
-            <button
-              onClick={() => setIsDownloadOpen(true)}
-              className={`text-sm font-medium transition-colors hover:text-primary flex items-center gap-1 ${
-                isScrolled ? "text-foreground" : "text-primary-foreground"
-              }`}
-            >
-              <Download className="w-4 h-4" />
-              Baixar App
-            </button>
-            <button
-              onClick={() => setIsTutorialOpen(true)}
-              className={`text-sm font-medium transition-colors hover:text-primary flex items-center gap-1 ${
-                isScrolled ? "text-foreground" : "text-primary-foreground"
-              }`}
-            >
-              <BookOpen className="w-4 h-4" />
-              Criar Grupo
-            </button>
-          </nav>
-
-          {/* Auth Buttons */}
-          <div className="hidden md:flex items-center gap-3 z-10">
+          {/* Auth Buttons + Hamburger */}
+          <div className="flex items-center gap-3 z-10">
             {user ? (
               <>
                 <Button
@@ -140,14 +96,11 @@ export const Header = ({ onAuthClick }: HeaderProps) => {
                 Entrar
               </Button>
             )}
-          </div>
 
-          {/* Mobile Menu Toggle */}
-          <button
-            className="md:hidden"
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            aria-label={isMobileMenuOpen ? "Fechar menu" : "Abrir menu"}
-          >
+            <button
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              aria-label={isMobileMenuOpen ? "Fechar menu" : "Abrir menu"}
+            >
             {isMobileMenuOpen ? (
               <X
                 className={`w-6 h-6 ${
@@ -161,12 +114,13 @@ export const Header = ({ onAuthClick }: HeaderProps) => {
                 }`}
               />
             )}
-          </button>
+           </button>
+          </div>
         </div>
 
-        {/* Mobile Menu - CSS animation instead of framer-motion */}
+        {/* Dropdown Menu */}
         {isMobileMenuOpen && (
-          <div className="md:hidden bg-card rounded-xl shadow-soft p-4 mb-4 animate-fade-in">
+          <div className="bg-card rounded-xl shadow-soft p-4 mb-4 animate-fade-in">
             <nav className="flex flex-col gap-2">
               {["Grupos", "Instituições", "Parceiros", "Impacto"].map((item) => (
                 <button
@@ -209,43 +163,6 @@ export const Header = ({ onAuthClick }: HeaderProps) => {
                 <BookOpen className="w-4 h-4 text-primary" />
                 Criar Grupo
               </button>
-              {user ? (
-                <>
-                  <div className="border-t border-border mt-2 pt-2">
-                    <Button
-                      variant="ghost"
-                      className="w-full justify-start"
-                      onClick={() => {
-                        navigate("/perfil");
-                        setIsMobileMenuOpen(false);
-                      }}
-                    >
-                      <Settings className="w-4 h-4 mr-2" />
-                      {user.user_metadata?.full_name || user.email}
-                    </Button>
-                  </div>
-                  <Button
-                    variant="outline"
-                    className="mt-2"
-                    onClick={handleSignOut}
-                  >
-                    <LogOut className="w-4 h-4" />
-                    Sair
-                  </Button>
-                </>
-              ) : (
-                <Button
-                  variant="default"
-                  className="mt-2"
-                  onClick={() => {
-                    onAuthClick();
-                    setIsMobileMenuOpen(false);
-                  }}
-                >
-                  <User className="w-4 h-4" />
-                  Entrar
-                </Button>
-              )}
             </nav>
           </div>
         )}
