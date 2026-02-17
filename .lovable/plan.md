@@ -1,59 +1,28 @@
 
 
-## Adicionar flag `is_test` na tabela `groups` e ordenar grupos de teste por ultimo
+## Unificar navegacao com menu hamburger em todas as telas
 
 ### Problema
-Nao existe uma forma de marcar grupos como "teste" no banco de dados. Grupos de teste aparecem misturados com os reais na listagem.
+O cabecalho desktop tem 7 itens de navegacao posicionados com `absolute left-1/2`, o que causa sobreposicao com o logo e os botoes de autenticacao em telas de tablet (768px-1024px) e desktops menores.
 
 ### Solucao
+Remover a navegacao horizontal desktop e usar o menu hamburger (dropdown) em **todas as resolucoes**, igual ao mobile atual. Isso simplifica o cabecalho e elimina o problema de sobreposicao.
 
-**1. Banco de dados (migration SQL)**
-
-- Adicionar coluna `is_test` (boolean, default false) na tabela `groups`
-- Recriar as 3 views (`groups_public`, `groups_my`, `groups_admin`) incluindo a nova coluna `is_test`
-- A view `groups_public` vai manter `is_test` visivel para que o frontend possa ordenar
-
-**2. Frontend - Ordenacao**
-
-- No hook `usePaginatedGroups.tsx`, alterar a ordenacao para usar `is_test` primeiro (ascendente, false antes de true) e depois `created_at` (descendente)
-- Isso garante que grupos de teste sempre aparecem por ultimo, tanto na aba "Todos" quanto na aba "Meus Grupos"
-
-**3. Interface do grupo (visual)**
-
-- Adicionar indicador visual "Teste" nos cards de grupo marcados como `is_test`, similar ao que ja existe para parceiros
+O cabecalho ficara com:
+- Logo a esquerda
+- Botao "Entrar" (ou nome do usuario + Sair) a direita
+- Icone de menu hamburger a direita (ao lado do botao de auth)
+- Ao clicar no hamburger, abre o dropdown com todos os links de navegacao
 
 ### Detalhes tecnicos
 
-**Migration SQL:**
-```sql
-ALTER TABLE groups ADD COLUMN is_test boolean NOT NULL DEFAULT false;
+**Arquivo: `src/components/Header.tsx`**
 
--- Recriar views com is_test
-DROP VIEW IF EXISTS groups_public CASCADE;
-CREATE VIEW groups_public WITH (security_invoker = off) AS
-SELECT g.id, g.name, g.city, g.donation_type, g.goal_2026,
-  g.is_private, g.leader_id, g.leader_name, g.description,
-  g.entity_id, g.end_date, g.created_at, g.updated_at,
-  g.image_url, g.members_visible, g.view_count, g.is_test,
-  g.default_commitment_name, g.default_commitment_metric,
-  g.default_commitment_ratio, g.default_commitment_donation,
-  g.default_commitment_goal,
-  COALESCE(gs.member_count, 0) AS member_count,
-  COALESCE(gs.total_goals, 0) AS total_goals,
-  COALESCE(gs.total_donations, 0) AS total_donations
-FROM groups g
-LEFT JOIN group_stats gs ON gs.group_id = g.id
-WHERE g.is_private = false;
+1. Remover a `<nav>` desktop (linhas 66-107) que usa `hidden md:flex` e posicionamento absoluto
+2. Remover `hidden md:flex` dos botoes de auth (linha 110) - tornar sempre visivel
+3. Remover `md:hidden` do botao hamburger (linha 147) - tornar sempre visivel
+4. Remover `md:hidden` do menu dropdown (linha 169) - tornar sempre visivel quando aberto
+5. Mover o botao "Entrar/Sair" para fora do dropdown, mantendo-o sempre visivel no cabecalho ao lado do hamburger
+6. Ajustar layout para: Logo | (espaco) | Botao Auth + Hamburger
 
--- Mesmo para groups_my e groups_admin (incluindo is_test)
-```
-
-**Frontend (usePaginatedGroups.tsx):**
-- Ordenar por `is_test` ascendente primeiro, depois `created_at` descendente
-- Mapear `is_test` no objeto Group retornado
-
-**Arquivos alterados:**
-- 1 migration SQL (nova coluna + views atualizadas)
-- `src/hooks/usePaginatedGroups.tsx` - ordenacao e mapeamento
-- `src/hooks/useGroups.tsx` - ordenacao
-- `src/components/GroupsSection.tsx` - badge visual de teste (opcional)
+Isso reaproveita todo o codigo do menu mobile existente, apenas removendo as classes `md:hidden` e `hidden md:flex` que separavam os dois modos.
