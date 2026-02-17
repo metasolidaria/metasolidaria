@@ -1,28 +1,41 @@
 
 
-## Unificar navegacao com menu hamburger em todas as telas
+## Corrigir layout do cabecalho em tablet e mobile
 
-### Problema
-O cabecalho desktop tem 7 itens de navegacao posicionados com `absolute left-1/2`, o que causa sobreposicao com o logo e os botoes de autenticacao em telas de tablet (768px-1024px) e desktops menores.
+### Problemas identificados
+
+1. **Mobile (390px)**: O nome do usuario ("dbmetas..."), botao "Sair" e icone hamburger ocupam todo o espaco, empurrando elementos para fora da tela
+2. **Tablet (834px)**: Os 4 itens de navegacao + nome do usuario + botao Sair + hamburger ficam apertados demais no cabecalho
 
 ### Solucao
-Remover a navegacao horizontal desktop e usar o menu hamburger (dropdown) em **todas as resolucoes**, igual ao mobile atual. Isso simplifica o cabecalho e elimina o problema de sobreposicao.
 
-O cabecalho ficara com:
+Simplificar o cabecalho mantendo apenas o essencial visivel, e mover informacoes do usuario para dentro do menu hamburger.
+
+**Layout do cabecalho em todas as telas:**
 - Logo a esquerda
-- Botao "Entrar" (ou nome do usuario + Sair) a direita
-- Icone de menu hamburger a direita (ao lado do botao de auth)
-- Ao clicar no hamburger, abre o dropdown com todos os links de navegacao
+- Links de navegacao no centro (apenas em `md+`, como ja esta)
+- Botao "Entrar" (se deslogado) + Hamburger a direita
+
+**Quando logado**: remover o nome do usuario e o botao "Sair" do cabecalho. Esses itens ficam **dentro do menu hamburger**, liberando espaco.
 
 ### Detalhes tecnicos
 
 **Arquivo: `src/components/Header.tsx`**
 
-1. Remover a `<nav>` desktop (linhas 66-107) que usa `hidden md:flex` e posicionamento absoluto
-2. Remover `hidden md:flex` dos botoes de auth (linha 110) - tornar sempre visivel
-3. Remover `md:hidden` do botao hamburger (linha 147) - tornar sempre visivel
-4. Remover `md:hidden` do menu dropdown (linha 169) - tornar sempre visivel quando aberto
-5. Mover o botao "Entrar/Sair" para fora do dropdown, mantendo-o sempre visivel no cabecalho ao lado do hamburger
-6. Ajustar layout para: Logo | (espaco) | Botao Auth + Hamburger
+1. Mover os botoes de usuario logado (nome + Sair) para dentro do dropdown menu
+   - Adicionar no topo do dropdown: nome do usuario com icone Settings e botao Sair
+   - No cabecalho, quando logado, mostrar apenas um icone de usuario (sem texto) para economizar espaco
 
-Isso reaproveita todo o codigo do menu mobile existente, apenas removendo as classes `md:hidden` e `hidden md:flex` que separavam os dois modos.
+2. Quando deslogado: manter botao "Entrar" compacto ao lado do hamburger
+
+3. No mobile (`< md`), o cabecalho fica: Logo | Icone usuario (se logado) ou "Entrar" | Hamburger
+
+4. No tablet/desktop (`md+`), o cabecalho fica: Logo | Grupos, Como Funciona, Criar Grupo, Baixar App | Icone usuario ou "Entrar" | Hamburger
+
+**Mudancas especificas:**
+
+- Substituir o botao com nome do usuario + botao "Sair" no cabecalho por um unico botao icone (Settings ou User) quando logado
+- Adicionar secao de usuario no topo do dropdown com: nome completo, link para perfil, e botao sair
+- Adicionar separador visual entre a secao do usuario e os links de navegacao no dropdown
+
+Isso resolve o overflow em mobile e o aperto em tablet, mantendo todas as funcionalidades acessiveis.
