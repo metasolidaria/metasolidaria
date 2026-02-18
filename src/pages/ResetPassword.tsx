@@ -127,7 +127,7 @@ const ResetPassword = () => {
               id="password"
               value={formData.password}
               onChange={(value) => setFormData({ ...formData, password: value })}
-              minLength={8}
+              minLength={6}
             />
             <PasswordStrengthIndicator password={formData.password} />
           </div>
@@ -138,7 +138,7 @@ const ResetPassword = () => {
               id="confirmPassword"
               value={formData.confirmPassword}
               onChange={(value) => setFormData({ ...formData, confirmPassword: value })}
-              minLength={8}
+              minLength={6}
             />
           </div>
 
