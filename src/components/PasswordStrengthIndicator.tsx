@@ -10,32 +10,40 @@ interface Requirement {
   met: boolean;
 }
 
+function hasSequentialChars(password: string, length = 3): boolean {
+  for (let i = 0; i <= password.length - length; i++) {
+    let ascending = true;
+    let descending = true;
+    for (let j = 1; j < length; j++) {
+      if (password.charCodeAt(i + j) !== password.charCodeAt(i + j - 1) + 1) ascending = false;
+      if (password.charCodeAt(i + j) !== password.charCodeAt(i + j - 1) - 1) descending = false;
+    }
+    if (ascending || descending) return true;
+  }
+  return false;
+}
+
 export const PasswordStrengthIndicator = ({ password }: PasswordStrengthIndicatorProps) => {
   const requirements: Requirement[] = useMemo(() => [
-    { label: "Mínimo 8 caracteres", met: password.length >= 8 },
-    { label: "Letra maiúscula", met: /[A-Z]/.test(password) },
-    { label: "Letra minúscula", met: /[a-z]/.test(password) },
-    { label: "Número", met: /[0-9]/.test(password) },
-    { label: "Caractere especial (!@#$...)", met: /[^A-Za-z0-9]/.test(password) },
+    { label: "Mínimo 6 caracteres", met: password.length >= 6 },
+    { label: "Sem sequências (abc, 123...)", met: password.length > 0 && !hasSequentialChars(password) },
   ], [password]);
 
   const strength = useMemo(() => {
     const metCount = requirements.filter(r => r.met).length;
     if (metCount === 0) return { level: 0, label: "", color: "" };
-    if (metCount <= 2) return { level: 1, label: "Fraca", color: "bg-destructive" };
-    if (metCount <= 4) return { level: 2, label: "Média", color: "bg-yellow-500" };
-    return { level: 3, label: "Forte", color: "bg-green-500" };
+    if (metCount === 1) return { level: 1, label: "Fraca", color: "bg-destructive" };
+    return { level: 2, label: "Forte", color: "bg-green-500" };
   }, [requirements]);
 
   const isEmpty = !password;
 
   return (
     <div className="space-y-3 mt-2">
-      {/* Strength bar - only show when typing */}
       {!isEmpty && (
         <div className="space-y-1">
           <div className="flex gap-1">
-            {[1, 2, 3].map((level) => (
+            {[1, 2].map((level) => (
               <div
                 key={level}
                 className={`h-1.5 flex-1 rounded-full transition-colors ${
@@ -46,9 +54,7 @@ export const PasswordStrengthIndicator = ({ password }: PasswordStrengthIndicato
           </div>
           {strength.label && (
             <p className={`text-xs font-medium ${
-              strength.level === 1 ? "text-destructive" :
-              strength.level === 2 ? "text-yellow-600" :
-              "text-green-600"
+              strength.level === 1 ? "text-destructive" : "text-green-600"
             }`}>
               Senha {strength.label}
             </p>
@@ -56,7 +62,6 @@ export const PasswordStrengthIndicator = ({ password }: PasswordStrengthIndicato
         </div>
       )}
 
-      {/* Requirements checklist */}
       <div className="grid grid-cols-2 gap-1">
         {requirements.map((req, index) => (
           <div
@@ -81,10 +86,7 @@ export const PasswordStrengthIndicator = ({ password }: PasswordStrengthIndicato
 };
 
 export const validatePasswordStrength = (password: string): string | null => {
-  if (password.length < 8) return "A senha deve ter no mínimo 8 caracteres";
-  if (!/[A-Z]/.test(password)) return "A senha deve conter letra maiúscula";
-  if (!/[a-z]/.test(password)) return "A senha deve conter letra minúscula";
-  if (!/[0-9]/.test(password)) return "A senha deve conter número";
-  if (!/[^A-Za-z0-9]/.test(password)) return "A senha deve conter um caractere especial (!@#$...)";
+  if (password.length < 6) return "A senha deve ter no mínimo 6 caracteres";
+  if (hasSequentialChars(password)) return "A senha não pode conter sequências (abc, 123...)";
   return null;
 };

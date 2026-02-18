@@ -79,7 +79,7 @@ export const signupSchema = z.object({
     ),
   password: z
     .string()
-    .min(8, "Senha deve ter pelo menos 8 caracteres"),
+    .min(6, "Senha deve ter pelo menos 6 caracteres"),
 });
 
 // Partner submission validation
