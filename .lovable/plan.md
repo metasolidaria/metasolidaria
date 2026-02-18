@@ -1,41 +1,55 @@
 
 
-## Corrigir layout do cabecalho em tablet e mobile
+## Simplificar exigencia de senha: minimo 6 caracteres + sem sequencias
 
-### Problemas identificados
+### O que muda
 
-1. **Mobile (390px)**: O nome do usuario ("dbmetas..."), botao "Sair" e icone hamburger ocupam todo o espaco, empurrando elementos para fora da tela
-2. **Tablet (834px)**: Os 4 itens de navegacao + nome do usuario + botao Sair + hamburger ficam apertados demais no cabecalho
+A senha passa a exigir apenas:
+1. **Minimo 6 caracteres**
+2. **Sem sequencias** (ex: "123456", "abcdef", "654321")
 
-### Solucao
+Todos os outros requisitos (maiuscula, minuscula, numero, caractere especial) serao **removidos**.
 
-Simplificar o cabecalho mantendo apenas o essencial visivel, e mover informacoes do usuario para dentro do menu hamburger.
+### Arquivos afetados
 
-**Layout do cabecalho em todas as telas:**
-- Logo a esquerda
-- Links de navegacao no centro (apenas em `md+`, como ja esta)
-- Botao "Entrar" (se deslogado) + Hamburger a direita
+**1. `src/components/PasswordStrengthIndicator.tsx`**
+- Alterar os requisitos para apenas 2: minimo 6 caracteres e sem sequencias
+- Atualizar a logica de forca: 0 = vazia, 1 = fraca (1 requisito), 2 = forte (2 requisitos)
+- Simplificar a barra de forca para 2 niveis
+- Adicionar funcao `hasSequentialChars` que detecta 3+ caracteres consecutivos em sequencia (abc, 123, cba, 321)
+- Atualizar `validatePasswordStrength` para validar apenas minimo 6 e sem sequencias
 
-**Quando logado**: remover o nome do usuario e o botao "Sair" do cabecalho. Esses itens ficam **dentro do menu hamburger**, liberando espaco.
+**2. `src/lib/validations.ts`**
+- Atualizar `signupSchema` para `password: z.string().min(6, "...")`
+
+**3. `src/components/PasswordInput.tsx`**
+- Alterar `minLength` default de 6 (ja esta 6, sem mudanca necessaria)
 
 ### Detalhes tecnicos
 
-**Arquivo: `src/components/Header.tsx`**
+**Deteccao de sequencias** - funcao que verifica se a senha contem 3 ou mais caracteres consecutivos em ordem crescente ou decrescente (ex: "abc", "123", "zyx", "987"):
 
-1. Mover os botoes de usuario logado (nome + Sair) para dentro do dropdown menu
-   - Adicionar no topo do dropdown: nome do usuario com icone Settings e botao Sair
-   - No cabecalho, quando logado, mostrar apenas um icone de usuario (sem texto) para economizar espaco
+```typescript
+function hasSequentialChars(password: string, length = 3): boolean {
+  for (let i = 0; i <= password.length - length; i++) {
+    let ascending = true;
+    let descending = true;
+    for (let j = 1; j < length; j++) {
+      if (password.charCodeAt(i + j) !== password.charCodeAt(i + j - 1) + 1) ascending = false;
+      if (password.charCodeAt(i + j) !== password.charCodeAt(i + j - 1) - 1) descending = false;
+    }
+    if (ascending || descending) return true;
+  }
+  return false;
+}
+```
 
-2. Quando deslogado: manter botao "Entrar" compacto ao lado do hamburger
+**Requisitos atualizados:**
+- "Minimo 6 caracteres" - `password.length >= 6`
+- "Sem sequencias (abc, 123...)" - `!hasSequentialChars(password)`
 
-3. No mobile (`< md`), o cabecalho fica: Logo | Icone usuario (se logado) ou "Entrar" | Hamburger
+**Barra de forca simplificada:**
+- 0 requisitos: vazia
+- 1 requisito: fraca (vermelho)
+- 2 requisitos: forte (verde)
 
-4. No tablet/desktop (`md+`), o cabecalho fica: Logo | Grupos, Como Funciona, Criar Grupo, Baixar App | Icone usuario ou "Entrar" | Hamburger
-
-**Mudancas especificas:**
-
-- Substituir o botao com nome do usuario + botao "Sair" no cabecalho por um unico botao icone (Settings ou User) quando logado
-- Adicionar secao de usuario no topo do dropdown com: nome completo, link para perfil, e botao sair
-- Adicionar separador visual entre a secao do usuario e os links de navegacao no dropdown
-
-Isso resolve o overflow em mobile e o aperto em tablet, mantendo todas as funcionalidades acessiveis.
