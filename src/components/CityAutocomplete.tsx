@@ -2,18 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { MapPin, Loader2, Check } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-
-interface City {
-  id: number;
-  nome: string;
-  microrregiao: {
-    mesorregiao: {
-      UF: {
-        sigla: string;
-      };
-    };
-  };
-}
+import { fetchCities, type IBGECity } from "@/lib/citiesCache";
 
 interface CityAutocompleteProps {
   value: string;
@@ -31,7 +20,7 @@ export const CityAutocomplete = ({
   className,
 }: CityAutocompleteProps) => {
   const [query, setQuery] = useState(value);
-  const [cities, setCities] = useState<City[]>([]);
+  const [cities, setCities] = useState<IBGECity[]>([]);
 
   // Sync internal query state when external value changes
   useEffect(() => {
@@ -44,25 +33,13 @@ export const CityAutocomplete = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Fetch all cities once on mount
+  // Fetch all cities once on mount (uses shared cache)
   useEffect(() => {
-    const fetchCities = async () => {
-      setIsLoading(true);
-      try {
-        const response = await fetch(
-          "https://servicodados.ibge.gov.br/api/v1/localidades/municipios?orderBy=nome"
-        );
-        if (response.ok) {
-          const data: City[] = await response.json();
-          setCities(data);
-        }
-      } catch (error) {
-        console.error("Error fetching cities:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchCities();
+    setIsLoading(true);
+    fetchCities()
+      .then(setCities)
+      .catch((error) => console.error("Error fetching cities:", error))
+      .finally(() => setIsLoading(false));
   }, []);
 
   // Filter cities based on query

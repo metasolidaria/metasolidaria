@@ -21,17 +21,7 @@ interface SearchGroup {
   description: string | null;
 }
 
-interface City {
-  id: number;
-  nome: string;
-  microrregiao: {
-    mesorregiao: {
-      UF: {
-        sigla: string;
-      };
-    };
-  };
-}
+import { fetchCities as fetchCitiesFromCache, type IBGECity } from "@/lib/citiesCache";
 
 interface GroupSearchProps {
   onRequireAuth: () => void;
@@ -55,7 +45,7 @@ export const GroupSearch = ({ onRequireAuth, userMemberships }: GroupSearchProps
   const [pendingRequestGroupIds, setPendingRequestGroupIds] = useState<string[]>([]);
   
   // City autocomplete state
-  const [cities, setCities] = useState<City[]>([]);
+  const [cities, setCities] = useState<IBGECity[]>([]);
   const [filteredCities, setFilteredCities] = useState<{ nome: string; uf: string }[]>([]);
   const [isCitiesLoading, setIsCitiesLoading] = useState(false);
   const [isCityDropdownOpen, setIsCityDropdownOpen] = useState(false);
@@ -89,25 +79,19 @@ export const GroupSearch = ({ onRequireAuth, userMemberships }: GroupSearchProps
     fetchPendingRequests();
   }, [user]);
 
-  // Fetch cities on mount for city search
+  // Fetch cities on mount for city search (uses shared cache)
   useEffect(() => {
-    const fetchCities = async () => {
-      setIsCitiesLoading(true);
-      try {
-        const response = await fetch(
-          "https://servicodados.ibge.gov.br/api/v1/localidades/municipios?orderBy=nome"
-        );
-        if (response.ok) {
-          const data: City[] = await response.json();
-          setCities(data);
-        }
-      } catch (error) {
+    setIsCitiesLoading(true);
+    fetchCitiesFromCache()
+      .then((data) => {
+        setCities(data);
+      })
+      .catch((error) => {
         console.error("Error fetching cities:", error);
-      } finally {
+      })
+      .finally(() => {
         setIsCitiesLoading(false);
-      }
-    };
-    fetchCities();
+      });
   }, []);
 
   // Filter cities for autocomplete
