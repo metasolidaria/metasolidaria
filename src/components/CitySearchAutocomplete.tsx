@@ -2,18 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { Search, Loader2, X, MapPin } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-
-interface City {
-  id: number;
-  nome: string;
-  microrregiao: {
-    mesorregiao: {
-      UF: {
-        sigla: string;
-      };
-    };
-  };
-}
+import { fetchCities as fetchCitiesFromCache, type IBGECity } from "@/lib/citiesCache";
 
 interface CitySearchAutocompleteProps {
   value: string;
@@ -29,7 +18,7 @@ export const CitySearchAutocomplete = ({
   className,
 }: CitySearchAutocompleteProps) => {
   const [query, setQuery] = useState(value);
-  const [cities, setCities] = useState<City[]>([]);
+  const [cities, setCities] = useState<IBGECity[]>([]);
   const [filteredCities, setFilteredCities] = useState<{ nome: string; uf: string }[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
@@ -38,19 +27,14 @@ export const CitySearchAutocomplete = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Fetch cities only when user focuses on input (deferred loading)
+  // Fetch cities only when user focuses on input (uses shared cache)
   const fetchCities = useCallback(async () => {
     if (hasFetched || isLoading) return;
     setIsLoading(true);
     try {
-      const response = await fetch(
-        "https://servicodados.ibge.gov.br/api/v1/localidades/municipios?orderBy=nome"
-      );
-      if (response.ok) {
-        const data: City[] = await response.json();
-        setCities(data);
-        setHasFetched(true);
-      }
+      const data = await fetchCitiesFromCache();
+      setCities(data);
+      setHasFetched(true);
     } catch (error) {
       console.error("Error fetching cities:", error);
     } finally {
