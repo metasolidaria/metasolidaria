@@ -70,7 +70,7 @@ const donationTypes = [
   { id: "mudas", label: "Mudas de Árvore (unidades)", icon: "🌱" },
   { id: "racao", label: "Ração (kg)", icon: "🐾" },
   { id: "sangue", label: "Doador de Sangue (doações)", icon: "🩸" },
-  { id: "ovos_pascoa", label: "Ovos de Páscoa (unidades)", icon: "🥚" },
+  { id: "ovos_pascoa", label: "Ovos de Páscoa (unidades)", icon: "🍫" },
   { id: "outro", label: "Outro", icon: "📦" },
 ];
 
@@ -397,7 +397,7 @@ export const EditGroupModal = ({
                     >
                       <span className="text-xl">{type.icon}</span>
                       <span className="text-sm font-medium text-foreground">
-                        {type.label.split(" ")[0]}
+                        {type.id === "ovos_pascoa" ? "Ovos de Páscoa" : type.label.split(" ")[0]}
                       </span>
                     </button>
                   ))}
