@@ -11,6 +11,7 @@ export interface DonationsByType {
   higiene: number;
   racao: number;
   mudas: number;
+  ovos_pascoa: number;
   outro: number;
 }
 
@@ -48,6 +49,7 @@ export const useImpactStats = () => {
         higiene: 0,
         racao: 0,
         mudas: 0,
+        ovos_pascoa: 0,
         outro: 0,
       };
 

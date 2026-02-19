@@ -21,6 +21,10 @@ const donationTypeLabels: Record<string, {
   sopas: { label: "Sopas", icon: "🍲" },
   brinquedos: { label: "Brinquedos", icon: "🧸" },
   higiene: { label: "Kits de Higiene", icon: "🧴" },
+  mudas: { label: "Mudas de Árvore", icon: "🌱" },
+  racao: { label: "Ração", icon: "🐾" },
+  sangue: { label: "Doação de Sangue", icon: "🩸" },
+  ovos_pascoa: { label: "Ovos de Páscoa", icon: "🥚" },
   outro: { label: "Outro", icon: "📦" }
 };
 const placeholderImages = [

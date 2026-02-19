@@ -42,6 +42,9 @@ const donationTypes = [
   { id: "brinquedos", label: "Brinquedos (unidades)" },
   { id: "higiene", label: "Kits de Higiene (unidades)" },
   { id: "racao", label: "Ração (kg)" },
+  { id: "mudas", label: "Mudas de Árvore (unidades)" },
+  { id: "sangue", label: "Doador de Sangue (doações)" },
+  { id: "ovos_pascoa", label: "Ovos de Páscoa (unidades)" },
   { id: "outro", label: "Outro" },
 ];
 
