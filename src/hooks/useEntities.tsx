@@ -22,6 +22,7 @@ export const DONATION_OPTIONS = [
   { value: "higiene", label: "Kits de Higiene" },
   { value: "sopas", label: "Sopas/Refeições" },
   { value: "racao", label: "Ração" },
+  { value: "ovos_pascoa", label: "Ovos de Páscoa" },
   { value: "moveis", label: "Móveis" },
   { value: "eletrodomesticos", label: "Eletrodomésticos" },
   { value: "dinheiro", label: "Dinheiro" },

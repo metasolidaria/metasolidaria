@@ -94,6 +94,7 @@ const prefetchCriticalData = async () => {
         sopas: 0,
         brinquedos: 0,
         higiene: 0,
+        ovos_pascoa: 0,
         outro: 0,
       };
 
