@@ -13,5 +13,5 @@ Atualmente, ao criar uma conta, o usuário precisa confirmar o email antes de co
 ### Detalhes técnicos
 
 - Usar a ferramenta `configure-auth` para habilitar `auto_confirm_email = true`
-- No `AuthModal.tsx`, simplificar o bloco pós-signup removendo a verificação `if (signUpData?.user && !signUpData?.session)` e deixando apenas a mensagem de sucesso
+- No `AuthModal.tsx`, simplificar o bloco pós-signup (linhas 107-118) removendo a verificação `if (signUpData?.user && !signUpData?.session)` e deixando apenas a mensagem de sucesso com fechamento do modal
 
