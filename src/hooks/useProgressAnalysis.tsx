@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -94,13 +95,19 @@ export const useProgressAnalysis = () => {
         description: entry.description,
       }));
 
+      // Get user session for authenticated request
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error("Você precisa estar logado para gerar análises.");
+      }
+
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/analyze-progress`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+            Authorization: `Bearer ${session.access_token}`,
           },
           body: JSON.stringify({
             group: {
