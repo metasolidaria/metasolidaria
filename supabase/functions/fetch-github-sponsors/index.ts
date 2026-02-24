@@ -3,7 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version, x-cron-secret",
 };
 
 const GITHUB_GRAPHQL_URL = "https://api.github.com/graphql";
@@ -38,15 +38,29 @@ query {
 `;
 
 Deno.serve(async (req) => {
+  // Preflight
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // Only allow POST
+  if (req.method !== "POST") {
+    return new Response("Method Not Allowed", {
+      status: 405,
+      headers: corsHeaders,
+    });
+  }
+
+  // ✅ Protect with CRON secret
+  const cronSecret = Deno.env.get("CRON_SECRET");
+  const incoming = req.headers.get("x-cron-secret");
+  if (!cronSecret || incoming !== cronSecret) {
+    return new Response("Unauthorized", { status: 401, headers: corsHeaders });
+  }
+
   try {
     const githubPat = Deno.env.get("GITHUB_PAT");
-    if (!githubPat) {
-      throw new Error("GITHUB_PAT not configured");
-    }
+    if (!githubPat) throw new Error("GITHUB_PAT not configured");
 
     // Fetch sponsors from GitHub GraphQL API
     const ghResponse = await fetch(GITHUB_GRAPHQL_URL, {
@@ -64,17 +78,17 @@ Deno.serve(async (req) => {
     }
 
     const data = await ghResponse.json();
+    if (data.errors) throw new Error(`GraphQL errors: ${JSON.stringify(data.errors)}`);
 
-    if (data.errors) {
-      throw new Error(`GraphQL errors: ${JSON.stringify(data.errors)}`);
+    const nodes = data.data?.user?.sponsorshipsAsMaintainer?.nodes ?? [];
+
+    // Connect to Supabase with service role (server-only)
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    if (!supabaseUrl || !supabaseServiceKey) {
+      throw new Error("Supabase env vars not configured");
     }
 
-    const nodes =
-      data.data?.user?.sponsorshipsAsMaintainer?.nodes ?? [];
-
-    // Connect to Supabase with service role
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Mark all existing sponsors as inactive
@@ -105,26 +119,14 @@ Deno.serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({
-        success: true,
-        sponsors_count: nodes.length,
-      }),
-      {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
+      JSON.stringify({ success: true, sponsors_count: nodes.length }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
     console.error("Error fetching GitHub sponsors:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
-  const cronSecret = Deno.env.get("CRON_SECRET");
-const incoming = req.headers.get("x-cron-secret");
-if (!cronSecret || incoming !== cronSecret) {
-  return new Response("Unauthorized", { status: 401, headers: corsHeaders });
-}  );
+      JSON.stringify({ error: error instanceof Error ? error.message : "Internal error" }),
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
   }
 });
