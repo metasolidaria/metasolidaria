@@ -70,4 +70,4 @@ We welcome contributors who want to improve documentation, performance, UI/UX, a
 
 ## 📜 License
 
-(To be defined – MIT or Apache 2.0 recommended)
+MIT
