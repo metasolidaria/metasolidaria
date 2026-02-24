@@ -3,7 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+    "authorization, x-client-info, apikey, content-type, x-internal-secret",
 };
 
 interface NotificationPayload {
@@ -38,7 +38,6 @@ interface NotificationPreferences {
   new_members: boolean;
 }
 
-// Helper to generate notification content based on event type
 function generateNotificationContent(payload: NotificationPayload): {
   title: string;
   body: string;
@@ -51,13 +50,14 @@ function generateNotificationContent(payload: NotificationPayload): {
         title: `Nova solicitação - ${group_name}`,
         body: `${actor_name} solicitou entrada no grupo`,
       };
-    case "new_donation":
+    case "new_donation": {
       const amount = details.amount || 0;
       const donationType = details.donation_type || "doação";
       return {
         title: `Nova doação - ${group_name}`,
         body: `${actor_name} registrou ${amount} ${donationType}`,
       };
+    }
     case "new_member":
       return {
         title: `Novo membro - ${group_name}`,
@@ -71,41 +71,17 @@ function generateNotificationContent(payload: NotificationPayload): {
   }
 }
 
-// Send Web Push notification using fetch (no external library)
-async function sendWebPush(
-  subscription: PushSubscription,
-  notification: { title: string; body: string },
-  vapidPublicKey: string,
-  vapidPrivateKey: string
-): Promise<boolean> {
-  if (!subscription.endpoint || !subscription.p256dh || !subscription.auth) {
-    console.log("Missing web push subscription data");
-    return false;
-  }
-
-  try {
-    // For web push, we need to use a proper web push library
-    // Since we can't easily use npm packages in Deno edge functions,
-    // we'll rely on FCM for both web and native
-    // Web clients will use the Firebase SDK for receiving
-    console.log("Web push subscription found - using FCM fallback");
-    return false;
-  } catch (error) {
-    console.error("Error sending web push:", error);
-    return false;
-  }
+// Web push placeholder (não envia)
+async function sendWebPush(): Promise<boolean> {
+  return false;
 }
 
-// Send FCM notification (for Android/iOS via Firebase)
 async function sendFCM(
   subscription: PushSubscription,
   notification: { title: string; body: string },
   fcmServerKey: string
 ): Promise<boolean> {
-  if (!subscription.device_token) {
-    console.log("Missing FCM device token");
-    return false;
-  }
+  if (!subscription.device_token) return false;
 
   try {
     const response = await fetch("https://fcm.googleapis.com/fcm/send", {
@@ -135,7 +111,6 @@ async function sendFCM(
       return false;
     }
 
-    console.log("FCM notification sent successfully");
     return true;
   } catch (error) {
     console.error("Error sending FCM:", error);
@@ -144,17 +119,32 @@ async function sendFCM(
 }
 
 Deno.serve(async (req) => {
-  // Handle CORS preflight
+  // CORS preflight
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // Only POST
+  if (req.method !== "POST") {
+    return new Response(
+      JSON.stringify({ error: "Method Not Allowed" }),
+      { status: 405, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  }
+
+  // 🔐 Internal protection (required)
+  const internalSecret = Deno.env.get("INTERNAL_SECRET");
+  const incoming = req.headers.get("x-internal-secret");
+  if (!internalSecret || incoming !== internalSecret) {
+    return new Response(
+      JSON.stringify({ error: "Unauthorized" }),
+      { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  }
+
   try {
     const payload: NotificationPayload = await req.json();
-    console.log("Received notification request:", payload);
-
-    const { event_type, leader_id, group_id, group_name, actor_name, details } =
-      payload;
+    const { event_type, leader_id, group_id } = payload;
 
     if (!event_type || !leader_id || !group_id) {
       return new Response(
@@ -163,25 +153,25 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Initialize Supabase client with service role
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    if (!supabaseUrl || !supabaseServiceKey) {
+      throw new Error("Supabase env vars not configured");
+    }
+
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Get notification preferences for the leader
     const { data: preferences } = await supabase
       .from("notification_preferences")
       .select("*")
       .eq("user_id", leader_id)
       .single();
 
-    // Check if leader wants this type of notification
     const defaultPrefs: NotificationPreferences = {
       join_requests: true,
       new_donations: true,
       new_members: true,
     };
-
     const userPrefs = preferences || defaultPrefs;
 
     const shouldNotify =
@@ -190,14 +180,12 @@ Deno.serve(async (req) => {
       (event_type === "new_member" && userPrefs.new_members);
 
     if (!shouldNotify) {
-      console.log("User has disabled this notification type");
       return new Response(
         JSON.stringify({ success: true, message: "Notification disabled by user" }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Get push subscriptions for the leader
     const { data: subscriptions, error: subError } = await supabase
       .from("push_subscriptions")
       .select("*")
@@ -212,31 +200,23 @@ Deno.serve(async (req) => {
     }
 
     if (!subscriptions || subscriptions.length === 0) {
-      console.log("No push subscriptions found for leader");
       return new Response(
         JSON.stringify({ success: true, message: "No subscriptions" }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Generate notification content
     const notification = generateNotificationContent(payload);
-    console.log("Generated notification:", notification);
 
-    // Get secrets for push services
     const vapidPublicKey = Deno.env.get("VAPID_PUBLIC_KEY");
     const vapidPrivateKey = Deno.env.get("VAPID_PRIVATE_KEY");
     const fcmServerKey = Deno.env.get("FCM_SERVER_KEY");
 
-    // Send notifications to all subscriptions
     const results = await Promise.allSettled(
       subscriptions.map(async (sub: PushSubscription) => {
         if (sub.platform === "web" && vapidPublicKey && vapidPrivateKey) {
-          return sendWebPush(sub, notification, vapidPublicKey, vapidPrivateKey);
-        } else if (
-          (sub.platform === "android" || sub.platform === "ios") &&
-          fcmServerKey
-        ) {
+          return sendWebPush();
+        } else if ((sub.platform === "android" || sub.platform === "ios") && fcmServerKey) {
           return sendFCM(sub, notification, fcmServerKey);
         }
         return false;
@@ -247,20 +227,14 @@ Deno.serve(async (req) => {
       (r) => r.status === "fulfilled" && r.value === true
     ).length;
 
-    console.log(`Sent ${successCount}/${subscriptions.length} notifications`);
-
     return new Response(
-      JSON.stringify({
-        success: true,
-        sent: successCount,
-        total: subscriptions.length,
-      }),
+      JSON.stringify({ success: true, sent: successCount, total: subscriptions.length }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
     console.error("Error processing notification:", error);
     return new Response(
-      JSON.stringify({ error: "Internal server error" }),
+      JSON.stringify({ error: error instanceof Error ? error.message : "Internal server error" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
