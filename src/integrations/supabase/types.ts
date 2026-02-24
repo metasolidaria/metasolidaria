@@ -74,6 +74,45 @@ export type Database = {
         }
         Relationships: []
       }
+      github_sponsors: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          fetched_at: string
+          github_login: string
+          github_name: string | null
+          id: string
+          is_active: boolean
+          profile_url: string | null
+          tier_monthly_price: number | null
+          tier_name: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          fetched_at?: string
+          github_login: string
+          github_name?: string | null
+          id?: string
+          is_active?: boolean
+          profile_url?: string | null
+          tier_monthly_price?: number | null
+          tier_name?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          fetched_at?: string
+          github_login?: string
+          github_name?: string | null
+          id?: string
+          is_active?: boolean
+          profile_url?: string | null
+          tier_monthly_price?: number | null
+          tier_name?: string | null
+        }
+        Relationships: []
+      }
       goal_progress: {
         Row: {
           amount: number
