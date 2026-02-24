@@ -1,17 +1,22 @@
 
 
-# Adicionar .env ao .gitignore
+# Reduzir tamanho das fontes do Hero no mobile
 
-## Resumo
+## O que sera feito
 
-Adicionar o arquivo `.env` ao `.gitignore` para que ele nunca mais seja commitado no GitHub, evitando a remoção acidental que causou o erro anterior.
+Reduzir o tamanho do titulo principal e do paragrafo descritivo na secao Hero para ficarem mais proporcionais em telas de celular.
 
-## Detalhes técnicos
+## Alteracoes
 
-Editar o arquivo `.gitignore` para incluir a linha `.env` (e variantes como `.env.local`, `.env*.local`) na lista de arquivos ignorados pelo Git.
+**Arquivo:** `src/components/Hero.tsx`
 
-Isso garante que:
-- O `.env` continuará sendo gerenciado automaticamente pela plataforma Lovable Cloud
-- Ele não aparecerá mais nos commits do GitHub
-- Não haverá risco de remoção acidental via GitHub
+1. **Titulo principal** - Alterar de `text-4xl md:text-6xl lg:text-7xl` para `text-3xl sm:text-4xl md:text-6xl lg:text-7xl`
+   - No mobile: de 36px para 30px
+
+2. **Paragrafo descritivo** - Alterar de `text-lg md:text-xl` para `text-base md:text-xl`
+   - No mobile: de 18px para 16px
+
+## Resultado esperado
+
+O texto do Hero ficara mais compacto e proporcional em telas pequenas, sem afetar a aparencia em desktop/tablet.
 
