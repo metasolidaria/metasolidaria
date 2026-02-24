@@ -2,6 +2,7 @@ import { Heart, Settings, Instagram, Facebook, ChevronDown, Mail } from "lucide-
 import { Link } from "react-router-dom";
 import { lazy, Suspense } from "react";
 import { InstallAppButton } from "./InstallAppButton";
+import { GitHubSponsorsSection } from "./GitHubSponsorsSection";
 const logo = "/logo.jpg";
 
 // TikTok icon component (not available in Lucide)
@@ -143,6 +144,9 @@ export const Footer = () => {
 
           {/* Install App Button */}
           <InstallAppButton variant="footer" />
+
+          {/* GitHub Sponsors */}
+          <GitHubSponsorsSection />
 
           {/* Tagline */}
           <div className="flex items-center gap-1 text-primary-foreground/60 text-sm">
