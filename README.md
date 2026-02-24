@@ -1,73 +1,73 @@
-# Welcome to your Lovable project
+**Turning personal goals into measurable social impact.**
 
-## Project info
+Meta Solidária is an open-source social impact platform that transforms personal discipline into collective generosity.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+Groups — friends, residential communities, companies, and fitness teams — set measurable goals (such as weight loss or healthy habits) and convert achievements into real-world donations.
 
-## How can I edit this code?
+Every milestone reached becomes food, clothing, or essential supplies donated to local institutions.
 
-There are several ways of editing your application.
+---
 
-**Use Lovable**
+## 🎯 Mission
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+To connect self-improvement with social transformation.
 
-Changes made via Lovable will be committed automatically to this repo.
+We believe that when personal growth meets community purpose, sustainable impact becomes possible.
 
-**Use your preferred IDE**
+---
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+## 🚀 Core Features
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+- Public and private group creation  
+- Custom goal tracking  
+- Progress visualization  
+- Donation commitment per milestone  
+- Community-driven impact reporting  
+- Corporate ESG engagement opportunities  
 
-Follow these steps:
+---
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+## 💻 Tech Stack
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+- Vite  
+- React  
+- TypeScript  
+- Tailwind CSS  
+- shadcn-ui  
 
-# Step 3: Install the necessary dependencies.
-npm i
+---
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
+## 🌎 Why Open Source?
 
-**Edit a file directly in GitHub**
+Meta Solidária is developed as an open-source initiative to ensure:
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+- Transparency  
+- Community contribution  
+- Long-term sustainability  
+- Scalable global impact  
 
-**Use GitHub Codespaces**
+---
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## 💡 Infrastructure & Sustainability
 
-## What technologies are used for this project?
+Meta Solidária operates with an average infrastructure cost of approximately **$400/month**.
 
-This project is built with:
+This includes hosting, database services, security, monitoring, and continuous development.
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+The platform is free for users.
 
-## How can I deploy this project?
+Community sponsorship helps keep the project sustainable and scalable.
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+👉 If you believe technology can drive measurable social impact, consider supporting this project through GitHub Sponsors.
 
-## Can I connect a custom domain to my Lovable project?
+---
 
-Yes, you can!
+## 🤝 Contributing
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+We welcome contributors who want to improve documentation, performance, UI/UX, and scalability.
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+---
+
+## 📜 License
+
+(To be defined – MIT or Apache 2.0 recommended)
