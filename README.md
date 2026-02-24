@@ -2,6 +2,8 @@
 
 **Turning personal goals into measurable social impact.**
 
+Built in Brazil. Designed for global impact.
+
 Meta Solidária is an open-source social impact platform that transforms personal discipline into collective generosity.
 
 Groups — friends, residential communities, companies, and fitness teams — set measurable goals (such as weight loss or healthy habits) and convert achievements into real-world donations.
@@ -12,9 +14,9 @@ Every milestone reached becomes food, clothing, or essential supplies donated to
 
 ## 🎯 Mission
 
-To connect self-improvement with social transformation.
+To connect self-improvement with scalable social transformation.
 
-We believe that when personal growth meets community purpose, sustainable impact becomes scalable impact.
+We believe that when personal growth meets community purpose, sustainable impact becomes systemic impact.
 
 ---
 
@@ -48,9 +50,9 @@ To become a global infrastructure where personal achievement automatically gener
 
 ## 📊 Why This Matters
 
-Most fitness and productivity apps focus only on individual results.
+Most fitness and productivity platforms focus solely on individual outcomes.
 
-Meta Solidária connects personal growth with measurable community impact — aligning discipline, accountability, and generosity in a single ecosystem.
+Meta Solidária creates an infrastructure where personal performance fuels collective good — turning discipline into distributed social impact.
 
 ---
 
@@ -69,24 +71,24 @@ Meta Solidária is built as an open-source initiative to ensure:
 
 Meta Solidária operates with an average infrastructure cost of approximately **$400/month**.
 
-The platform is free for users.
+The platform remains free for users.
 
 Community sponsorship directly supports:
 
 - Infrastructure and hosting  
 - Security and data reliability  
-- Feature development  
-- Global scalability  
+- Continuous development  
+- Global expansion  
 
-If you believe technology can drive measurable social impact, support this project through GitHub Sponsors.
+If you believe technology can power measurable social transformation, consider supporting the project through GitHub Sponsors.
 
-👉 **Become a sponsor and help scale impact globally.**
+👉 **Help build global infrastructure for everyday impact.**
 
 ---
 
 ## 🤝 Contributing
 
-We welcome contributors who want to improve documentation, performance, UI/UX, security, and scalability.
+We welcome developers, designers, and impact-driven professionals who want to improve documentation, performance, security, scalability, and ESG integration.
 
 ---
 
