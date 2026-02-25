@@ -27,10 +27,7 @@ const useTopGroups = () => {
 };
 
 const GroupCard = ({ group, onClick }: { group: any; onClick: () => void }) => (
-  <button
-    onClick={onClick}
-    className="bg-card rounded-xl p-4 shadow-soft hover:shadow-glow transition-all duration-300 text-left w-full hover:scale-[1.02] cursor-pointer"
-  >
+  <div className="bg-card rounded-xl p-4 shadow-soft hover:shadow-glow transition-all duration-300 text-left w-full">
     <div className="flex items-start justify-between gap-2 mb-2">
       <h3 className="font-bold text-foreground text-sm line-clamp-1">{group.name}</h3>
       <span className="bg-primary/10 text-primary text-xs font-medium px-2 py-0.5 rounded-full whitespace-nowrap">
@@ -53,10 +50,11 @@ const GroupCard = ({ group, onClick }: { group: any; onClick: () => void }) => (
         </span>
       )}
     </div>
-    <span className="text-xs font-semibold text-primary flex items-center gap-1">
-      Participar <ArrowRight className="w-3 h-3" />
-    </span>
-  </button>
+    <Button size="sm" variant="default" className="w-full" onClick={onClick}>
+      <Users className="w-4 h-4" />
+      Entrar no Grupo
+    </Button>
+  </div>
 );
 
 const GroupCardSkeleton = () => (
