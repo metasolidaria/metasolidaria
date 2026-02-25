@@ -20,6 +20,8 @@ import { GoldPartnersCarousel } from "@/components/GoldPartnersCarousel";
 import { PremiumLogosCarousel } from "@/components/PremiumLogosCarousel";
 import { EntityInfoBox } from "@/components/EntityInfoBox";
 import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import {
@@ -48,6 +50,7 @@ export default function GroupPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { toast } = useToast();
   const [addProgressOpen, setAddProgressOpen] = useState(false);
   const [selectedCommitment, setSelectedCommitment] = useState<{
     id: string;
@@ -400,6 +403,71 @@ export default function GroupPage() {
           />
         </div>
       </div>
+
+      {/* Join Group Banner for non-members */}
+      {!userMember && !isLeader && !group.is_private && (
+        <div className="bg-primary/5 border-b border-primary/10">
+          <div className="container mx-auto px-4 py-4">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+              <div>
+                <p className="font-semibold text-foreground text-sm">
+                  Quer participar deste grupo?
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Entre no grupo e comece a contribuir com suas metas solidárias.
+                </p>
+              </div>
+              {!user ? (
+                <Button 
+                  variant="hero" 
+                  size="sm"
+                  onClick={() => navigate("/?login=true")}
+                  className="w-full sm:w-auto"
+                >
+                  <Users className="w-4 h-4 mr-1" />
+                  Fazer Login para Participar
+                </Button>
+              ) : (
+                <Button 
+                  variant="hero" 
+                  size="sm"
+                  onClick={async () => {
+                    if (!user || !id) return;
+                    const profile = user.user_metadata;
+                    const name = profile?.full_name || user.email || "Membro";
+                    const { data: memberData, error } = await supabase
+                      .from("group_members")
+                      .insert([{ group_id: id, user_id: user.id, name }])
+                      .select("id")
+                      .single();
+                    if (error) {
+                      if (error.message?.includes("duplicate") || error.code === "23505") {
+                        toast({ title: "Você já é membro deste grupo!", variant: "destructive" });
+                      } else {
+                        toast({ title: "Erro ao entrar no grupo", description: error.message, variant: "destructive" });
+                      }
+                    } else {
+                      // Apply default commitment
+                      if (memberData?.id) {
+                        await supabase.rpc("apply_default_commitment", {
+                          _member_id: memberData.id,
+                          _group_id: id,
+                        });
+                      }
+                      toast({ title: "Bem-vindo ao grupo! 🎉", description: "Você agora faz parte deste grupo." });
+                      window.location.reload();
+                    }
+                  }}
+                  className="w-full sm:w-auto"
+                >
+                  <Users className="w-4 h-4 mr-1" />
+                  Participar do Grupo
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="container mx-auto px-4 py-8 space-y-8 overflow-x-hidden">
         <div className="grid lg:grid-cols-3 gap-8">
