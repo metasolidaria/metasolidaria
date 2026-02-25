@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { MapPin, Users, Heart, ArrowRight } from "lucide-react";
 import { Button } from "./ui/button";
 import { Skeleton } from "./ui/skeleton";
+import { useNavigate } from "react-router-dom";
 
 const useTopGroups = () => {
   return useQuery({
@@ -25,15 +26,18 @@ const useTopGroups = () => {
   });
 };
 
-const GroupCard = ({ group }: { group: any }) => (
-  <div className="bg-card rounded-xl p-4 shadow-soft hover:shadow-glow transition-shadow duration-300 text-left">
+const GroupCard = ({ group, onClick }: { group: any; onClick: () => void }) => (
+  <button
+    onClick={onClick}
+    className="bg-card rounded-xl p-4 shadow-soft hover:shadow-glow transition-all duration-300 text-left w-full hover:scale-[1.02] cursor-pointer"
+  >
     <div className="flex items-start justify-between gap-2 mb-2">
       <h3 className="font-bold text-foreground text-sm line-clamp-1">{group.name}</h3>
       <span className="bg-primary/10 text-primary text-xs font-medium px-2 py-0.5 rounded-full whitespace-nowrap">
         {group.donation_type}
       </span>
     </div>
-    <div className="flex items-center gap-3 text-xs text-muted-foreground">
+    <div className="flex items-center flex-wrap gap-2 text-xs text-muted-foreground mb-3">
       <span className="flex items-center gap-1">
         <MapPin className="w-3 h-3" />
         {group.city}
@@ -49,7 +53,10 @@ const GroupCard = ({ group }: { group: any }) => (
         </span>
       )}
     </div>
-  </div>
+    <span className="text-xs font-semibold text-primary flex items-center gap-1">
+      Participar <ArrowRight className="w-3 h-3" />
+    </span>
+  </button>
 );
 
 const GroupCardSkeleton = () => (
@@ -67,6 +74,7 @@ const GroupCardSkeleton = () => (
 
 export const HeroGroupsPreview = () => {
   const { data: groups, isLoading } = useTopGroups();
+  const navigate = useNavigate();
 
   const scrollToGroups = () => {
     document.getElementById("grupos")?.scrollIntoView({ behavior: "smooth" });
@@ -89,7 +97,13 @@ export const HeroGroupsPreview = () => {
         <div className="grid sm:grid-cols-3 gap-3 max-w-3xl mx-auto mb-6">
           {isLoading
             ? [1, 2, 3].map(i => <GroupCardSkeleton key={i} />)
-            : groups?.map(group => <GroupCard key={group.id} group={group} />)
+            : groups?.map(group => (
+                <GroupCard
+                  key={group.id}
+                  group={group}
+                  onClick={() => navigate(`/grupo/${group.id}`)}
+                />
+              ))
           }
         </div>
 
