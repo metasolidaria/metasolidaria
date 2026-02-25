@@ -11,6 +11,8 @@ const AuthModal = lazy(() => import("@/components/AuthModal").then(m => ({ defau
 
 // Lazy load below-the-fold sections to improve FCP and LCP
 const ImpactCounter = lazy(() => import("@/components/ImpactCounter").then(m => ({ default: m.ImpactCounter })));
+const HeroGroupsPreview = lazy(() => import("@/components/HeroGroupsPreview").then(m => ({ default: m.HeroGroupsPreview })));
+const HowItWorks = lazy(() => import("@/components/HowItWorks").then(m => ({ default: m.HowItWorks })));
 const GroupsSection = lazy(() => import("@/components/GroupsSection").then(m => ({ default: m.GroupsSection })));
 const EntitiesSection = lazy(() => import("@/components/EntitiesSection").then(m => ({ default: m.EntitiesSection })));
 const PartnersSection = lazy(() => import("@/components/PartnersSection").then(m => ({ default: m.PartnersSection })));
@@ -109,9 +111,15 @@ const Index = () => {
       <main>
         <Hero />
         <Suspense fallback={<SectionPlaceholder />}>
+          <HeroGroupsPreview />
+        </Suspense>
+        <Suspense fallback={<SectionPlaceholder />}>
           <div id="impacto">
             <ImpactCounter />
           </div>
+        </Suspense>
+        <Suspense fallback={<SectionPlaceholder />}>
+          <HowItWorks />
         </Suspense>
         <Suspense fallback={<SectionPlaceholder />}>
           <GroupsSection onRequireAuth={handleRequireAuth} />
