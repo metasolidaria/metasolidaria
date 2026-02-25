@@ -88,17 +88,17 @@ export const Hero = () => {
           </p>
 
           {/* Mini Como Funciona - 3 passos inline */}
-          <div className="flex items-center justify-center gap-2 sm:gap-4 mb-8">
+          <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-4 mb-8 px-2">
             {miniSteps.map((step, index) => (
               <div key={step.label} className="flex items-center gap-1 sm:gap-2">
-                <div className="flex items-center gap-1.5 sm:gap-2 bg-primary-foreground/10 rounded-full px-3 py-1.5 sm:px-4 sm:py-2">
-                  <step.icon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-secondary flex-shrink-0" />
-                  <span className="text-primary-foreground text-xs sm:text-sm font-medium whitespace-nowrap">
+                <div className="flex items-center gap-1 sm:gap-2 bg-primary-foreground/10 rounded-full px-2.5 py-1 sm:px-4 sm:py-2">
+                  <step.icon className="w-3 h-3 sm:w-4 sm:h-4 text-secondary flex-shrink-0" />
+                  <span className="text-primary-foreground text-[11px] sm:text-sm font-medium whitespace-nowrap">
                     {step.label}
                   </span>
                 </div>
                 {index < miniSteps.length - 1 && (
-                  <ChevronRight className="w-3.5 h-3.5 text-primary-foreground/40 flex-shrink-0" />
+                  <ChevronRight className="w-3 h-3 text-primary-foreground/40 flex-shrink-0 hidden sm:block" />
                 )}
               </div>
             ))}
