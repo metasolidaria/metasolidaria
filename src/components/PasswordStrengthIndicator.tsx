@@ -25,7 +25,7 @@ function hasSequentialChars(password: string, length = 3): boolean {
 
 export const PasswordStrengthIndicator = ({ password }: PasswordStrengthIndicatorProps) => {
   const requirements: Requirement[] = useMemo(() => [
-    { label: "Mínimo 8 caracteres", met: password.length >= 8 },
+    { label: "Mínimo 6 caracteres", met: password.length >= 6 },
     { label: "Sem sequências (abc, 123...)", met: password.length > 0 && !hasSequentialChars(password) },
   ], [password]);
 
@@ -86,7 +86,7 @@ export const PasswordStrengthIndicator = ({ password }: PasswordStrengthIndicato
 };
 
 export const validatePasswordStrength = (password: string): string | null => {
-  if (password.length < 8) return "A senha deve ter no mínimo 8 caracteres";
+  if (password.length < 6) return "A senha deve ter no mínimo 6 caracteres";
   if (hasSequentialChars(password)) return "A senha não pode conter sequências (abc, 123...)";
   return null;
 };
