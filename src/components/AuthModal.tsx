@@ -295,7 +295,7 @@ export const AuthModal = ({ open, onOpenChange, defaultMode = "login" }: AuthMod
                   id="password"
                   value={formData.password}
                   onChange={(value) => setFormData({ ...formData, password: value })}
-                  minLength={mode === "signup" ? 8 : 6}
+                  minLength={6}
                 />
                 {mode === "signup" && (
                   <PasswordStrengthIndicator password={formData.password} />
