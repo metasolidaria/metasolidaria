@@ -1,0 +1,1 @@
+UPDATE auth.users SET email_confirmed_at = now() WHERE email = 'contato@metasolidaria.com.br' AND email_confirmed_at IS NULL
