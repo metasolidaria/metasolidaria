@@ -19,10 +19,11 @@ import { useProgressAnalysis } from "@/hooks/useProgressAnalysis";
 import { GoldPartnersCarousel } from "@/components/GoldPartnersCarousel";
 import { PremiumLogosCarousel } from "@/components/PremiumLogosCarousel";
 import { EntityInfoBox } from "@/components/EntityInfoBox";
-import { useState } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { AuthModal } from "@/components/AuthModal";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import {
@@ -69,6 +70,9 @@ export default function GroupPage() {
   const [inviteModalOpen, setInviteModalOpen] = useState(false);
   const [memberToRemove, setMemberToRemove] = useState<{ id: string; name: string } | null>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [joiningAfterAuth, setJoiningAfterAuth] = useState(false);
+  const pendingJoinRef = useRef(false);
+  const queryClient = useQueryClient();
   
   const { analyzeProgress, analysis, isLoading: analysisLoading, clearAnalysis } = useProgressAnalysis();
 
@@ -90,6 +94,52 @@ export default function GroupPage() {
 
   // Hook for join requests - MUST be called before any early returns
   const { userRequest, createRequest, isLoading: requestsLoading } = useJoinRequests(id);
+
+  // Auto-join group after login/signup
+  const joinGroup = useCallback(async (currentUser: typeof user) => {
+    if (!currentUser || !id || joiningAfterAuth) return;
+    setJoiningAfterAuth(true);
+    try {
+      const profile = currentUser.user_metadata;
+      const name = profile?.full_name || currentUser.email || "Membro";
+      const { data: memberData, error } = await supabase
+        .from("group_members")
+        .insert([{ group_id: id, user_id: currentUser.id, name }])
+        .select("id")
+        .single();
+      if (error) {
+        if (error.message?.includes("duplicate") || error.code === "23505") {
+          toast({ title: "Você já é membro deste grupo!" });
+        } else {
+          toast({ title: "Erro ao entrar no grupo", description: error.message, variant: "destructive" });
+        }
+      } else {
+        if (memberData?.id) {
+          await supabase.rpc("apply_default_commitment", {
+            _member_id: memberData.id,
+            _group_id: id,
+          });
+        }
+        toast({ title: "Bem-vindo ao grupo! 🎉", description: "Você agora faz parte deste grupo." });
+      }
+      // Refresh data without reloading
+      queryClient.invalidateQueries({ queryKey: ["groupDetails", id] });
+      queryClient.invalidateQueries({ queryKey: ["groupMembers", id] });
+      queryClient.invalidateQueries({ queryKey: ["userMemberships"] });
+    } catch (err) {
+      console.error("Error joining group:", err);
+    } finally {
+      setJoiningAfterAuth(false);
+      pendingJoinRef.current = false;
+    }
+  }, [id, joiningAfterAuth, toast, queryClient]);
+
+  // Watch for user login while auth modal was open (pending join)
+  useEffect(() => {
+    if (user && pendingJoinRef.current && !userMember) {
+      joinGroup(user);
+    }
+  }, [user, userMember, joinGroup]);
 
   const handleLeaveGroup = () => {
     leaveGroup.mutate(undefined, {
@@ -423,7 +473,10 @@ export default function GroupPage() {
                 <Button 
                   variant="hero" 
                   size="sm"
-                  onClick={() => setShowAuthModal(true)}
+                  onClick={() => {
+                    pendingJoinRef.current = true;
+                    setShowAuthModal(true);
+                  }}
                   className="w-full sm:w-auto"
                 >
                   <Users className="w-4 h-4 mr-1" />
@@ -433,36 +486,15 @@ export default function GroupPage() {
                 <Button 
                   variant="hero" 
                   size="sm"
-                  onClick={async () => {
-                    if (!user || !id) return;
-                    const profile = user.user_metadata;
-                    const name = profile?.full_name || user.email || "Membro";
-                    const { data: memberData, error } = await supabase
-                      .from("group_members")
-                      .insert([{ group_id: id, user_id: user.id, name }])
-                      .select("id")
-                      .single();
-                    if (error) {
-                      if (error.message?.includes("duplicate") || error.code === "23505") {
-                        toast({ title: "Você já é membro deste grupo!", variant: "destructive" });
-                      } else {
-                        toast({ title: "Erro ao entrar no grupo", description: error.message, variant: "destructive" });
-                      }
-                    } else {
-                      // Apply default commitment
-                      if (memberData?.id) {
-                        await supabase.rpc("apply_default_commitment", {
-                          _member_id: memberData.id,
-                          _group_id: id,
-                        });
-                      }
-                      toast({ title: "Bem-vindo ao grupo! 🎉", description: "Você agora faz parte deste grupo." });
-                      window.location.reload();
-                    }
-                  }}
+                  onClick={() => joinGroup(user)}
+                  disabled={joiningAfterAuth}
                   className="w-full sm:w-auto"
                 >
-                  <Users className="w-4 h-4 mr-1" />
+                  {joiningAfterAuth ? (
+                    <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                  ) : (
+                    <Users className="w-4 h-4 mr-1" />
+                  )}
                   Participar do Grupo
                 </Button>
               )}
@@ -956,7 +988,7 @@ export default function GroupPage() {
         groupName={group?.name || ""}
       />
 
-      <AuthModal open={showAuthModal} onOpenChange={setShowAuthModal} defaultMode="login" />
+      <AuthModal open={showAuthModal} onOpenChange={setShowAuthModal} defaultMode="signup" />
     </div>
   );
 }
