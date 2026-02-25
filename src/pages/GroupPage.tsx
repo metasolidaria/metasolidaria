@@ -20,6 +20,7 @@ import { GoldPartnersCarousel } from "@/components/GoldPartnersCarousel";
 import { PremiumLogosCarousel } from "@/components/PremiumLogosCarousel";
 import { EntityInfoBox } from "@/components/EntityInfoBox";
 import { useState } from "react";
+import { AuthModal } from "@/components/AuthModal";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
@@ -67,6 +68,7 @@ export default function GroupPage() {
   const [addMemberOpen, setAddMemberOpen] = useState(false);
   const [inviteModalOpen, setInviteModalOpen] = useState(false);
   const [memberToRemove, setMemberToRemove] = useState<{ id: string; name: string } | null>(null);
+  const [showAuthModal, setShowAuthModal] = useState(false);
   
   const { analyzeProgress, analysis, isLoading: analysisLoading, clearAnalysis } = useProgressAnalysis();
 
@@ -421,7 +423,7 @@ export default function GroupPage() {
                 <Button 
                   variant="hero" 
                   size="sm"
-                  onClick={() => navigate("/?login=true")}
+                  onClick={() => setShowAuthModal(true)}
                   className="w-full sm:w-auto"
                 >
                   <Users className="w-4 h-4 mr-1" />
@@ -953,6 +955,8 @@ export default function GroupPage() {
         isLoading={analysisLoading}
         groupName={group?.name || ""}
       />
+
+      <AuthModal open={showAuthModal} onOpenChange={setShowAuthModal} defaultMode="login" />
     </div>
   );
 }
