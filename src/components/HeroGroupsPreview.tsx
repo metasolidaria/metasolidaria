@@ -1,15 +1,18 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { MapPin, Users, Heart, ArrowRight, Search, Loader2 } from "lucide-react";
+import { MapPin, Users, Heart, ArrowRight, Search, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Skeleton } from "./ui/skeleton";
 import { useNavigate } from "react-router-dom";
+import useEmblaCarousel from "embla-carousel-react";
+import Autoplay from "embla-carousel-autoplay";
+import { useCallback, useEffect } from "react";
 
-const useTopGroups = () => {
+const usePublicGroups = () => {
   return useQuery({
-    queryKey: ["topGroupsPreview"],
+    queryKey: ["publicGroupsCarousel"],
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
     refetchOnWindowFocus: false,
@@ -19,8 +22,7 @@ const useTopGroups = () => {
         .select("id, name, city, donation_type, member_count, total_goals, total_donations")
         .eq("is_private", false)
         .eq("is_test", false)
-        .order("member_count", { ascending: false })
-        .limit(3);
+        .order("member_count", { ascending: false });
 
       if (error) throw error;
       return data || [];
@@ -47,12 +49,28 @@ const useSearchGroups = (query: string) => {
   });
 };
 
+const donationTypeLabels: Record<string, string> = {
+  alimentos: "🍎 Alimentos",
+  livros: "📚 Livros",
+  roupas: "👕 Roupas",
+  cobertores: "🛏️ Cobertores",
+  sopas: "🍲 Sopas",
+  brinquedos: "🧸 Brinquedos",
+  higiene: "🧴 Higiene",
+  mudas: "🌱 Mudas",
+  racao: "🐾 Ração",
+  sangue: "🩸 Sangue",
+  ovos_pascoa: "🍫 Páscoa",
+  dinheiro: "💰 Dinheiro",
+  outro: "📦 Outro",
+};
+
 const GroupCard = ({ group, onClick }: { group: any; onClick: () => void }) => (
-  <div className="bg-card rounded-xl p-4 shadow-soft hover:shadow-glow transition-all duration-300 text-left w-full">
+  <div className="bg-card rounded-xl p-4 shadow-soft hover:shadow-glow transition-all duration-300 text-left w-full h-full flex flex-col">
     <div className="flex items-start justify-between gap-2 mb-2">
       <h3 className="font-bold text-foreground text-sm line-clamp-1">{group.name}</h3>
-      <span className="bg-primary/10 text-primary text-xs font-medium px-2 py-0.5 rounded-full whitespace-nowrap">
-        {group.donation_type}
+      <span className="bg-primary/10 text-primary text-xs font-medium px-2 py-0.5 rounded-full whitespace-nowrap shrink-0">
+        {donationTypeLabels[group.donation_type] || "📦 Outro"}
       </span>
     </div>
     <div className="flex items-center flex-wrap gap-2 text-xs text-muted-foreground mb-3">
@@ -71,10 +89,12 @@ const GroupCard = ({ group, onClick }: { group: any; onClick: () => void }) => (
         </span>
       )}
     </div>
-    <Button size="sm" variant="default" className="w-full" onClick={onClick}>
-      <Users className="w-4 h-4" />
-      Entrar no Grupo
-    </Button>
+    <div className="mt-auto">
+      <Button size="sm" variant="default" className="w-full" onClick={onClick}>
+        <Users className="w-4 h-4" />
+        Entrar no Grupo
+      </Button>
+    </div>
   </div>
 );
 
@@ -84,18 +104,55 @@ const GroupCardSkeleton = () => (
       <Skeleton className="h-4 w-32" />
       <Skeleton className="h-5 w-16 rounded-full" />
     </div>
-    <div className="flex gap-3">
+    <div className="flex gap-3 mb-3">
       <Skeleton className="h-3 w-20" />
       <Skeleton className="h-3 w-24" />
     </div>
+    <Skeleton className="h-8 w-full rounded-md" />
   </div>
 );
 
 export const HeroGroupsPreview = () => {
-  const { data: groups, isLoading } = useTopGroups();
+  const { data: groups, isLoading } = usePublicGroups();
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const { data: searchResults, isLoading: isSearching } = useSearchGroups(searchQuery);
+
+  const [emblaRef, emblaApi] = useEmblaCarousel(
+    {
+      loop: true,
+      align: "start",
+      slidesToScroll: 1,
+      breakpoints: {
+        "(min-width: 640px)": { slidesToScroll: 2 },
+        "(min-width: 1024px)": { slidesToScroll: 3 },
+      },
+    },
+    [Autoplay({ delay: 4000, stopOnInteraction: true, stopOnMouseEnter: true })]
+  );
+
+  const [canScrollPrev, setCanScrollPrev] = useState(false);
+  const [canScrollNext, setCanScrollNext] = useState(false);
+
+  const onSelect = useCallback(() => {
+    if (!emblaApi) return;
+    setCanScrollPrev(emblaApi.canScrollPrev());
+    setCanScrollNext(emblaApi.canScrollNext());
+  }, [emblaApi]);
+
+  useEffect(() => {
+    if (!emblaApi) return;
+    onSelect();
+    emblaApi.on("select", onSelect);
+    emblaApi.on("reInit", onSelect);
+    return () => {
+      emblaApi.off("select", onSelect);
+      emblaApi.off("reInit", onSelect);
+    };
+  }, [emblaApi, onSelect]);
+
+  const scrollPrev = useCallback(() => emblaApi?.scrollPrev(), [emblaApi]);
+  const scrollNext = useCallback(() => emblaApi?.scrollNext(), [emblaApi]);
 
   const showSearch = searchQuery.length >= 2;
 
@@ -163,17 +220,62 @@ export const HeroGroupsPreview = () => {
           )}
         </div>
 
-        <div className="grid sm:grid-cols-3 gap-3 max-w-3xl mx-auto mb-6">
-          {isLoading
-            ? [1, 2, 3].map(i => <GroupCardSkeleton key={i} />)
-            : groups?.map(group => (
-                <GroupCard
-                  key={group.id}
-                  group={group}
-                  onClick={() => navigate(`/grupo/${group.id}`)}
-                />
-              ))
-          }
+        {/* Carousel */}
+        <div className="relative max-w-5xl mx-auto mb-6">
+          {/* Navigation Buttons */}
+          {groups && groups.length > 3 && (
+            <>
+              <Button
+                variant="outline"
+                size="icon"
+                className="absolute -left-4 top-1/2 -translate-y-1/2 z-10 rounded-full w-8 h-8 bg-card shadow-md hidden sm:flex"
+                onClick={scrollPrev}
+                disabled={!canScrollPrev}
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                className="absolute -right-4 top-1/2 -translate-y-1/2 z-10 rounded-full w-8 h-8 bg-card shadow-md hidden sm:flex"
+                onClick={scrollNext}
+                disabled={!canScrollNext}
+              >
+                <ChevronRight className="w-4 h-4" />
+              </Button>
+            </>
+          )}
+
+          {isLoading ? (
+            <div className="grid sm:grid-cols-3 gap-3">
+              {[1, 2, 3].map(i => <GroupCardSkeleton key={i} />)}
+            </div>
+          ) : (
+            <div className="overflow-hidden" ref={emblaRef}>
+              <div className="flex -ml-3">
+                {groups?.map(group => (
+                  <div
+                    key={group.id}
+                    className="flex-[0_0_100%] sm:flex-[0_0_50%] lg:flex-[0_0_33.333%] pl-3 min-w-0"
+                  >
+                    <GroupCard
+                      group={group}
+                      onClick={() => navigate(`/grupo/${group.id}`)}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Mobile swipe hint */}
+          {groups && groups.length > 1 && (
+            <div className="flex justify-center gap-1 mt-3 sm:hidden">
+              <span className="text-xs text-muted-foreground">
+                ← Deslize para ver mais →
+              </span>
+            </div>
+          )}
         </div>
 
         <div className="text-center">
