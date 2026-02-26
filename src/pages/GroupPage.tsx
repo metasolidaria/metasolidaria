@@ -6,6 +6,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { Progress } from "@/components/ui/progress";
 import { useGroupDetails } from "@/hooks/useGroupDetails";
 import { useAuth } from "@/hooks/useAuth";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { useJoinRequests } from "@/hooks/useJoinRequests";
 import { AddProgressModal } from "@/components/AddProgressModal";
 import { AddMemberModal } from "@/components/AddMemberModal";
@@ -53,6 +54,7 @@ export default function GroupPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
+  const { isAdmin } = useIsAdmin();
   const [addProgressOpen, setAddProgressOpen] = useState(false);
   const [selectedCommitment, setSelectedCommitment] = useState<{
     id: string;
@@ -627,7 +629,7 @@ export default function GroupPage() {
             {/* Members - Show based on visibility settings */}
             {(() => {
               const membersVisible = (group as any).members_visible !== false;
-              const showAllMembers = membersVisible || isLeader;
+              const showAllMembers = membersVisible || isLeader || isAdmin;
               // Filter to show only user's own member when list is hidden
               const displayMembers = showAllMembers 
                 ? members 
