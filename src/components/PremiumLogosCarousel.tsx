@@ -36,7 +36,7 @@ const useAllPremiumPartners = () => {
   });
 };
 
-export const PremiumLogosCarousel = () => {
+export const PremiumLogosCarousel = ({ compact = false }: { compact?: boolean }) => {
   const { data: premiumPartners, isLoading } = useAllPremiumPartners();
   const [autoplayPlugin, setAutoplayPlugin] = useState<AutoplayType | null>(null);
   const pointerStartPos = useRef<{ x: number; y: number } | null>(null);
@@ -81,8 +81,8 @@ export const PremiumLogosCarousel = () => {
 
   return (
     <TooltipProvider delayDuration={100}>
-      <div className="flex flex-col items-center gap-1 overflow-hidden">
-        <span className="text-[10px] text-primary font-bold uppercase tracking-wide">
+      <div className={`flex ${compact ? "flex-row items-center gap-2" : "flex-col items-center gap-1"} overflow-hidden`}>
+        <span className={`${compact ? "text-[9px]" : "text-[10px]"} text-primary font-bold uppercase tracking-wide whitespace-nowrap`}>
           Parceiros Idealizadores
         </span>
         <Carousel
@@ -91,7 +91,7 @@ export const PremiumLogosCarousel = () => {
             loop: true,
           }}
           plugins={autoplayPlugin ? [autoplayPlugin] : []}
-          className="w-auto max-w-[320px] overflow-hidden"
+          className={`overflow-hidden ${compact ? "w-auto max-w-[180px]" : "w-auto max-w-[320px]"}`}
         >
           <CarouselContent className="-ml-1">
             {premiumPartners.map((partner) => (
@@ -106,7 +106,7 @@ export const PremiumLogosCarousel = () => {
                       aria-label={`Visitar Instagram de ${partner.name}`}
                     >
                       <Avatar 
-                        style={{ width: 112, height: 112 }}
+                        style={compact ? { width: 40, height: 40 } : { width: 112, height: 112 }}
                         className={`rounded-lg bg-transparent transition-colors shadow-sm hover:shadow-md ${partner.instagram ? "cursor-pointer" : ""}`}
                       >
                         <AvatarImage 
@@ -114,7 +114,7 @@ export const PremiumLogosCarousel = () => {
                           alt={partner.name || "Parceiro Premium"}
                           className="object-contain p-0.5 mix-blend-multiply"
                         />
-                        <AvatarFallback className="rounded-lg bg-primary/10 text-primary font-semibold text-sm">
+                        <AvatarFallback className={`rounded-lg bg-primary/10 text-primary font-semibold ${compact ? "text-xs" : "text-sm"}`}>
                           {partner.name?.charAt(0) || "P"}
                         </AvatarFallback>
                       </Avatar>
