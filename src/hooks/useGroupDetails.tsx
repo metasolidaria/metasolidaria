@@ -59,7 +59,7 @@ export const useGroupDetails = (groupId: string | undefined) => {
       // Try to fetch full group details first
       const { data, error } = await supabase
         .from("groups")
-        .select("*, entity:entities(id, name, city, accepted_donations, pix_key, pix_name, observations)")
+        .select("*, entity:entities(id, name, city, accepted_donations, pix_key, pix_name, pix_qr_code_url, observations)")
         .eq("id", groupId)
         .maybeSingle();
 
