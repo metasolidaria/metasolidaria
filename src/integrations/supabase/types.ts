@@ -803,6 +803,7 @@ export type Database = {
           observations: string | null
           pix_key: string | null
           pix_name: string | null
+          pix_qr_code_url: string | null
         }
         Insert: {
           accepted_donations?: string[] | null
@@ -813,6 +814,7 @@ export type Database = {
           observations?: string | null
           pix_key?: string | null
           pix_name?: string | null
+          pix_qr_code_url?: string | null
         }
         Update: {
           accepted_donations?: string[] | null
@@ -823,6 +825,7 @@ export type Database = {
           observations?: string | null
           pix_key?: string | null
           pix_name?: string | null
+          pix_qr_code_url?: string | null
         }
         Relationships: []
       }
