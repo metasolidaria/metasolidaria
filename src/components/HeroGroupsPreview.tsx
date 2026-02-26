@@ -1,7 +1,9 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { MapPin, Users, Heart, ArrowRight } from "lucide-react";
+import { MapPin, Users, Heart, ArrowRight, Search, Loader2 } from "lucide-react";
 import { Button } from "./ui/button";
+import { Input } from "./ui/input";
 import { Skeleton } from "./ui/skeleton";
 import { useNavigate } from "react-router-dom";
 
@@ -19,6 +21,25 @@ const useTopGroups = () => {
         .eq("is_test", false)
         .order("member_count", { ascending: false })
         .limit(3);
+
+      if (error) throw error;
+      return data || [];
+    },
+  });
+};
+
+const useSearchGroups = (query: string) => {
+  return useQuery({
+    queryKey: ["searchGroupsPreview", query],
+    enabled: query.length >= 2,
+    staleTime: 30 * 1000,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("groups_search")
+        .select("id, name, city, donation_type")
+        .eq("is_private", false)
+        .or(`name.ilike.%${query}%,city.ilike.%${query}%`)
+        .limit(5);
 
       if (error) throw error;
       return data || [];
@@ -73,6 +94,10 @@ const GroupCardSkeleton = () => (
 export const HeroGroupsPreview = () => {
   const { data: groups, isLoading } = useTopGroups();
   const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState("");
+  const { data: searchResults, isLoading: isSearching } = useSearchGroups(searchQuery);
+
+  const showSearch = searchQuery.length >= 2;
 
   const scrollToGroups = () => {
     document.getElementById("grupos")?.scrollIntoView({ behavior: "smooth" });
@@ -90,6 +115,52 @@ export const HeroGroupsPreview = () => {
           <p className="text-sm text-muted-foreground">
             Veja quem já está transformando metas em doações
           </p>
+        </div>
+
+        <div className="max-w-md mx-auto mb-6 relative">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              type="text"
+              placeholder="Buscar grupo por nome ou cidade..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 pr-4"
+            />
+            {isSearching && (
+              <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-muted-foreground" />
+            )}
+          </div>
+
+          {showSearch && (
+            <div className="absolute z-10 top-full mt-1 w-full bg-card border border-border rounded-xl shadow-lg overflow-hidden">
+              {searchResults && searchResults.length > 0 ? (
+                searchResults.map((group) => (
+                  <button
+                    key={group.id}
+                    onClick={() => {
+                      navigate(`/grupo/${group.id}`);
+                      setSearchQuery("");
+                    }}
+                    className="w-full flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors text-left"
+                  >
+                    <Users className="w-4 h-4 text-primary shrink-0" />
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-foreground truncate">{group.name}</p>
+                      <p className="text-xs text-muted-foreground flex items-center gap-1">
+                        <MapPin className="w-3 h-3" />
+                        {group.city}
+                      </p>
+                    </div>
+                  </button>
+                ))
+              ) : !isSearching ? (
+                <div className="px-4 py-3 text-sm text-muted-foreground text-center">
+                  Nenhum grupo encontrado
+                </div>
+              ) : null}
+            </div>
+          )}
         </div>
 
         <div className="grid sm:grid-cols-3 gap-3 max-w-3xl mx-auto mb-6">
