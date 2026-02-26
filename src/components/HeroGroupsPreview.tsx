@@ -128,7 +128,7 @@ export const HeroGroupsPreview = () => {
         "(min-width: 1024px)": { slidesToScroll: 3 },
       },
     },
-    [Autoplay({ delay: 4000, stopOnInteraction: true, stopOnMouseEnter: true })]
+    [Autoplay({ delay: 4000, stopOnInteraction: false, stopOnMouseEnter: true })]
   );
 
   const [canScrollPrev, setCanScrollPrev] = useState(false);
