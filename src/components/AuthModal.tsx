@@ -249,7 +249,7 @@ export const AuthModal = ({ open, onOpenChange, defaultMode = "login" }: AuthMod
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="city">Cidade</Label>
+                  <Label htmlFor="city">Cidade <span className="text-muted-foreground font-normal text-xs">(opcional)</span></Label>
                   <CityAutocomplete
                     value={formData.city}
                     onChange={(value) => setFormData({ ...formData, city: value })}
@@ -261,7 +261,7 @@ export const AuthModal = ({ open, onOpenChange, defaultMode = "login" }: AuthMod
 
             <div className="space-y-2">
               <Label htmlFor="email">
-                {mode === "login" ? "Email ou Telefone" : "Email"}
+                {mode === "login" ? "Email ou Telefone" : <span>Email <span className="text-muted-foreground font-normal text-xs">(necessário para login)</span></span>}
               </Label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
