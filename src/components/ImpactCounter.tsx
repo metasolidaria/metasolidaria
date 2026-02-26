@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react";
-import { Heart, Apple, BookOpen, Shirt, BedDouble, Soup, Gift, Package, TreeDeciduous, Candy, DollarSign } from "lucide-react";
+import { Heart, Apple, BookOpen, Shirt, BedDouble, Soup, Gift, Package, TreeDeciduous, DollarSign } from "lucide-react";
 import { useImpactStats, DonationsByType } from "@/hooks/useImpactStats";
 import { PremiumPartnerSlots } from "./PremiumPartnerSlots";
 import { Skeleton } from "./ui/skeleton";
@@ -51,17 +51,23 @@ const AnimatedNumber = ({
   );
 };
 
-const donationTypeConfig = [
-  { key: "alimentos" as keyof DonationsByType, label: "Kg de Alimento", icon: Apple, unit: "kg" },
-  { key: "livros" as keyof DonationsByType, label: "Livros", icon: BookOpen, unit: "un" },
-  { key: "roupas" as keyof DonationsByType, label: "Roupas", icon: Shirt, unit: "peças" },
-  { key: "cobertores" as keyof DonationsByType, label: "Cobertores", icon: BedDouble, unit: "un" },
-  { key: "sopas" as keyof DonationsByType, label: "Sopas", icon: Soup, unit: "porções" },
-  { key: "higiene" as keyof DonationsByType, label: "Kits de Higiene", icon: Package, unit: "kits" },
-  { key: "brinquedos" as keyof DonationsByType, label: "Brinquedos", icon: Gift, unit: "un" },
-  { key: "mudas" as keyof DonationsByType, label: "Mudas de Árvore", icon: TreeDeciduous, unit: "un" },
-  { key: "ovos_pascoa" as keyof DonationsByType, label: "Ovos de Páscoa", icon: Candy, unit: "un" },
-  { key: "dinheiro" as keyof DonationsByType, label: "Dinheiro", icon: DollarSign, unit: "R$" },
+const donationTypeConfig: {
+  key: keyof DonationsByType;
+  label: string;
+  icon: React.ComponentType<{ className?: string }> | null;
+  emoji?: string;
+  unit: string;
+}[] = [
+  { key: "alimentos", label: "Kg de Alimento", icon: Apple, unit: "kg" },
+  { key: "livros", label: "Livros", icon: BookOpen, unit: "un" },
+  { key: "roupas", label: "Roupas", icon: Shirt, unit: "peças" },
+  { key: "cobertores", label: "Cobertores", icon: BedDouble, unit: "un" },
+  { key: "sopas", label: "Sopas", icon: Soup, unit: "porções" },
+  { key: "higiene", label: "Kits de Higiene", icon: Package, unit: "kits" },
+  { key: "brinquedos", label: "Brinquedos", icon: Gift, unit: "un" },
+  { key: "mudas", label: "Mudas de Árvore", icon: TreeDeciduous, unit: "un" },
+  { key: "ovos_pascoa", label: "Ovos de Páscoa", icon: null, emoji: "🍫", unit: "un" },
+  { key: "dinheiro", label: "Dinheiro", icon: DollarSign, unit: "R$" },
 ];
 
 // Hook for intersection observer
@@ -183,7 +189,11 @@ export const ImpactCounter = () => {
                       className={`bg-primary-foreground/10 backdrop-blur-sm rounded-xl p-4 text-center border border-primary-foreground/20 ${isInView ? 'animate-in fade-in slide-in-from-bottom-4 duration-400' : 'opacity-0'}`}
                       style={{ animationDelay: `${300 + index * 50}ms` }}
                     >
-                      <type.icon className="w-6 h-6 text-primary-foreground mx-auto mb-2" />
+                      {type.icon ? (
+                        <type.icon className="w-6 h-6 text-primary-foreground mx-auto mb-2" />
+                      ) : (
+                        <span className="text-2xl mx-auto mb-2 block w-6 h-6 leading-6">{type.emoji}</span>
+                      )}
                       <div className="text-2xl md:text-3xl font-bold text-primary-foreground mb-1">
                         {isInView ? (
                           <AnimatedNumber 
