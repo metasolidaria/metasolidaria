@@ -97,7 +97,29 @@ export const useAuth = () => {
     return { data, error };
   };
 
-  const signIn = async (email: string, password: string) => {
+  const resolveEmailFromPhone = async (phone: string): Promise<string | null> => {
+    try {
+      const { data, error } = await supabase.rpc('get_email_by_phone', { _phone: phone });
+      if (error || !data) return null;
+      return data;
+    } catch {
+      return null;
+    }
+  };
+
+  const signIn = async (emailOrPhone: string, password: string) => {
+    let email = emailOrPhone;
+    
+    // If input looks like a phone number (mostly digits), resolve to email
+    const digitsOnly = emailOrPhone.replace(/[^0-9]/g, '');
+    if (digitsOnly.length >= 8 && !emailOrPhone.includes('@')) {
+      const resolved = await resolveEmailFromPhone(emailOrPhone);
+      if (!resolved) {
+        return { data: null, error: { message: 'Nenhuma conta encontrada com este telefone.' } as any };
+      }
+      email = resolved;
+    }
+    
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,

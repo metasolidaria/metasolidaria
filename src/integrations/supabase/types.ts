@@ -1240,6 +1240,7 @@ export type Database = {
           whatsapp: string
         }[]
       }
+      get_email_by_phone: { Args: { _phone: string }; Returns: string }
       get_invitation_stats: {
         Args: never
         Returns: {
