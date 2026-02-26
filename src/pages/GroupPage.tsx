@@ -417,10 +417,6 @@ export default function GroupPage() {
               </div>
             </div>
 
-            {/* Premium Logos Carousel */}
-            <div className="shrink-0">
-              <PremiumLogosCarousel />
-            </div>
           </motion.div>
 
           {/* Leader Action Buttons */}

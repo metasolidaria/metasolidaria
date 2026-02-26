@@ -106,7 +106,7 @@ export const PremiumLogosCarousel = ({ compact = false }: { compact?: boolean })
                       aria-label={`Visitar Instagram de ${partner.name}`}
                     >
                       <Avatar 
-                        style={compact ? { width: 40, height: 40 } : { width: 112, height: 112 }}
+                        style={compact ? { width: 28, height: 28 } : { width: 112, height: 112 }}
                         className={`rounded-lg bg-transparent transition-colors shadow-sm hover:shadow-md ${partner.instagram ? "cursor-pointer" : ""}`}
                       >
                         <AvatarImage 
