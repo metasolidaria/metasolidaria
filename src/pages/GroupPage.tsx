@@ -362,12 +362,10 @@ export default function GroupPage() {
             )}
           </div>
 
-          {/* Parceiros Solidários - compact version below header actions */}
-          {group.city && (
-            <div className="mb-4">
-              <GoldPartnersCarousel groupCity={group.city} groupId={group.id} groupName={group.name} compact />
-            </div>
-          )}
+          {/* Parceiros Idealizadores - compact banner */}
+          <div className="mb-2">
+            <PremiumLogosCarousel compact />
+          </div>
 
           <motion.div
             initial={{ opacity: 0, y: 20 }}
