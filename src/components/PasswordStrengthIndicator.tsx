@@ -23,17 +23,32 @@ function hasSequentialChars(password: string, length = 3): boolean {
   return false;
 }
 
+const commonPasswords = new Set([
+  "123456", "password", "123456789", "12345678", "12345", "1234567", "1234567890",
+  "qwerty", "abc123", "111111", "123123", "admin", "letmein", "welcome", "monkey",
+  "master", "dragon", "login", "princess", "qwerty123", "solo", "passw0rd",
+  "654321", "superman", "qazwsx", "michael", "football", "shadow", "sunshine",
+  "trustno1", "iloveyou", "batman", "access", "hello", "charlie", "donald",
+  "senha123", "senha", "mudar123", "mudar", "brasil", "teste123", "teste",
+]);
+
+function isCommonPassword(password: string): boolean {
+  return commonPasswords.has(password.toLowerCase());
+}
+
 export const PasswordStrengthIndicator = ({ password }: PasswordStrengthIndicatorProps) => {
   const requirements: Requirement[] = useMemo(() => [
     { label: "Mínimo 6 caracteres", met: password.length >= 6 },
     { label: "Sem sequências (abc, 123...)", met: password.length > 0 && !hasSequentialChars(password) },
+    { label: "Evite senhas comuns (ex: 123456)", met: password.length > 0 && !isCommonPassword(password) },
   ], [password]);
 
   const strength = useMemo(() => {
     const metCount = requirements.filter(r => r.met).length;
     if (metCount === 0) return { level: 0, label: "", color: "" };
-    if (metCount === 1) return { level: 1, label: "Fraca", color: "bg-destructive" };
-    return { level: 2, label: "Forte", color: "bg-green-500" };
+    if (metCount <= 1) return { level: 1, label: "Fraca", color: "bg-destructive" };
+    if (metCount === 2) return { level: 2, label: "Média", color: "bg-yellow-500" };
+    return { level: 3, label: "Forte", color: "bg-green-500" };
   }, [requirements]);
 
   const isEmpty = !password;
@@ -43,7 +58,7 @@ export const PasswordStrengthIndicator = ({ password }: PasswordStrengthIndicato
       {!isEmpty && (
         <div className="space-y-1">
           <div className="flex gap-1">
-            {[1, 2].map((level) => (
+            {[1, 2, 3].map((level) => (
               <div
                 key={level}
                 className={`h-1.5 flex-1 rounded-full transition-colors ${
@@ -54,7 +69,7 @@ export const PasswordStrengthIndicator = ({ password }: PasswordStrengthIndicato
           </div>
           {strength.label && (
             <p className={`text-xs font-medium ${
-              strength.level === 1 ? "text-destructive" : "text-green-600"
+              strength.level === 1 ? "text-destructive" : strength.level === 2 ? "text-yellow-600" : "text-green-600"
             }`}>
               Senha {strength.label}
             </p>
@@ -62,7 +77,7 @@ export const PasswordStrengthIndicator = ({ password }: PasswordStrengthIndicato
         </div>
       )}
 
-      <div className="grid grid-cols-2 gap-1">
+      <div className="grid grid-cols-1 gap-1">
         {requirements.map((req, index) => (
           <div
             key={index}
@@ -88,5 +103,6 @@ export const PasswordStrengthIndicator = ({ password }: PasswordStrengthIndicato
 export const validatePasswordStrength = (password: string): string | null => {
   if (password.length < 6) return "A senha deve ter no mínimo 6 caracteres";
   if (hasSequentialChars(password)) return "A senha não pode conter sequências (abc, 123...)";
+  if (isCommonPassword(password)) return "Esta senha é muito comum. Escolha uma senha mais segura.";
   return null;
 };
