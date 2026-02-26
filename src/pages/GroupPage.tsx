@@ -996,7 +996,7 @@ export default function GroupPage() {
         groupName={group?.name || ""}
       />
 
-      <AuthModal open={showAuthModal} onOpenChange={setShowAuthModal} defaultMode="signup" />
+      <AuthModal open={showAuthModal} onOpenChange={setShowAuthModal} defaultMode="login" />
     </div>
   );
 }
