@@ -107,19 +107,7 @@ export const useAuth = () => {
     }
   };
 
-  const signIn = async (emailOrPhone: string, password: string) => {
-    let email = emailOrPhone;
-    
-    // If input looks like a phone number (mostly digits), resolve to email
-    const digitsOnly = emailOrPhone.replace(/[^0-9]/g, '');
-    if (digitsOnly.length >= 8 && !emailOrPhone.includes('@')) {
-      const resolved = await resolveEmailFromPhone(emailOrPhone);
-      if (!resolved) {
-        return { data: null, error: { message: 'Nenhuma conta encontrada com este telefone.' } as any };
-      }
-      email = resolved;
-    }
-    
+  const signIn = async (email: string, password: string) => {
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,

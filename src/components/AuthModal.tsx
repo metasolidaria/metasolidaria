@@ -260,15 +260,13 @@ export const AuthModal = ({ open, onOpenChange, defaultMode = "login" }: AuthMod
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="email">
-                {mode === "login" ? "Email ou Telefone" : <span>Email <span className="text-muted-foreground font-normal text-xs">(necessário para login)</span></span>}
-              </Label>
+              <Label htmlFor="email">Email</Label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <Input
                   id="email"
-                  type={mode === "login" ? "text" : "email"}
-                  placeholder={mode === "login" ? "Email ou telefone" : "seu@email.com"}
+                  type="email"
+                  placeholder="seu@email.com"
                   value={formData.email}
                   onChange={(e) =>
                     setFormData({ ...formData, email: e.target.value })
