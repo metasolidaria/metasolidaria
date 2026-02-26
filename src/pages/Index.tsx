@@ -2,6 +2,7 @@ import { useState, useEffect, lazy, Suspense } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { Hero } from "@/components/Hero";
+import { EmergencyBanner } from "@/components/EmergencyBanner";
 import { Footer } from "@/components/Footer";
 import { WhatsAppFloatingButton } from "@/components/WhatsAppFloatingButton";
 import { useInviteLink } from "@/hooks/useInviteLink";
@@ -110,6 +111,7 @@ const Index = () => {
       <WhatsAppFloatingButton />
       <main>
         <Hero />
+        <EmergencyBanner />
         <Suspense fallback={<SectionPlaceholder />}>
           <HeroGroupsPreview />
         </Suspense>
