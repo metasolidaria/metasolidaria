@@ -77,15 +77,10 @@ export const Hero = () => {
             </Suspense>
           </div>
 
-          <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-extrabold text-primary-foreground mb-6 leading-tight">
+          <h1 className="text-2xl sm:text-3xl md:text-5xl lg:text-6xl font-extrabold text-primary-foreground mb-8 leading-tight">
             Cada meta alcançada,{" "}
             <span className="text-secondary">uma doação</span>
           </h1>
-
-          <p className="text-base md:text-xl text-primary-foreground/80 mb-8 max-w-3xl mx-auto leading-relaxed">
-            Junte-se ou crie grupos comprometidos em transformar metas pessoais em
-            ações solidárias. Doe alimentos, livros, roupas, mudas de árvore, cobertores e muito mais.
-          </p>
 
           {/* Mini Como Funciona - 3 passos inline */}
           <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-4 mb-8 px-2">
