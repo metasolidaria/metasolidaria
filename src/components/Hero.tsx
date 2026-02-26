@@ -1,5 +1,6 @@
 import { useState, Suspense, lazy } from "react";
-import { ArrowDown, Heart, Users, Target, Gift, ChevronRight } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { ArrowDown, Heart, Users, Target, Gift, ChevronRight, ArrowRight } from "lucide-react";
 import { Button } from "./ui/button";
 import { Skeleton } from "./ui/skeleton";
 import { useAuth } from "@/hooks/useAuth";
@@ -40,6 +41,7 @@ const miniSteps = [
 ];
 
 export const Hero = () => {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { data: heroStats } = useHeroStats();
   const [authModalOpen, setAuthModalOpen] = useState(false);
@@ -82,7 +84,17 @@ export const Hero = () => {
             <span className="text-secondary">uma doação</span>
           </h1>
 
-          {/* Mini Como Funciona - 3 passos inline */}
+          {/* Emergency CTA */}
+          <div className="flex items-center justify-center gap-2 mb-6 animate-fade-in">
+            <button
+              onClick={() => navigate("/grupo/4b4a4e4a-2003-4de0-854b-f3c464592cf3")}
+              className="inline-flex items-center gap-2 bg-destructive/90 hover:bg-destructive text-destructive-foreground px-4 py-2 rounded-full text-sm font-semibold transition-all hover:scale-105 shadow-lg"
+            >
+              <span className="animate-bounce">🚨</span>
+              <span>Doe para as vítimas das enchentes de MG</span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          </div>
           <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-4 mb-8 px-2">
             {miniSteps.map((step, index) => (
               <div key={step.label} className="flex items-center gap-1 sm:gap-2">
