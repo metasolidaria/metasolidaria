@@ -150,7 +150,7 @@ export function EntityInfoBox({ groupCity, groupDonationType, entity, entityId }
     <div className="bg-accent/30 border border-accent/50 rounded-xl p-4 mt-4">
       <p className="text-xs text-muted-foreground mb-3 font-medium uppercase tracking-wide flex items-center gap-1.5">
         <Lightbulb className="w-3.5 h-3.5" />
-        Sugestão de instituição na sua cidade
+        <span className="text-sm font-bold text-foreground">SUGESTÃO</span> de instituição na sua cidade
       </p>
       <div className="space-y-4">
         {suggestions.map((s) => (
