@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { MapPin, Loader2, Check } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import { fetchCities, type IBGECity } from "@/lib/citiesCache";
+import { fetchCities, BRAZILIAN_STATES, COUNTRY_OPTIONS, type IBGECity } from "@/lib/citiesCache";
 
 interface CityAutocompleteProps {
   value: string;
@@ -26,7 +26,7 @@ export const CityAutocomplete = ({
   useEffect(() => {
     setQuery(value);
   }, [value]);
-  const [filteredCities, setFilteredCities] = useState<{ nome: string; uf: string }[]>([]);
+  const [filteredCities, setFilteredCities] = useState<{ nome: string; uf: string; tipo?: string }[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
@@ -42,7 +42,7 @@ export const CityAutocomplete = ({
       .finally(() => setIsLoading(false));
   }, []);
 
-  // Filter cities based on query
+  // Filter cities, states, and country based on query
   useEffect(() => {
     if (!query || query.length < 2) {
       setFilteredCities([]);
@@ -54,7 +54,19 @@ export const CityAutocomplete = ({
       .normalize("NFD")
       .replace(/[\u0300-\u036f]/g, "");
 
-    const filtered = cities
+    // Filter country
+    const matchedCountry = COUNTRY_OPTIONS
+      .filter((c) => c.nome.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes(normalizedQuery))
+      .map((c) => ({ nome: c.nome, uf: "", tipo: c.tipo }));
+
+    // Filter states
+    const matchedStates = BRAZILIAN_STATES
+      .filter((s) => s.nome.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes(normalizedQuery))
+      .slice(0, 3)
+      .map((s) => ({ nome: s.nome, uf: s.sigla, tipo: "Estado" }));
+
+    // Filter cities
+    const matchedCities = cities
       .filter((city) => {
         const normalizedName = city.nome
           .toLowerCase()
@@ -68,7 +80,7 @@ export const CityAutocomplete = ({
         uf: city.microrregiao.mesorregiao.UF.sigla,
       }));
 
-    setFilteredCities(filtered);
+    setFilteredCities([...matchedCountry, ...matchedStates, ...matchedCities]);
     setSelectedIndex(-1);
   }, [query, cities]);
 
@@ -84,8 +96,8 @@ export const CityAutocomplete = ({
   }, []);
 
   const handleSelect = useCallback(
-    (cityName: string, uf: string) => {
-      const formatted = `${cityName}, ${uf}`;
+    (cityName: string, uf: string, tipo?: string) => {
+      const formatted = tipo ? cityName : `${cityName}, ${uf}`;
       setQuery(formatted);
       onChange(formatted);
       setIsOpen(false);
@@ -122,7 +134,7 @@ export const CityAutocomplete = ({
         e.preventDefault();
         if (selectedIndex >= 0) {
           const city = filteredCities[selectedIndex];
-          handleSelect(city.nome, city.uf);
+          handleSelect(city.nome, city.uf, city.tipo);
         }
         break;
       case "Escape":
@@ -152,28 +164,35 @@ export const CityAutocomplete = ({
       {/* Dropdown */}
       {isOpen && filteredCities.length > 0 && (
         <div className="absolute top-full left-0 right-0 mt-1 bg-popover border border-border rounded-lg shadow-lg z-50 max-h-60 overflow-y-auto">
-          {filteredCities.map((city, index) => (
-            <button
-              key={`${city.nome}-${city.uf}`}
-              type="button"
-              onClick={() => handleSelect(city.nome, city.uf)}
-              className={cn(
-                "w-full flex items-center justify-between px-4 py-2.5 text-left text-sm transition-colors",
-                index === selectedIndex
-                  ? "bg-accent text-accent-foreground"
-                  : "hover:bg-muted"
-              )}
-            >
-              <span className="flex items-center gap-2">
-                <MapPin className="w-4 h-4 text-muted-foreground" />
-                <span className="text-foreground">{city.nome}</span>
-                <span className="text-muted-foreground">{city.uf}</span>
-              </span>
-              {`${city.nome}, ${city.uf}` === value && (
-                <Check className="w-4 h-4 text-primary" />
-              )}
-            </button>
-          ))}
+          {filteredCities.map((city, index) => {
+            const displayValue = city.tipo ? city.nome : `${city.nome}, ${city.uf}`;
+            return (
+              <button
+                key={`${city.nome}-${city.uf}-${city.tipo || 'city'}`}
+                type="button"
+                onClick={() => handleSelect(city.nome, city.uf, city.tipo)}
+                className={cn(
+                  "w-full flex items-center justify-between px-4 py-2.5 text-left text-sm transition-colors",
+                  index === selectedIndex
+                    ? "bg-accent text-accent-foreground"
+                    : "hover:bg-muted"
+                )}
+              >
+                <span className="flex items-center gap-2">
+                  <MapPin className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-foreground">{city.nome}</span>
+                  {city.tipo ? (
+                    <span className="text-muted-foreground text-xs">({city.tipo})</span>
+                  ) : (
+                    <span className="text-muted-foreground">{city.uf}</span>
+                  )}
+                </span>
+                {displayValue === value && (
+                  <Check className="w-4 h-4 text-primary" />
+                )}
+              </button>
+            );
+          })}
         </div>
       )}
 
