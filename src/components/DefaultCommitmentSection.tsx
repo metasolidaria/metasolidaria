@@ -34,6 +34,14 @@ const getDonationUnit = (donationType: string): string => {
       return "kit(s)";
     case "mudas":
       return "muda(s)";
+    case "racao":
+      return "kg";
+    case "sangue":
+      return "doação(ões)";
+    case "ovos_pascoa":
+      return "ovo(s)";
+    case "dinheiro":
+      return "R$";
     default:
       return "unidade(s)";
   }
