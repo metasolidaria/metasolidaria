@@ -13,6 +13,7 @@ interface EntityData {
   accepted_donations?: string[] | null;
   pix_key?: string | null;
   pix_name?: string | null;
+  pix_qr_code_url?: string | null;
   observations?: string | null;
 }
 
@@ -85,6 +86,16 @@ function EntityDetails({ entity }: { entity: EntityData }) {
                 <span className="font-medium text-foreground break-all">{entity.pix_key}</span>
               </p>
               <CopyButton text={entity.pix_key} />
+            </div>
+          )}
+          {entity.pix_qr_code_url && (
+            <div className="flex flex-col items-center gap-2 pt-2">
+              <p className="text-xs text-muted-foreground font-medium">QR Code PIX</p>
+              <img
+                src={entity.pix_qr_code_url}
+                alt={`QR Code PIX - ${entity.name}`}
+                className="w-48 h-auto rounded-lg border border-border"
+              />
             </div>
           )}
           {entity.pix_name && (
