@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react";
-import { Heart, Apple, BookOpen, Shirt, BedDouble, Soup, Gift, Package, TreeDeciduous, Candy } from "lucide-react";
+import { Heart, Apple, BookOpen, Shirt, BedDouble, Soup, Gift, Package, TreeDeciduous, Candy, DollarSign } from "lucide-react";
 import { useImpactStats, DonationsByType } from "@/hooks/useImpactStats";
 import { PremiumPartnerSlots } from "./PremiumPartnerSlots";
 import { Skeleton } from "./ui/skeleton";
@@ -59,6 +59,7 @@ const donationTypeConfig = [
   { key: "brinquedos" as keyof DonationsByType, label: "Brinquedos", icon: Gift, unit: "un" },
   { key: "mudas" as keyof DonationsByType, label: "Mudas de Árvore", icon: TreeDeciduous, unit: "un" },
   { key: "ovos_pascoa" as keyof DonationsByType, label: "Ovos de Páscoa", icon: Candy, unit: "un" },
+  { key: "dinheiro" as keyof DonationsByType, label: "Dinheiro", icon: DollarSign, unit: "R$" },
 ];
 
 // Hook for intersection observer

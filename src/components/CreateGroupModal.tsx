@@ -38,6 +38,7 @@ const donationTypes = [
   { id: "racao", label: "Ração (kg)", icon: "🐾" },
   { id: "sangue", label: "Doador de Sangue (doações)", icon: "🩸" },
   { id: "ovos_pascoa", label: "Ovos de Páscoa (unidades)", icon: "🍫" },
+  { id: "dinheiro", label: "Dinheiro (R$)", icon: "💰" },
   { id: "outro", label: "Outro", icon: "📦" },
 ];
 

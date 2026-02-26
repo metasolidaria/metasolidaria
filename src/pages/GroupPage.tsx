@@ -46,6 +46,11 @@ const donationTypeLabels: Record<string, { label: string; icon: string; unit: st
   sopas: { label: "Sopas", icon: "🍲", unit: "porções" },
   brinquedos: { label: "Brinquedos", icon: "🧸", unit: "brinquedos" },
   higiene: { label: "Kits de Higiene", icon: "🧴", unit: "kits" },
+  racao: { label: "Ração", icon: "🐾", unit: "kg" },
+  mudas: { label: "Mudas de Árvore", icon: "🌱", unit: "mudas" },
+  sangue: { label: "Doação de Sangue", icon: "🩸", unit: "doações" },
+  ovos_pascoa: { label: "Ovos de Páscoa", icon: "🍫", unit: "unidades" },
+  dinheiro: { label: "Dinheiro", icon: "💰", unit: "R$" },
   outro: { label: "Outro", icon: "📦", unit: "itens" },
 };
 
