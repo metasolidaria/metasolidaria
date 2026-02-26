@@ -17,9 +17,10 @@ interface GoldPartnersCarouselProps {
   groupCity: string;
   groupId?: string;
   groupName?: string;
+  compact?: boolean;
 }
 
-export const GoldPartnersCarousel = ({ groupCity, groupId, groupName }: GoldPartnersCarouselProps) => {
+export const GoldPartnersCarousel = ({ groupCity, groupId, groupName, compact = false }: GoldPartnersCarouselProps) => {
   const { data: partners, isLoading } = usePremiumAndGoldPartners(groupCity);
   const [autoplayPlugin, setAutoplayPlugin] = useState<AutoplayType | null>(null);
   
@@ -83,15 +84,15 @@ export const GoldPartnersCarousel = ({ groupCity, groupId, groupName }: GoldPart
 
   return (
     <div
-      className="animate-in fade-in slide-in-from-bottom-4 duration-300 bg-gradient-to-r from-amber-500/10 via-purple-500/5 to-amber-600/10 rounded-2xl p-6 shadow-soft border border-amber-500/20 overflow-hidden"
+      className={`animate-in fade-in slide-in-from-bottom-4 duration-300 bg-gradient-to-r from-amber-500/10 via-purple-500/5 to-amber-600/10 rounded-2xl shadow-soft border border-amber-500/20 overflow-hidden ${compact ? "p-3" : "p-6"}`}
     >
-      <div className="flex items-center gap-2 mb-4">
+      <div className={`flex items-center gap-2 ${compact ? "mb-2" : "mb-4"}`}>
         <div className="flex items-center gap-1">
-          <Crown className="w-5 h-5 text-purple-500" />
-          <Star className="w-5 h-5 text-amber-500 fill-amber-500" />
+          <Crown className={`${compact ? "w-3.5 h-3.5" : "w-5 h-5"} text-purple-500`} />
+          <Star className={`${compact ? "w-3.5 h-3.5" : "w-5 h-5"} text-amber-500 fill-amber-500`} />
         </div>
-        <h2 className="text-xl font-bold text-foreground">Parceiros Solidários</h2>
-        <Badge variant="outline" className="ml-auto bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/30">
+        <h2 className={`${compact ? "text-sm" : "text-xl"} font-bold text-foreground`}>Parceiros Solidários</h2>
+        <Badge variant="outline" className={`ml-auto bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/30 ${compact ? "text-[10px] px-1.5 py-0" : ""}`}>
           {partners.length} {partners.length === 1 ? "parceiro" : "parceiros"}
         </Badge>
       </div>
@@ -119,9 +120,9 @@ export const GoldPartnersCarousel = ({ groupCity, groupId, groupName }: GoldPart
                 }`}
                 onClick={() => handlePartnerClick(partner)}
               >
-                <CardContent className="p-4">
+                <CardContent className={compact ? "p-2.5" : "p-4"}>
                   <div className="flex items-start gap-3">
-                    <Avatar className="w-20 h-20 rounded-xl border-2 border-amber-500/30 bg-white">
+                    <Avatar className={`${compact ? "w-12 h-12" : "w-20 h-20"} rounded-xl border-2 border-amber-500/30 bg-white`}>
                       <AvatarImage 
                         src={getPartnerLogo(partner)} 
                         alt={partner.name || "Parceiro"}
