@@ -503,6 +503,20 @@ export const CreateGroupModal = ({ open, onOpenChange, onRequireAuth }: CreateGr
                 </div>
               </div>
 
+              {/* Entity Select */}
+              <div className="space-y-2">
+                <Label className="text-foreground font-medium">
+                  Instituição Beneficente (opcional)
+                </Label>
+                <EntitySelect
+                  value={formData.entityId}
+                  onChange={(value) => setFormData({ ...formData, entityId: value })}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Vincule seu grupo a uma instituição beneficente cadastrada
+                </p>
+              </div>
+
               <DefaultCommitmentSection
                 data={defaultCommitment}
                 onChange={setDefaultCommitment}
