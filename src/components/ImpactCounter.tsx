@@ -8,9 +8,11 @@ import { Skeleton } from "./ui/skeleton";
 const AnimatedNumber = ({
   value,
   suffix,
+  prefix = "",
 }: {
   value: number;
   suffix: string;
+  prefix?: string;
 }) => {
   const [displayValue, setDisplayValue] = useState(value);
   const [hasAnimated, setHasAnimated] = useState(false);
@@ -43,7 +45,7 @@ const AnimatedNumber = ({
 
   return (
     <span>
-      {displayValue.toLocaleString("pt-BR")}
+      {prefix}{displayValue.toLocaleString("pt-BR")}
       {suffix}
     </span>
   );
@@ -187,6 +189,7 @@ export const ImpactCounter = () => {
                           <AnimatedNumber 
                             value={impactData?.donationsByType?.[type.key] || 0} 
                             suffix="" 
+                            prefix={type.unit === "R$" ? "R$ " : ""}
                           />
                         ) : null}
                       </div>
