@@ -45,7 +45,7 @@ const donationTypes = [
   { id: "mudas", label: "Mudas de Árvore (unidades)" },
   { id: "sangue", label: "Doador de Sangue (doações)" },
   { id: "ovos_pascoa", label: "Ovos de Páscoa (unidades)" },
-  { id: "dinheiro", label: "Dinheiro (R$)" },
+  { id: "dinheiro", label: "Dinheiro (reais)" },
   { id: "outro", label: "Outro" },
 ];
 
