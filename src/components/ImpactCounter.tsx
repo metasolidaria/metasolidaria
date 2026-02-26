@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react";
-import { Heart, Apple, BookOpen, Shirt, BedDouble, Soup, Gift, Package, TreeDeciduous, DollarSign } from "lucide-react";
+import { Heart, Apple, BookOpen, Shirt, BedDouble, Soup, Gift, Package, TreeDeciduous, DollarSign, Egg } from "lucide-react";
 import { useImpactStats, DonationsByType } from "@/hooks/useImpactStats";
 import { PremiumPartnerSlots } from "./PremiumPartnerSlots";
 import { Skeleton } from "./ui/skeleton";
@@ -54,8 +54,7 @@ const AnimatedNumber = ({
 const donationTypeConfig: {
   key: keyof DonationsByType;
   label: string;
-  icon: React.ComponentType<{ className?: string }> | null;
-  emoji?: string;
+  icon: React.ComponentType<{ className?: string }>;
   unit: string;
 }[] = [
   { key: "alimentos", label: "Kg de Alimento", icon: Apple, unit: "kg" },
@@ -66,7 +65,7 @@ const donationTypeConfig: {
   { key: "higiene", label: "Kits de Higiene", icon: Package, unit: "kits" },
   { key: "brinquedos", label: "Brinquedos", icon: Gift, unit: "un" },
   { key: "mudas", label: "Mudas de Árvore", icon: TreeDeciduous, unit: "un" },
-  { key: "ovos_pascoa", label: "Ovos de Páscoa", icon: null, emoji: "🍫", unit: "un" },
+  { key: "ovos_pascoa", label: "Ovos de Páscoa", icon: Egg, unit: "un" },
   { key: "dinheiro", label: "Dinheiro", icon: DollarSign, unit: "R$" },
 ];
 
@@ -189,11 +188,7 @@ export const ImpactCounter = () => {
                       className={`bg-primary-foreground/10 backdrop-blur-sm rounded-xl p-4 text-center border border-primary-foreground/20 ${isInView ? 'animate-in fade-in slide-in-from-bottom-4 duration-400' : 'opacity-0'}`}
                       style={{ animationDelay: `${300 + index * 50}ms` }}
                     >
-                      {type.icon ? (
-                        <type.icon className="w-6 h-6 text-primary-foreground mx-auto mb-2" />
-                      ) : (
-                        <span className="text-2xl mx-auto mb-2 block w-6 h-6 leading-6">{type.emoji}</span>
-                      )}
+                      <type.icon className="w-6 h-6 text-primary-foreground mx-auto mb-2" />
                       <div className="text-2xl md:text-3xl font-bold text-primary-foreground mb-1">
                         {isInView ? (
                           <AnimatedNumber 
