@@ -571,63 +571,7 @@ export default function GroupPage() {
             )}
             */}
 
-            {/* Progress Entries */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="bg-card rounded-2xl p-6 shadow-soft"
-            >
-              <h2 className="text-xl font-bold text-foreground mb-4 truncate">
-                Histórico de Doações
-              </h2>
-
-              {progressEntries && progressEntries.length > 0 ? (
-                <div className="space-y-3">
-                  {progressEntries.map((entry) => (
-                    <div 
-                      key={entry.id}
-                      className="flex items-start gap-2 p-3 bg-muted/50 rounded-lg"
-                    >
-                      <div className="flex-1 min-w-0">
-                        <div className="flex flex-wrap items-center gap-1">
-                          <span className="font-medium text-foreground">
-                            +{entry.amount} {donationType.unit}
-                          </span>
-                          <span className="text-sm text-muted-foreground truncate">
-                            por {entry.member_name}
-                          </span>
-                        </div>
-                        {entry.description && (
-                          <p className="text-sm text-muted-foreground mt-1 break-words">
-                            {entry.description}
-                          </p>
-                        )}
-                        <p className="text-xs text-muted-foreground mt-1">
-                          {format(new Date(entry.created_at), "dd 'de' MMMM 'às' HH:mm", { locale: ptBR })}
-                        </p>
-                      </div>
-                      
-                      {entry.user_id === user?.id && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => deleteProgress.mutate(entry.id)}
-                          disabled={deleteProgress.isPending}
-                          className="text-destructive hover:text-destructive flex-shrink-0"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-muted-foreground text-center py-8">
-                  Nenhuma doação registrada ainda. Seja o primeiro!
-                </p>
-              )}
-            </motion.div>
+            {/* Histórico de Doações removido da visualização pública */}
           </div>
 
           {/* Sidebar */}
