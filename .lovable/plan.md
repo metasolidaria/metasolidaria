@@ -1,32 +1,14 @@
 
 
-## Tornar Instituições Visíveis para Todos (sem login)
+## Analysis
 
-### Problema
-A view `entities_public` usa `security_invoker=on`, o que significa que herda as políticas RLS da tabela base `entities`. Como a tabela exige `auth.uid() IS NOT NULL` para SELECT, visitantes não logados não conseguem ver nenhuma instituição.
+The `HeroGroupsPreview` carousel already includes the `embla-carousel-autoplay` plugin with `delay: 4000`, `stopOnInteraction: true`, and `stopOnMouseEnter: true`. It should already be auto-scrolling.
 
-### Solução
-Recriar a view `entities_public` com `security_invoker=off` (mesmo padrão usado em `groups_public` e `group_members_public`). Isso permite que qualquer visitante veja as instituições sem precisar estar autenticado.
+However, `stopOnInteraction: true` means that once a user scrolls, clicks, or touches the carousel, autoplay stops permanently. This could make it seem like autoplay isn't working.
 
-### Detalhes Técnicos
+## Plan
 
-1. **Migração SQL** -- recriar a view sem security_invoker:
-   ```sql
-   DROP VIEW IF EXISTS public.entities_public;
-   CREATE VIEW public.entities_public AS
-     SELECT id, name, city, accepted_donations, observations, 
-            pix_key, pix_name, pix_qr_code_url, created_at
-     FROM public.entities
-     WHERE is_test = false;
-   ```
-   - Sem `security_invoker=on`, a view executa com permissões do owner (bypassa RLS)
-   - Filtra `is_test = false` manualmente na view, mantendo segurança
-   - Dados sensíveis (phone, created_by) continuam ocultos
+1. **In `src/components/HeroGroupsPreview.tsx`**: Change `stopOnInteraction` from `true` to `false` so autoplay resumes after user interaction. Keep `stopOnMouseEnter: true` so it pauses on hover but resumes when the mouse leaves.
 
-2. **Nenhuma mudança de código necessária** -- o hook `useEntities` já consulta `entities_public` e o componente `EntitiesSection` já está na página inicial.
-
-### Segurança
-- Informações sensíveis (telefone, criador) permanecem excluídas da view
-- Apenas entidades não-teste são expostas
-- Consistente com a estratégia já usada nas outras views públicas do projeto
+This single change should make the carousel feel consistently automatic.
 
