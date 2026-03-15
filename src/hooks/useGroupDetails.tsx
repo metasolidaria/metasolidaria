@@ -13,6 +13,7 @@ interface MemberCommitment {
   donation_amount: number;
   personal_goal: number;
   penalty_donation: number | null;
+  progress: number;
 }
 
 interface GroupMember {
@@ -135,11 +136,19 @@ export const useGroupDetails = (groupId: string | undefined) => {
       // Get total contributions for each member
       const { data: progressData } = await supabase
         .from("goal_progress")
-        .select("member_id, amount")
+        .select("member_id, amount, commitment_id")
         .eq("group_id", groupId);
 
       const contributionsByMember = (progressData || []).reduce((acc, entry) => {
         acc[entry.member_id] = (acc[entry.member_id] || 0) + entry.amount;
+        return acc;
+      }, {} as Record<string, number>);
+
+      // Calculate per-commitment progress
+      const contributionsByCommitment = (progressData || []).reduce((acc, entry) => {
+        if (entry.commitment_id) {
+          acc[entry.commitment_id] = (acc[entry.commitment_id] || 0) + entry.amount;
+        }
         return acc;
       }, {} as Record<string, number>);
 
@@ -160,6 +169,7 @@ export const useGroupDetails = (groupId: string | undefined) => {
           donation_amount: c.donation_amount,
           personal_goal: c.personal_goal || 0,
           penalty_donation: c.penalty_donation || null,
+          progress: contributionsByCommitment[c.id] || 0,
         });
         return acc;
       }, {} as Record<string, MemberCommitment[]>);
@@ -219,11 +229,13 @@ export const useGroupDetails = (groupId: string | undefined) => {
     mutationFn: async ({ 
       memberId, 
       amount, 
-      description 
+      description,
+      commitmentId,
     }: { 
       memberId: string; 
       amount: number; 
       description?: string;
+      commitmentId?: string;
     }) => {
       if (!user || !groupId) throw new Error("Dados inválidos");
 
@@ -235,6 +247,7 @@ export const useGroupDetails = (groupId: string | undefined) => {
           user_id: user.id,
           amount,
           description,
+          commitment_id: commitmentId || null,
         }])
         .select()
         .single();

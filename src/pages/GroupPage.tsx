@@ -708,15 +708,15 @@ export default function GroupPage() {
                                       </p>
                                       <div className="flex items-center gap-2 mt-1">
                                         <p className="text-xs font-medium text-foreground">
-                                          {member.total_contributed || 0} / {c.personal_goal} {donationType.unit}
+                                          {c.progress || 0} / {c.personal_goal} {donationType.unit}
                                         </p>
                                         {c.personal_goal > 0 && (
                                           <span className={`text-xs font-semibold ${
-                                            (member.total_contributed || 0) >= c.personal_goal 
+                                            (c.progress || 0) >= c.personal_goal 
                                               ? 'text-green-600 dark:text-green-400' 
                                               : 'text-muted-foreground'
                                           }`}>
-                                            ({Math.min(Math.round(((member.total_contributed || 0) / c.personal_goal) * 100), 100)}%)
+                                            ({Math.min(Math.round(((c.progress || 0) / c.personal_goal) * 100), 100)}%)
                                           </span>
                                         )}
                                       </div>
@@ -724,11 +724,11 @@ export default function GroupPage() {
                                         <div className="mt-1 h-1.5 w-full bg-muted rounded-full overflow-hidden">
                                           <div 
                                             className={`h-full rounded-full transition-all ${
-                                              (member.total_contributed || 0) >= c.personal_goal 
+                                              (c.progress || 0) >= c.personal_goal 
                                                 ? 'bg-green-500' 
                                                 : 'bg-primary'
                                             }`}
-                                            style={{ width: `${Math.min(((member.total_contributed || 0) / c.personal_goal) * 100, 100)}%` }}
+                                            style={{ width: `${Math.min(((c.progress || 0) / c.personal_goal) * 100, 100)}%` }}
                                           />
                                         </div>
                                       )}

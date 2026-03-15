@@ -119,6 +119,7 @@ export type Database = {
       goal_progress: {
         Row: {
           amount: number
+          commitment_id: string | null
           created_at: string
           description: string | null
           group_id: string
@@ -128,6 +129,7 @@ export type Database = {
         }
         Insert: {
           amount?: number
+          commitment_id?: string | null
           created_at?: string
           description?: string | null
           group_id: string
@@ -137,6 +139,7 @@ export type Database = {
         }
         Update: {
           amount?: number
+          commitment_id?: string | null
           created_at?: string
           description?: string | null
           group_id?: string
@@ -145,6 +148,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "goal_progress_commitment_id_fkey"
+            columns: ["commitment_id"]
+            isOneToOne: false
+            referencedRelation: "member_commitments"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "goal_progress_group_id_fkey"
             columns: ["group_id"]

@@ -53,7 +53,8 @@ export const AddProgressModal = ({
       { 
         memberId, 
         amount: numAmount, 
-        description: description.trim() || undefined 
+        description: description.trim() || undefined,
+        commitmentId: commitment?.id,
       },
       {
         onSuccess: () => {
