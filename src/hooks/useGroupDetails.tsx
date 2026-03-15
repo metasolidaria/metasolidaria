@@ -219,11 +219,13 @@ export const useGroupDetails = (groupId: string | undefined) => {
     mutationFn: async ({ 
       memberId, 
       amount, 
-      description 
+      description,
+      commitmentId,
     }: { 
       memberId: string; 
       amount: number; 
       description?: string;
+      commitmentId?: string;
     }) => {
       if (!user || !groupId) throw new Error("Dados inválidos");
 
@@ -235,6 +237,7 @@ export const useGroupDetails = (groupId: string | undefined) => {
           user_id: user.id,
           amount,
           description,
+          commitment_id: commitmentId || null,
         }])
         .select()
         .single();
