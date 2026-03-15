@@ -706,11 +706,34 @@ export default function GroupPage() {
                                       <p className="text-xs text-primary break-words">
                                         📌 {c.name ? `${c.name}: ` : ''}{c.ratio} {c.metric} = {c.donation_amount} {donationType.unit}
                                       </p>
-                                      <p className="text-xs text-muted-foreground">
-                                        Meta: {c.personal_goal} {donationType.unit}
-                                      </p>
+                                      <div className="flex items-center gap-2 mt-1">
+                                        <p className="text-xs font-medium text-foreground">
+                                          {member.total_contributed || 0} / {c.personal_goal} {donationType.unit}
+                                        </p>
+                                        {c.personal_goal > 0 && (
+                                          <span className={`text-xs font-semibold ${
+                                            (member.total_contributed || 0) >= c.personal_goal 
+                                              ? 'text-green-600 dark:text-green-400' 
+                                              : 'text-muted-foreground'
+                                          }`}>
+                                            ({Math.min(Math.round(((member.total_contributed || 0) / c.personal_goal) * 100), 100)}%)
+                                          </span>
+                                        )}
+                                      </div>
+                                      {c.personal_goal > 0 && (
+                                        <div className="mt-1 h-1.5 w-full bg-muted rounded-full overflow-hidden">
+                                          <div 
+                                            className={`h-full rounded-full transition-all ${
+                                              (member.total_contributed || 0) >= c.personal_goal 
+                                                ? 'bg-green-500' 
+                                                : 'bg-primary'
+                                            }`}
+                                            style={{ width: `${Math.min(((member.total_contributed || 0) / c.personal_goal) * 100, 100)}%` }}
+                                          />
+                                        </div>
+                                      )}
                                       {c.penalty_donation && c.penalty_donation > 0 && (
-                                        <p className="text-xs text-amber-600 dark:text-amber-400">
+                                        <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
                                           🔥 Desafio: {c.penalty_donation} {donationType.unit}
                                         </p>
                                       )}
