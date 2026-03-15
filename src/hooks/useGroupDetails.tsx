@@ -13,6 +13,7 @@ interface MemberCommitment {
   donation_amount: number;
   personal_goal: number;
   penalty_donation: number | null;
+  progress: number;
 }
 
 interface GroupMember {
