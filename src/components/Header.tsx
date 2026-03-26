@@ -43,7 +43,8 @@ export const Header = ({ onAuthClick }: HeaderProps) => {
 
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 animate-fade-in ${
+      style={{ top: 'env(safe-area-inset-top, 0px)' }}
+      className={`fixed left-0 right-0 z-50 transition-all duration-300 animate-fade-in ${
         isScrolled
           ? "bg-card/95 backdrop-blur-md shadow-soft"
           : "bg-transparent"
