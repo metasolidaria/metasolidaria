@@ -25,6 +25,8 @@ export const DONATION_OPTIONS = [
   { value: "ovos_pascoa", label: "Ovos de Páscoa" },
   { value: "moveis", label: "Móveis" },
   { value: "eletrodomesticos", label: "Eletrodomésticos" },
+  { value: "materiais_escolar", label: "Materiais Escolar" },
+  { value: "kit_limpeza", label: "Kit de Limpeza" },
   { value: "dinheiro", label: "Dinheiro" },
   { value: "outros", label: "Outros (especificar nas observações)" },
 ] as const;
