@@ -1,33 +1,31 @@
 
 
-## Enviar E-mails de Lembrete para Membros
+## Corrigir sobreposição do header com a status bar do Android
 
-Sim, e possivel. Para isso precisamos configurar o envio de e-mails no projeto.
+### Problema
+O header fixo (`fixed top-0`) fica por trás da barra de status do Android quando o app roda como aplicativo nativo (Capacitor). No navegador isso não acontece porque o browser já gerencia a safe area, mas no app nativo o WebView ocupa a tela inteira, incluindo a área da status bar.
 
-### Pre-requisito: Configurar Dominio de E-mail
+### Solução
 
-O projeto ainda nao tem um dominio de e-mail configurado. O primeiro passo e configurar um dominio de envio (ex: `notify@seudominio.com`) para que os e-mails cheguem na caixa de entrada dos membros e nao caiam no spam.
+Duas mudanças simples:
 
-### O que sera implementado
+**1. Configurar Capacitor para usar a Status Bar overlay**
+- Em `capacitor.config.ts`, adicionar configuração do plugin `StatusBar` com `overlaysWebView: false` para que o WebView não fique atrás da status bar. Isso resolve o problema na maioria dos casos.
 
-1. **Configurar dominio de e-mail** - Voce precisara de um dominio proprio (ex: metasolidaria.com.br) e configurar os registros DNS
-2. **Infraestrutura de e-mail** - Fila de envio com retentativas automaticas, log de entregas
-3. **Edge Function de lembrete** - Funcao backend que busca membros com e-mail cadastrado e envia o lembrete
-4. **Template do e-mail** - E-mail bonito e responsivo lembrando o membro de registrar suas evolucoes, com link direto para o grupo
-5. **Gatilho de envio** - Pode ser manual (botao no painel admin) ou automatico (semanal via cron job)
+**2. Adicionar suporte a safe-area via CSS (fallback)**
+- No `index.html`, adicionar `viewport-fit=cover` na meta tag viewport
+- No `src/index.css`, adicionar padding-top com `env(safe-area-inset-top)` no body ou no header para respeitar a safe area em dispositivos com notch ou status bar sobreposta
+- No `Header.tsx`, ajustar o `top` ou `padding-top` para usar `env(safe-area-inset-top)` garantindo que o conteúdo não fique escondido
 
-### Observacao importante
+### Detalhes técnicos
 
-Atualmente os membros sao cadastrados apenas com nome e WhatsApp. Para enviar e-mails, precisariamos do e-mail dos membros. Existem duas opcoes:
+- `viewport-fit=cover` na meta viewport permite que o CSS acesse `env(safe-area-inset-top)`
+- `env(safe-area-inset-top)` retorna a altura da status bar/notch do dispositivo
+- O header precisa de `padding-top: env(safe-area-inset-top)` e as páginas precisam compensar a altura extra
 
-- **Usar o e-mail da conta do usuario** (membros que tem `user_id` vinculado ja possuem e-mail no sistema de autenticacao)
-- **Adicionar campo de e-mail na tabela de membros** para membros sem conta
-
-### Proximos passos
-
-Para comecar, o primeiro passo e configurar seu dominio de e-mail:
-
-<lov-actions>
-<lov-open-email-setup>Configurar dominio de e-mail</lov-open-email-setup>
-</lov-actions>
+### Arquivos alterados
+1. `index.html` — adicionar `viewport-fit=cover`
+2. `src/index.css` — variável CSS para safe-area
+3. `src/components/Header.tsx` — padding-top com safe-area-inset-top
+4. `capacitor.config.ts` — configuração do StatusBar plugin
 
