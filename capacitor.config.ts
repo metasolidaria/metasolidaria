@@ -4,6 +4,11 @@ const config: CapacitorConfig = {
   appId: 'app.lovable.48cb3c9479794c0abe1669aa41076de9',
   appName: 'Meta Solidária',
   webDir: 'dist',
+  plugins: {
+    StatusBar: {
+      overlaysWebView: false,
+    },
+  },
   // Hot-reload para desenvolvimento (descomente para testar no dispositivo):
   // server: {
   //   url: 'https://48cb3c94-7979-4c0a-be16-69aa41076de9.lovableproject.com?forceHideBadge=true',
