@@ -1,12 +1,18 @@
-import { Header } from "@/components/Header";
+import { Link } from "react-router-dom";
 import { Footer } from "@/components/Footer";
-import { Shield, AlertTriangle, Mail, FileWarning, Users, Gavel } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Shield, AlertTriangle, Mail, FileWarning, Users, Gavel, ArrowLeft } from "lucide-react";
 
 const ChildSafety = () => {
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      <Header />
-      <main className="flex-1 container mx-auto px-4 py-12 max-w-4xl">
+      <main className="flex-1 container mx-auto px-4 py-8 max-w-4xl">
+        <Button variant="ghost" asChild className="mb-6">
+          <Link to="/" className="flex items-center gap-2">
+            <ArrowLeft className="w-4 h-4" />
+            Voltar
+          </Link>
+        </Button>
         <div className="space-y-8">
           <header className="text-center space-y-4">
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10">
