@@ -170,6 +170,13 @@ export const Footer = () => {
             >
               Termos de Uso
             </Link>
+            <span className="text-primary-foreground/40">|</span>
+            <Link 
+              to="/seguranca-infantil" 
+              className="text-primary-foreground/60 hover:text-primary-foreground text-sm transition-colors"
+            >
+              Segurança Infantil
+            </Link>
           </div>
 
           {/* Copyright and Admin */}
